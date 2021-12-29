@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='altvmasterlist',  
-    version='0.1',
+    version='0.2',
     scripts=['altvmasterlist.py'] ,
     author="Nickwasused",
     author_email="nickwasused.social@protonmail.com",
@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
          "Programming Language :: Python :: 3",
-         "License :: OSI Approved :: MIT License",
+         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
          "Operating System :: OS Independent",
      ],
 )

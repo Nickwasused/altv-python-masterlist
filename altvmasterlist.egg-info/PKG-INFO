@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: altvmasterlist
-Version: 0.1
+Version: 0.2
 Summary: A package to use the alt:V Masterlist api
 Home-page: https://github.com/Nickwasused/altv-python-masterlist
 Author: Nickwasused
@@ -8,7 +8,7 @@ Author-email: nickwasused.social@protonmail.com
 License: UNKNOWN
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
+Classifier: License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
 License-File: LICENSE
