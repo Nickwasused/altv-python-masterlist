@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 from urllib3 import PoolManager
-from config import config
 from json import loads
 
 pool = PoolManager()
+
+class config:
+    base_link = "https://api.altv.mp"
+    all_server_stats_link = "{}/servers".format(base_link)
+    all_servers_link = "{}/servers/list".format(base_link)
+    server_link = "{}/server".format(base_link) + "/{}"
+    server_average_link = "{}/avg".format(base_link) + "/{}/{}"
+    server_max_link = "{}/max".format(base_link) + "/{}/{}"
 
 class Server:
     def __init__(self, active, id, maxPlayers, players, name, locked, host, port, gameMode, website, language, description, verified, promoted, useEarlyAuth, earlyAuthUrl, useCdn, cdnUrl, useVoiceChat, tags, bannerUrl, branch, build, version, lastUpdate):
