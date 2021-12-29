@@ -3,8 +3,10 @@ README.md
 altvmasterlist.py
 config.py
 example.py
+publish.py
 setup.py
 altvmasterlist.egg-info/PKG-INFO
 altvmasterlist.egg-info/SOURCES.txt
 altvmasterlist.egg-info/dependency_links.txt
 altvmasterlist.egg-info/top_level.txt
+dist/altvmasterlist-0.2-py3-none-any.whl
