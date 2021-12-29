@@ -1,0 +1,8 @@
+LICENSE
+README.md
+altvmasterlist.py
+setup.py
+altvmasterlist.egg-info/PKG-INFO
+altvmasterlist.egg-info/SOURCES.txt
+altvmasterlist.egg-info/dependency_links.txt
+altvmasterlist.egg-info/top_level.txt
