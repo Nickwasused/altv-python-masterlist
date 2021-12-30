@@ -95,8 +95,26 @@ def get_server_by_id(id):
 def get_server_by_id_avg(id, time):
     return request(config.server_average_link.format(id, time))
 
-def get_server_by_id_avg(id, time):
+def get_server_by_id_avg_result(id, time):
+    response = get_server_by_id_avg(id, time)
+    players_all = 0
+    for entry in response:
+        players_all = players_all + entry["c"]
+    result = players_all / len(response)
+    return round(result)
+
+def get_server_by_id_max(id, time):
     return request(config.server_max_link.format(id, time))
+
+def validate_id(id):
+    from re import compile
+    regexraw = r"^[0-9a-zA-Z]{32}$"
+    regex = compile(regexraw)
+    result = regex.match(id)
+    if (result != None):
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     exit()

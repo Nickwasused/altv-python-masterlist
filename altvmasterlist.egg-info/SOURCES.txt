@@ -5,7 +5,6 @@ publish.py
 setup.py
 altvmasterlist/__init__.py
 altvmasterlist/altvmasterlist.py
-altvmasterlist/config.py
 altvmasterlist.egg-info/PKG-INFO
 altvmasterlist.egg-info/SOURCES.txt
 altvmasterlist.egg-info/dependency_links.txt
