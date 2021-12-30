@@ -2,6 +2,7 @@ LICENSE
 README.md
 example.py
 publish.py
+requirements.txt
 setup.py
 altvmasterlist/__init__.py
 altvmasterlist/altvmasterlist.py
