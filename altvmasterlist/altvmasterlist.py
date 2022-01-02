@@ -69,6 +69,34 @@ class Server:
             "lastUpdate": self.lastUpdate
         }
 
+    def update(self):
+        temp_server = get_server_by_id(self.id)
+        self.active = temp_server.active
+        self.id = self.id
+        self.maxPlayers = temp_server.maxPlayers
+        self.players = temp_server.players
+        self.name = temp_server.name
+        self.locked = temp_server.locked
+        self.host = temp_server.host
+        self.port = temp_server.port
+        self.gameMode = temp_server.gameMode
+        self.website = temp_server.website
+        self.language = temp_server.language
+        self.description = temp_server.description
+        self.verified = temp_server.verified
+        self.promoted = temp_server.promoted
+        self.useEarlyAuth = temp_server.useEarlyAuth
+        self.earlyAuthUrl = temp_server.earlyAuthUrl
+        self.useCdn = temp_server.useCdn
+        self.cdnUrl = temp_server.cdnUrl
+        self.useVoiceChat = temp_server.useVoiceChat
+        self.tags = temp_server.tags
+        self.bannerUrl = temp_server.bannerUrl
+        self.branch = temp_server.branch
+        self.build = temp_server.build
+        self.version = temp_server.version
+        self.lastUpdate = temp_server.lastUpdate
+
 def request(url):
     request = pool.request('GET', url, preload_content=False)
     apijson = loads(request.data)
