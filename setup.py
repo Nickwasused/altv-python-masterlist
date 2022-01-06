@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='altvmasterlist',
     packages=['altvmasterlist'],
-    version='0.9',
+    version='1.0',
     author="Nickwasused",
     author_email="nickwasused.social@protonmail.com",
     description="A package to use the alt:V Masterlist api",

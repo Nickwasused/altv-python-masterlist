@@ -97,8 +97,13 @@ class Server:
         self.version = temp_server.version
         self.lastUpdate = temp_server.lastUpdate
 
+    def fetchconnectjson(self):
+        return request(self.cdnUrl + "/connect.json")
+
 def request(url):
-    request = pool.request('GET', url, preload_content=False)
+    request = pool.request('GET', url, preload_content=False, headers={
+        "User-Agent": "AltPublicAgent"
+    })
     apijson = loads(request.data)
     request.release_conn()
     return apijson

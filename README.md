@@ -65,11 +65,16 @@ server = ...
 print(server.players)
 ```
 
+| Option  | Description           | Example Output  | Extra
+| ------- | ------------------ | ------------------ | ------------------ 
+| get_json() | Use this to get the Server data as Json Output | https://api.altv.mp/server/ceaac3d1cc22761223beac38386f5ab2 | There is no "info" Object
+| update() | Use this to Update the Data in the Server Object | Values like server.players are updates | 
+| fetchconnectjson() | Use this to fetch the Connect.json when the Server is using a CDN | ```{"earlyAuthUrl":"https://freeroam.nickwasused.com/auth","files":[{"hash":"b4029e455ff21c20","name":"core"},{"hash":"b4d95c9269392f1a","name":"dumps"},{"hash":"e1cfce6f4d8edec1","name":"webview-images"}],"host":"134.255.227.168","optional-permissions":[],"port":6135,"required-permissions":[]}``` | 
+
 ## Commands
 
 | Option  | Description           | Example Output  | Extra
 | ------- | ------------------ | ------------------ | ------------------ 
-| get_json() | Use this to get the Server data as Json Output | https://api.altv.mp/server/ceaac3d1cc22761223beac38386f5ab2 | There is no "info" Object
 | get_server_stats() | Get the Stats of all alt:V Servers | {'serversCount': 111, 'playersCount': 665} | 
 | get_servers() | Get an Array of all alt:V Servers on the Masterlist | [ServerObject1, ServerObject2, ServerObject3] | Array with Server Object
 | get_server_by_id(id) | Get a specific Server using the id | ServerObject | Returned as Server Object
