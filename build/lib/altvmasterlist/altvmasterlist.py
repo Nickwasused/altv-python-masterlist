@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from urllib3 import PoolManager
-from json import loads
+import json
 
 pool = PoolManager()
 
@@ -71,40 +71,48 @@ class Server:
 
     def update(self):
         temp_server = get_server_by_id(self.id)
-        self.active = temp_server.active
-        self.id = self.id
-        self.maxPlayers = temp_server.maxPlayers
-        self.players = temp_server.players
-        self.name = temp_server.name
-        self.locked = temp_server.locked
-        self.host = temp_server.host
-        self.port = temp_server.port
-        self.gameMode = temp_server.gameMode
-        self.website = temp_server.website
-        self.language = temp_server.language
-        self.description = temp_server.description
-        self.verified = temp_server.verified
-        self.promoted = temp_server.promoted
-        self.useEarlyAuth = temp_server.useEarlyAuth
-        self.earlyAuthUrl = temp_server.earlyAuthUrl
-        self.useCdn = temp_server.useCdn
-        self.cdnUrl = temp_server.cdnUrl
-        self.useVoiceChat = temp_server.useVoiceChat
-        self.tags = temp_server.tags
-        self.bannerUrl = temp_server.bannerUrl
-        self.branch = temp_server.branch
-        self.build = temp_server.build
-        self.version = temp_server.version
-        self.lastUpdate = temp_server.lastUpdate
+        if (temp_server != False):
+            self.active = temp_server.active
+            self.id = self.id
+            self.maxPlayers = temp_server.maxPlayers
+            self.players = temp_server.players
+            self.name = temp_server.name
+            self.locked = temp_server.locked
+            self.host = temp_server.host
+            self.port = temp_server.port
+            self.gameMode = temp_server.gameMode
+            self.website = temp_server.website
+            self.language = temp_server.language
+            self.description = temp_server.description
+            self.verified = temp_server.verified
+            self.promoted = temp_server.promoted
+            self.useEarlyAuth = temp_server.useEarlyAuth
+            self.earlyAuthUrl = temp_server.earlyAuthUrl
+            self.useCdn = temp_server.useCdn
+            self.cdnUrl = temp_server.cdnUrl
+            self.useVoiceChat = temp_server.useVoiceChat
+            self.tags = temp_server.tags
+            self.bannerUrl = temp_server.bannerUrl
+            self.branch = temp_server.branch
+            self.build = temp_server.build
+            self.version = temp_server.version
+            self.lastUpdate = temp_server.lastUpdate
 
     def fetchconnectjson(self):
-        return request(self.cdnUrl + "/connect.json")
+        if (self.useCdn == False):
+            print("[alt:V] This Server is not using a CDN.")
+            return json.dumps({})
+        else:
+            return request(self.cdnUrl + "/connect.json")
 
 def request(url):
     request = pool.request('GET', url, preload_content=False, headers={
         "User-Agent": "AltPublicAgent"
     })
-    apijson = loads(request.data)
+    try:
+        apijson = json.loads(request.data)
+    except json.decoder.JSONDecodeError:
+        apijson = json.dumps({})
     request.release_conn()
     return apijson
 
@@ -114,6 +122,8 @@ def get_server_stats():
 def get_servers():
     return_servers = []
     servers = request(config.all_servers_link)
+    if (servers == "{}"):
+        return []
     for server in servers:
         temp_server = Server("unknown", server["id"], server["maxPlayers"], server["players"], server["name"], server["locked"], server["host"], server["port"], server["gameMode"], server["website"], server["language"], server["description"], server["verified"], server["promoted"], server["useEarlyAuth"], server["earlyAuthUrl"], server["useCdn"], server["cdnUrl"], server["useVoiceChat"], server["tags"], server["bannerUrl"], server["branch"], server["build"], server["version"], server["lastUpdate"])
         return_servers.append(temp_server)
@@ -122,11 +132,14 @@ def get_servers():
 
 def get_server_by_id(id):
     temp_data = request(config.server_link.format(id))
-    if (temp_data["active"] == False):
-        return_server = Server(temp_data["active"], id, 0, 0, "", False, "0.0.0.0", 7788, "", "", "", "", False, False, False, "", False, "", False, [], "", "release", -1, 0.0, 0)
+    if (temp_data == {}):
+        return False
     else:
-        return_server = Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
-    return return_server
+        if (temp_data["active"] == False):
+            return_server = Server(temp_data["active"], id, 0, 0, "", False, "0.0.0.0", 7788, "", "", "", "", False, False, False, "", False, "", False, [], "", "release", -1, 0.0, 0)
+        else:
+            return_server = Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
+        return return_server
 
 def get_server_by_id_avg(id, time):
     return request(config.server_average_link.format(id, time))
