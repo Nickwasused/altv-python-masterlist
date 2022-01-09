@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from urllib3 import PoolManager
+from urllib3 import PoolManager, exceptions
 import json
 
 pool = PoolManager()
@@ -106,14 +106,17 @@ class Server:
             return request(self.cdnUrl + "/connect.json")
 
 def request(url):
-    request = pool.request('GET', url, preload_content=False, headers={
-        "User-Agent": "AltPublicAgent"
-    })
     try:
-        apijson = json.loads(request.data)
-    except json.decoder.JSONDecodeError:
+        request = pool.request('GET', url, preload_content=False, headers={
+            "User-Agent": "AltPublicAgent"
+        })
+        try:
+            apijson = json.loads(request.data)
+        except json.decoder.JSONDecodeError:
+            apijson = json.dumps({})
+        request.release_conn()
+    except exceptions.MaxRetryError:
         apijson = json.dumps({})
-    request.release_conn()
     return apijson
 
 def get_server_stats():
