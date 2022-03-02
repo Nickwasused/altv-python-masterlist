@@ -1,4 +1,4 @@
-from altvmasterlist import altvmasterlist as altv
+import altvmasterlist as altv
 import time
 
 # get the server json

@@ -9,7 +9,7 @@ You can use this Package to interface with the alt:V master list API.
 # Examples
 
 ```
-from altvmasterlist import altvmasterlist as altv
+import altvmasterlist as altv
 
 # get the server json
 altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2").get_json()
