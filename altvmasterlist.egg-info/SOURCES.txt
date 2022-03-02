@@ -4,6 +4,8 @@ example.py
 publish.py
 requirements.txt
 setup.py
+altvmasterlist/__init__.py
+altvmasterlist/masterlist.py
 altvmasterlist.egg-info/PKG-INFO
 altvmasterlist.egg-info/SOURCES.txt
 altvmasterlist.egg-info/dependency_links.txt
