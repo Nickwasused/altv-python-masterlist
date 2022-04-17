@@ -97,10 +97,12 @@ class Server:
     def fetchconnectjson(self):
         from json import dumps
         if (self.useCdn == False):
-            print("[alt:V] This Server is not using a CDN.")
-            return dumps({})
+            raise Exception("[alt:V] This Server is not using a CDN.")
         else:
-            return request(self.cdnUrl + "/connect.json")
+            try:
+                return request(self.cdnUrl + "/connect.json")
+            except:
+                raise Exception("Couldn`t get server CDN")
 
 def request(url):
     from requests import get, exceptions
@@ -118,20 +120,18 @@ def request(url):
         raise Exception("Couldn`t make request") 
 
 def get_server_stats():
-    try {
+    try :
         return request(config.all_server_stats_link)
-    } except {
+    except:
         raise Exception("Couldn`t get Server stats") 
-    }
     
 
 def get_servers():
     return_servers = []
-    try {
+    try:
         servers = request(config.all_servers_link)
-    } except {
+    except:
         raise Exception("Couldn`t get Servers") 
-    }
     
     if (servers == "{}"):
         return []
@@ -142,11 +142,10 @@ def get_servers():
     return return_servers
 
 def get_server_by_id(id):
-    try {
+    try:
         temp_data = request(config.server_link.format(id))
-    } except {
+    except:
         raise Exception("Couldn`t get server data") 
-    }
     
     if (temp_data == {}):
         return False
@@ -158,19 +157,17 @@ def get_server_by_id(id):
         return return_server
 
 def get_server_by_id_avg(id, time):
-    try {
+    try:
         return request(config.server_average_link.format(id, time))
-    } except {
+    except:
         raise Exception("Couln`t get server data")
-    }
     
 
 def get_server_by_id_avg_result(id, time):
-    try {
+    try:
         response = get_server_by_id_avg(id, time)
-    } except {
+    except:
         raise Exception("Couln`t get server data")
-    }
     players_all = 0
     for entry in response:
         players_all = players_all + entry["c"]
@@ -178,12 +175,10 @@ def get_server_by_id_avg_result(id, time):
     return round(result)
 
 def get_server_by_id_max(id, time):
-    try {
+    try:
         return request(config.server_max_link.format(id, time))
-    } except {
+    except:
         raise Exception("Couln`t get server data")
-    }
-    
 
 def validate_id(id):
     from re import compile
