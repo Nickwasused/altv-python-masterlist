@@ -10,3 +10,6 @@ altvmasterlist.egg-info/PKG-INFO
 altvmasterlist.egg-info/SOURCES.txt
 altvmasterlist.egg-info/dependency_links.txt
 altvmasterlist.egg-info/top_level.txt
+altvmasterlist/__pycache__/__init__.cpython-39.pyc
+altvmasterlist/__pycache__/masterlist.cpython-39.pyc
+dist/altvmasterlist-1.7-py3-none-any.whl

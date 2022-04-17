@@ -110,20 +110,29 @@ def request(url):
             "User-Agent": "AltPublicAgent"
         })
         try:
-            apijson = loads(request.content.decode("utf-8"))
+            return loads(request.content.decode("utf-8"))
         except decoder.JSONDecodeError:
-            apijson = dumps({})
+            raise Exception("JSON Couldn`t be parsed") 
         del request
     except exceptions.RetryError():
-        apijson = dumps({})
-    return apijson
+        raise Exception("Couldn`t make request") 
 
 def get_server_stats():
-    return request(config.all_server_stats_link)
+    try {
+        return request(config.all_server_stats_link)
+    } except {
+        raise Exception("Couldn`t get Server stats") 
+    }
+    
 
 def get_servers():
     return_servers = []
-    servers = request(config.all_servers_link)
+    try {
+        servers = request(config.all_servers_link)
+    } except {
+        raise Exception("Couldn`t get Servers") 
+    }
+    
     if (servers == "{}"):
         return []
     for server in servers:
@@ -133,7 +142,12 @@ def get_servers():
     return return_servers
 
 def get_server_by_id(id):
-    temp_data = request(config.server_link.format(id))
+    try {
+        temp_data = request(config.server_link.format(id))
+    } except {
+        raise Exception("Couldn`t get server data") 
+    }
+    
     if (temp_data == {}):
         return False
     else:
@@ -144,10 +158,19 @@ def get_server_by_id(id):
         return return_server
 
 def get_server_by_id_avg(id, time):
-    return request(config.server_average_link.format(id, time))
+    try {
+        return request(config.server_average_link.format(id, time))
+    } except {
+        raise Exception("Couln`t get server data")
+    }
+    
 
 def get_server_by_id_avg_result(id, time):
-    response = get_server_by_id_avg(id, time)
+    try {
+        response = get_server_by_id_avg(id, time)
+    } except {
+        raise Exception("Couln`t get server data")
+    }
     players_all = 0
     for entry in response:
         players_all = players_all + entry["c"]
@@ -155,7 +178,12 @@ def get_server_by_id_avg_result(id, time):
     return round(result)
 
 def get_server_by_id_max(id, time):
-    return request(config.server_max_link.format(id, time))
+    try {
+        return request(config.server_max_link.format(id, time))
+    } except {
+        raise Exception("Couln`t get server data")
+    }
+    
 
 def validate_id(id):
     from re import compile
