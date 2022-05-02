@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='altvmasterlist',
-    version='1.8.1',
+    version='1.8.2',
     packages=["altvmasterlist"],
     author="Nickwasused",
     author_email="nickwasused.social@protonmail.com",
