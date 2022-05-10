@@ -7,3 +7,5 @@ Altvmasterlist is a package that interfaces with the [alt:V](https://altv.mp) [M
 ### [General](/general.md)
 ### [Server](/server.md)
 ### [Functions](/functions.md)
+
+### [Examples](./examples.md)
