@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="altvmasterlist",
-    version="2.0.0",
+    version="2.0.1",
     author="Nickwasused",
     author_email="contact.nickwasused.fa6c8@simplelogin.co",
     description="A package to use the alt:V Masterlist api",
@@ -14,6 +14,7 @@ setuptools.setup(
     url="https://github.com/Nickwasused/altv-python-masterlist",
     project_urls={
         "Bug Tracker": "https://github.com/Nickwasused/altv-python-masterlist/issues",
+        "Documentation" = "https://nickwasused.github.io/altv-python-masterlist/"
     },
     classifiers=[
         "Programming Language :: Python :: 3",
