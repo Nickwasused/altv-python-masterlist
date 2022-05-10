@@ -28,6 +28,10 @@ This should output something like 200
 
 # Usage
 
+## General
+
+If a function is failing, it is going to return None.
+
 ## Server Object
 
 | Parameter | Type
