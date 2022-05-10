@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/Nickwasused/altv-python-masterlist",
     project_urls={
         "Bug Tracker": "https://github.com/Nickwasused/altv-python-masterlist/issues",
-        "Documentation" = "https://nickwasused.github.io/altv-python-masterlist/"
+        "Documentation": "https://nickwasused.github.io/altv-python-masterlist/"
     },
     classifiers=[
         "Programming Language :: Python :: 3",
