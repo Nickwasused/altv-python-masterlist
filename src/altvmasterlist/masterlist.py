@@ -77,6 +77,9 @@ class Server:
         temp_server = get_server_by_id(self.id)
         # check if the function get_server_by_id() returned something
         if (temp_server == None):
+            # set the server to be offline and the players to 0, because the server is offline or does not exist
+            self.active = False
+            self.players = 0
             return 
 
         # check if the server is online
