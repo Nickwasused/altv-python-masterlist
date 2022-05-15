@@ -172,19 +172,29 @@ def get_servers():
     return return_servers
 
 # get a single server by their server id
-def get_server_by_id(id):
+def get_server_by_id(id, always_create = False):
     try:
+        
         temp_data = request(config.server_link.format(id))
     except:
-        return None
+        if (always_create == False):
+            return None
+        else:
+            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
     
     if (temp_data == {}):
         # the server just returned nothing: that should not happen!
-        return None
+        if (always_create == False):
+            return None
+        else:
+            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
     else:
         if (temp_data["active"] == False):
             # The server is offline or does not exist
-            return None
+            if (always_create == False):
+                return None
+            else:
+                return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
         else:
             # Create a Server object with the data and return that
             return_server = Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
