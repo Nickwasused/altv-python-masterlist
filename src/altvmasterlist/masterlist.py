@@ -83,7 +83,7 @@ class Server:
             return 
 
         # check if the server is online
-        if (temp_server != False):
+        if (temp_server.active != False):
             # these values are only avalible when the server is online
             self.active = temp_server.active
             self.maxPlayers = temp_server.maxPlayers
@@ -137,6 +137,8 @@ def request(url):
         request = get(url, headers={
             "User-Agent": "AltPublicAgent"
         })
+        if (request.status_code != 200):
+            return None
         try:
             return loads(request.content.decode("utf-8"))
         except decoder.JSONDecodeError:
@@ -148,8 +150,9 @@ def request(url):
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
 def get_server_stats():
-    try :
-        return request(config.all_server_stats_link)
+    try:
+        data = request(config.all_server_stats_link)
+        return data
     except:
         return None
     
@@ -161,7 +164,7 @@ def get_servers():
     except:
         return None
     
-    if (servers == "{}"):
+    if (servers == None or servers == "{}"):
         # if there are no servers return None
         return None
     for server in servers:
@@ -172,29 +175,18 @@ def get_servers():
     return return_servers
 
 # get a single server by their server id
-def get_server_by_id(id, always_create = False):
+def get_server_by_id(id):
     try:
-        
         temp_data = request(config.server_link.format(id))
     except:
-        if (always_create == False):
-            return None
-        else:
-            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
-    
-    if (temp_data == {}):
+        return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+            
+    if (temp_data == {} or temp_data == None):
         # the server just returned nothing: that should not happen!
-        if (always_create == False):
-            return None
-        else:
-            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+        return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
     else:
         if (temp_data["active"] == False):
-            # The server is offline or does not exist
-            if (always_create == False):
-                return None
-            else:
-                return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
         else:
             # Create a Server object with the data and return that
             return_server = Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
@@ -216,6 +208,10 @@ def get_server_by_id_avg_result(id, time):
         response = get_server_by_id_avg(id, time)
     except:
         return None
+
+    if (response == None):
+        return None
+
     players_all = 0
     for entry in response:
         players_all = players_all + entry["c"]
