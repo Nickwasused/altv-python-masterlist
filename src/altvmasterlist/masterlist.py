@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from json import dumps, loads, decoder
+from urllib.request import urlopen
 from re import compile
 import logging
 import ssl
