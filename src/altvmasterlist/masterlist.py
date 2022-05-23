@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+from json import dumps, loads, decoder
+from re import compile
+import logging
+import ssl
+
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 
 # This is the config object for this package
@@ -11,6 +16,8 @@ class config:
     server_link = f"{base_link}/server" + "/{}"
     server_average_link = f"{base_link}/avg" + "/{}/{}"
     server_max_link = f"{base_link}/max" + "/{}/{}"
+
+logging.debug(f'starting with base link: {config.base_link}')
 
 # This is the server object 
 class Server:
@@ -117,7 +124,6 @@ class Server:
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
     def fetchconnectjson(self):
-        from json import dumps
         if (self.useCdn == False):
             # This Server is not using a CDN.
             return None
@@ -130,22 +136,14 @@ class Server:
                 return None
 
 def request(url):
-    from requests import get, exceptions
-    from json import dumps, loads, decoder
-    try:
-        # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with a simple User-Agent check e.g. https://luckyv.de does that
-        request = get(url, headers={
-            "User-Agent": "AltPublicAgent"
-        })
-        if (request.status_code != 200):
+    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with a simple User-Agent check e.g. https://luckyv.de does that
+    with urlopen(url, data= {
+        "User-Agent": "AltPublicAgent"
+    }, context = ssl.create_default_context()) as response:
+        if (response.status != 200):
             return None
-        try:
-            return loads(request.content.decode("utf-8"))
-        except decoder.JSONDecodeError:
-            return None
-        del request
-    except exceptions.RetryError():
-        return None
+            
+        return loads(response.read().decode("utf-8"))
 
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
@@ -179,18 +177,17 @@ def get_server_by_id(id):
     try:
         temp_data = request(config.server_link.format(id))
     except:
-        return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
             
     if (temp_data == {} or temp_data == None):
         # the server just returned nothing: that should not happen!
-        return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
     else:
         if (temp_data["active"] == False):
-            return_server = Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+            return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
         else:
             # Create a Server object with the data and return that
-            return_server = Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
-        return return_server
+            return Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
 
 # get the average player count with a specified time range
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
@@ -229,7 +226,6 @@ def get_server_by_id_max(id, time):
 
 # validate agiven alt:V server id
 def validate_id(id):
-    from re import compile
     regexraw = r"^[0-9a-zA-Z]{32}$"
     regex = compile(regexraw)
     result = regex.match(id)
