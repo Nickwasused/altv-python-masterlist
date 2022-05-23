@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+from urllib.request import urlopen, Request
 from json import dumps, loads, decoder
-from urllib.request import urlopen
 from re import compile
 import logging
 import ssl
@@ -138,13 +138,19 @@ class Server:
 
 def request(url):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with a simple User-Agent check e.g. https://luckyv.de does that
-    with urlopen(url, data= {
-        "User-Agent": "AltPublicAgent"
-    }, context = ssl.create_default_context()) as response:
+    request = Request(
+        url, 
+        data=None, 
+        headers={
+            'User-Agent': 'AltPublicAgent'
+        }
+    )
+
+    with urlopen(request, context = ssl.create_default_context()) as response:
         if (response.status != 200):
             return None
-            
-        return loads(response.read().decode("utf-8"))
+
+        return loads(response.read().decode('utf-8'))
 
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
