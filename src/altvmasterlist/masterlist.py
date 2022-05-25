@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
 from urllib.request import urlopen, Request
-from json import dumps, loads, decoder
+from json import loads
 from re import compile
 import logging
+import urllib
 import ssl
+import sys
+
 
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 
 # This is the config object for this package
 # Here can you configure stuff like the api endpoint or the url format
-class config:
+class Config:
     base_link = "https://api.altv.mp"
     all_server_stats_link = f"{base_link}/servers"
     all_servers_link = f"{base_link}/servers/list"
@@ -18,12 +21,16 @@ class config:
     server_average_link = f"{base_link}/avg" + "/{}/{}"
     server_max_link = f"{base_link}/max" + "/{}/{}"
 
-logging.debug(f'starting with base link: {config.base_link}')
 
-# This is the server object 
+logging.debug(f'starting with base link: {Config.base_link}')
+
+
+# This is the server object
 class Server:
-    # initialize the object whith all values that are avalible in the alt:V masterlist API
-    def __init__(self, active, id, maxPlayers, players, name, locked, host, port, gameMode, website, language, description, verified, promoted, useEarlyAuth, earlyAuthUrl, useCdn, cdnUrl, useVoiceChat, tags, bannerUrl, branch, build, version, lastUpdate):
+    # initialize the object with all values that are available in the alt:V masterlist API
+    def __init__(self, active, id, maxPlayers, players, name, locked, host, port, gameMode, website, language,
+                 description, verified, promoted, useEarlyAuth, earlyAuthUrl, useCdn, cdnUrl, useVoiceChat, tags,
+                 bannerUrl, branch, build, version, lastUpdate):
         self.active = active
         self.id = id
         self.maxPlayers = maxPlayers
@@ -84,15 +91,15 @@ class Server:
     def update(self):
         temp_server = get_server_by_id(self.id)
         # check if the function get_server_by_id() returned something
-        if (temp_server == None):
+        if temp_server is None:
             # set the server to be offline and the players to 0, because the server is offline or does not exist
             self.active = False
             self.players = 0
-            return 
+            return
 
-        # check if the server is online
-        if (temp_server.active != False):
-            # these values are only avalible when the server is online
+            # check if the server is online
+        if temp_server.active:
+            # these values are only available when the server is online
             self.active = temp_server.active
             self.maxPlayers = temp_server.maxPlayers
             self.players = temp_server.players
@@ -124,122 +131,136 @@ class Server:
 
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
-    def fetchconnectjson(self):
-        if (self.useCdn == False):
+    def fetch_connect_json(self):
+        if not self.useCdn:
             # This Server is not using a CDN.
             return None
         else:
-            try:
-                # lets try to get the connect json
-                return request(self.cdnUrl + "/connect.json")
-            except:
+            # let`s try to get the connect json
+            cdn_request = request(self.cdnUrl + "/connect.json")
+            if cdn_request is None:
                 # maybe the CDN is offline
                 return None
+            else:
+                return cdn_request
+
 
 def request(url):
-    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with a simple User-Agent check e.g. https://luckyv.de does that
-    request = Request(
-        url, 
-        data=None, 
+    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
+    # a simple User-Agent check e.g. https://luckyv.de does that
+    web_request = Request(
+        url,
+        data=None,
         headers={
             'User-Agent': 'AltPublicAgent'
         }
     )
 
-    with urlopen(request, context = ssl.create_default_context()) as response:
-        if (response.status != 200):
-            return None
+    try:
+        with urlopen(web_request, context=ssl.create_default_context()) as response:
+            if response.status is not 200:
+                return None
+            else:
+                return loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError:
+        return None
 
-        return loads(response.read().decode('utf-8'))
 
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
 def get_server_stats():
-    try:
-        data = request(config.all_server_stats_link)
-        return data
-    except:
+    data = request(Config.all_server_stats_link)
+    if data is None:
         return None
-    
+    else:
+        return data
+
+
 # Get all Servers that are online as Server object
 def get_servers():
     return_servers = []
-    try:
-        servers = request(config.all_servers_link)
-    except:
+    servers = request(Config.all_servers_link)
+    if servers is None or servers == "{}":
         return None
-    
-    if (servers == None or servers == "{}"):
-        # if there are no servers return None
-        return None
-    for server in servers:
-        # Now change every JSON response to a server object that we can e.g. update ourself
-        temp_server = Server("unknown", server["id"], server["maxPlayers"], server["players"], server["name"], server["locked"], server["host"], server["port"], server["gameMode"], server["website"], server["language"], server["description"], server["verified"], server["promoted"], server["useEarlyAuth"], server["earlyAuthUrl"], server["useCdn"], server["cdnUrl"], server["useVoiceChat"], server["tags"], server["bannerUrl"], server["branch"], server["build"], server["version"], server["lastUpdate"])
-        return_servers.append(temp_server)
-        
-    return return_servers
+    else:
+        for server in servers:
+            # Now change every JSON response to a server object that we can e.g. update ourself
+            temp_server = Server("unknown", server["id"], server["maxPlayers"], server["players"], server["name"],
+                                 server["locked"], server["host"], server["port"], server["gameMode"], server["website"],
+                                 server["language"], server["description"], server["verified"], server["promoted"],
+                                 server["useEarlyAuth"], server["earlyAuthUrl"], server["useCdn"], server["cdnUrl"],
+                                 server["useVoiceChat"], server["tags"], server["bannerUrl"], server["branch"],
+                                 server["build"], server["version"], server["lastUpdate"])
+            return_servers.append(temp_server)
+
+        return return_servers
+
 
 # get a single server by their server id
 def get_server_by_id(id):
-    try:
-        temp_data = request(config.server_link.format(id))
-    except:
-        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
-            
-    if (temp_data == {} or temp_data == None):
-        # the server just returned nothing: that should not happen!
-        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
+    temp_data = request(Config.server_link.format(id))
+    if temp_data is None or temp_data == {} or not temp_data["active"]:
+        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "",
+                      "", "", 0, 0, "")
     else:
-        if (temp_data["active"] == False):
-            return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "", "", "", 0, 0, "")
-        else:
-            # Create a Server object with the data and return that
-            return Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"], temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"], temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"], temp_data["info"]["language"], temp_data["info"]["description"], temp_data["info"]["verified"], temp_data["info"]["promoted"], temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"], temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"], temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"], temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
+        # Create a Server object with the data and return that
+        return Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"],
+                      temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"],
+                      temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"],
+                      temp_data["info"]["language"], temp_data["info"]["description"],
+                      temp_data["info"]["verified"], temp_data["info"]["promoted"],
+                      temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"],
+                      temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"],
+                      temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"],
+                      temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
+
 
 # get the average player count with a specified time range
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
 def get_server_by_id_avg(id, time):
-    try:
-        return request(config.server_average_link.format(id, time))
-    except:
+    avg_data = request(Config.server_average_link.format(id, time))
+    if avg_data is None:
         return None
-    
+    else:
+        return avg_data
+
+
 # works like get_server_by_id_avg() but returns a integer/number
 # time: 1d, 7d, 31d
 def get_server_by_id_avg_result(id, time):
-    try:
-        response = get_server_by_id_avg(id, time)
-    except:
+    avg_result_response = get_server_by_id_avg(id, time)
+    if avg_result_response is None:
         return None
+    else:
+        players_all = 0
+        for entry in avg_result_response:
+            players_all = players_all + entry["c"]
+        result = players_all / len(avg_result_response)
+        return round(result)
 
-    if (response == None):
-        return None
-
-    players_all = 0
-    for entry in response:
-        players_all = players_all + entry["c"]
-    result = players_all / len(response)
-    return round(result)
 
 # get the maximum player count with a specified time range
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
 def get_server_by_id_max(id, time):
-    try:
-        return request(config.server_max_link.format(id, time))
-    except:
+    max_data = request(Config.server_max_link.format(id, time))
+    if max_data is None:
         return None
+    else:
+        return max_data
 
-# validate agiven alt:V server id
+
+# validate a given alt:V server id
 def validate_id(id):
-    regexraw = r"^[0-9a-zA-Z]{32}$"
-    regex = compile(regexraw)
+    regex = compile(r"^[\da-zA-Z]{32}$")
     result = regex.match(id)
-    if (result != None):
+    if result is not None:
         return True
     else:
         return False
 
+
 if __name__ == "__main__":
-    exit()
+    print("This is a Module!")
+    sys.exit()

@@ -5,6 +5,12 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)
 
+# Valid id
+print(altv.validate_id("bb7228a0d366fc575a5682a99359424f"))
+
+# Invalid id
+print(altv.validate_id("abcdefghijklmnop123"))
+
 # get the server json
 print(altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f").get_json())
 
@@ -16,7 +22,7 @@ altv.get_server_stats()
 
 # get the connect.json
 server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
-print(server.fetchconnectjson())
+print(server.fetch_connect_json())
 
 # get server with update
 server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
