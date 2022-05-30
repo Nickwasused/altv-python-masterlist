@@ -38,5 +38,5 @@ You can call the following functions on the server object:
 | Function | Description
 | - | -
 | get_json() | which is going to return the complete data (active to lastUpdate) as a JSON object.
-| update() | which is going to fetch the API data from alt:V and replace it in the Server object
+| update(always_return) | which is going to fetch the API data from alt:V and replace it in the Server object. always_return = always update the server object: E.g. if the altv:V does not answer then set the server to offline and 0 players
 | fetch_connect_json() | which is going to fetch the "connect.json" from the CDN of the specified server it it has a CDN

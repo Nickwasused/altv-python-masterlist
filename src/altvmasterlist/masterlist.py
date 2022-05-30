@@ -88,16 +88,17 @@ class Server:
         }
 
     # fetch the server data and replace it
-    def update(self):
-        temp_server = get_server_by_id(self.id)
-        # check if the function get_server_by_id() returned something
-        if temp_server is None:
-            # set the server to be offline and the players to 0, because the server is offline or does not exist
+    def update(self, always_return=True):
+        temp_server = get_server_by_id(self.id, always_return)
+
+        # check if the server is returned
+        if temp_server is None and always_return:
+            logging.warning(f"the alt:V API returned nothing.")
             self.active = False
             self.players = 0
             return
 
-            # check if the server is online
+        # check if the server is online
         if temp_server.active:
             # these values are only available when the server is online
             self.active = temp_server.active
@@ -159,6 +160,11 @@ def request(url):
     try:
         with urlopen(web_request, context=ssl.create_default_context()) as response:
             if response.status is not 200:
+                try:
+                    logging.info(response.read().decode('utf-8'))
+                except:
+                    pass
+                logging.warning(f"the alt:V API returned nothing.")
                 return None
             else:
                 return loads(response.read().decode('utf-8'))
@@ -184,9 +190,10 @@ def get_servers():
         return None
     else:
         for server in servers:
-            # Now change every JSON response to a server object that we can e.g. update ourself
+            # Now change every JSON response to a server object that we can e.g. update it when we want
             temp_server = Server("unknown", server["id"], server["maxPlayers"], server["players"], server["name"],
-                                 server["locked"], server["host"], server["port"], server["gameMode"], server["website"],
+                                 server["locked"], server["host"], server["port"], server["gameMode"],
+                                 server["website"],
                                  server["language"], server["description"], server["verified"], server["promoted"],
                                  server["useEarlyAuth"], server["earlyAuthUrl"], server["useCdn"], server["cdnUrl"],
                                  server["useVoiceChat"], server["tags"], server["bannerUrl"], server["branch"],
@@ -197,14 +204,18 @@ def get_servers():
 
 
 # get a single server by their server id
-def get_server_by_id(id):
-    temp_data = request(Config.server_link.format(id))
+def get_server_by_id(server_id, always_return=True):
+    temp_data = request(Config.server_link.format(server_id))
     if temp_data is None or temp_data == {} or not temp_data["active"]:
-        return Server(False, id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "", False, "",
-                      "", "", 0, 0, "")
+        if always_return:
+            return Server(False, server_id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "",
+                          False, "",
+                          "", "", 0, 0, "")
+        else:
+            return None
     else:
         # Create a Server object with the data and return that
-        return Server(temp_data["active"], id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"],
+        return Server(temp_data["active"], server_id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"],
                       temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"],
                       temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"],
                       temp_data["info"]["language"], temp_data["info"]["description"],
