@@ -159,10 +159,10 @@ def request(url):
 
     try:
         with urlopen(web_request, context=ssl.create_default_context()) as response:
-            if response.status is not 200:
+            if response.status != 200:
                 try:
                     logging.info(response.read().decode('utf-8'))
-                except:
+                except Exception:
                     pass
                 logging.warning(f"the alt:V API returned nothing.")
                 return None
@@ -229,8 +229,8 @@ def get_server_by_id(server_id, always_return=True):
 # get the average player count with a specified time range
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
-def get_server_by_id_avg(id, time):
-    avg_data = request(Config.server_average_link.format(id, time))
+def get_server_by_id_avg(server_id, time):
+    avg_data = request(Config.server_average_link.format(server_id, time))
     if avg_data is None:
         return None
     else:
@@ -239,8 +239,8 @@ def get_server_by_id_avg(id, time):
 
 # works like get_server_by_id_avg() but returns a integer/number
 # time: 1d, 7d, 31d
-def get_server_by_id_avg_result(id, time):
-    avg_result_response = get_server_by_id_avg(id, time)
+def get_server_by_id_avg_result(server_id, time):
+    avg_result_response = get_server_by_id_avg(server_id, time)
     if avg_result_response is None:
         return None
     else:
@@ -254,8 +254,8 @@ def get_server_by_id_avg_result(id, time):
 # get the maximum player count with a specified time range
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
-def get_server_by_id_max(id, time):
-    max_data = request(Config.server_max_link.format(id, time))
+def get_server_by_id_max(server_id, time):
+    max_data = request(Config.server_max_link.format(server_id, time))
     if max_data is None:
         return None
     else:
@@ -263,9 +263,9 @@ def get_server_by_id_max(id, time):
 
 
 # validate a given alt:V server id
-def validate_id(id):
+def validate_id(server_id):
     regex = compile(r"^[\da-zA-Z]{32}$")
-    result = regex.match(id)
+    result = regex.match(server_id)
     if result is not None:
         return True
     else:
