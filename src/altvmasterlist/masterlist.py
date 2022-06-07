@@ -5,8 +5,12 @@ from json import loads
 from re import compile
 import logging
 import urllib
+import brotli
 import ssl
 import sys
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(logging.INFO)
 
 
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
@@ -88,11 +92,11 @@ class Server:
         }
 
     # fetch the server data and replace it
-    def update(self, always_return=True):
-        temp_server = get_server_by_id(self.id, always_return)
+    def update(self):
+        temp_server = get_server_by_id(self.id)
 
         # check if the server is returned
-        if temp_server is None and always_return:
+        if temp_server is None:
             logging.warning(f"the alt:V API returned nothing.")
             self.active = False
             self.players = 0
@@ -147,28 +151,34 @@ class Server:
 
 
 def request(url):
+    ssl_context = ssl.create_default_context()
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
+    req_headers = {
+        'User-Agent': 'AltPublicAgent',
+        'Accept-Encoding': 'br',
+        'content-type': 'application/json; charset=utf-8'
+    }
+
     web_request = Request(
         url,
-        data=None,
-        headers={
-            'User-Agent': 'AltPublicAgent'
-        }
+        headers=req_headers
     )
 
     try:
-        with urlopen(web_request, context=ssl.create_default_context()) as response:
+        with urlopen(web_request, context=ssl_context) as response:
             if response.status != 200:
-                try:
-                    logging.info(response.read().decode('utf-8'))
-                except Exception:
-                    pass
-                logging.warning(f"the alt:V API returned nothing.")
+                logging.warning(f"the request returned nothing.")
                 return None
             else:
-                return loads(response.read().decode('utf-8'))
-    except urllib.error.HTTPError:
+                if response.headers["Content-Encoding"] == "br":
+                    response_encoded = response.read()
+                    return loads(brotli.decompress(response_encoded).decode("utf-8", errors='ignore'))
+                else:
+                    response_text = response.read().decode("utf-8", errors='ignore')
+                    return loads(response_text)
+    except urllib.error.HTTPError as e:
+        logging.error(e)
         return None
 
 
@@ -204,15 +214,16 @@ def get_servers():
 
 
 # get a single server by their server id
-def get_server_by_id(server_id, always_return=True):
+def get_server_by_id(server_id):
     temp_data = request(Config.server_link.format(server_id))
-    if temp_data is None or temp_data == {} or not temp_data["active"]:
-        if always_return:
-            return Server(False, server_id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "",
-                          False, "",
-                          "", "", 0, 0, "")
-        else:
-            return None
+    if temp_data is None or temp_data == {}:
+        # the api returned no data
+        return None
+    elif not temp_data["active"]:
+        # the server is offline
+        return Server(False, server_id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "",
+                      False, "",
+                      "", "", 0, 0, "")
     else:
         # Create a Server object with the data and return that
         return Server(temp_data["active"], server_id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"],
