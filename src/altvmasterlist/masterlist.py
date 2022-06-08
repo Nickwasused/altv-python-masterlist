@@ -97,9 +97,8 @@ class Server:
 
         # check if the server is returned
         if temp_server is None:
+            # don`t update the server object because the API returned invalid, broken, or no data
             logging.warning(f"the alt:V API returned nothing.")
-            self.active = False
-            self.players = 0
             return
 
         # check if the server is online
