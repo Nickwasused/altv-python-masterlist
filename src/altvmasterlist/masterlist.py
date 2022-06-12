@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from urllib.request import urlopen, Request
 from json import loads
 from re import compile
+import requests
 import logging
 import urllib
 import brotli
@@ -150,7 +150,6 @@ class Server:
 
 
 def request(url):
-    ssl_context = ssl.create_default_context()
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
     req_headers = {
@@ -159,24 +158,19 @@ def request(url):
         'content-type': 'application/json; charset=utf-8'
     }
 
-    web_request = Request(
-        url,
-        headers=req_headers
-    )
-
     try:
-        with urlopen(web_request, context=ssl_context) as response:
-            if response.status != 200:
-                logging.warning(f"the request returned nothing.")
-                return None
+        api_data = requests.get(url, headers=req_headers, timeout=30)
+        if api_data.status_code != 200:
+            logging.warning(f"the request returned nothing.")
+            return None
+        else:
+            if api_data.headers["Content-Encoding"] == "br":
+                response_encoded = api_data.content
+                return loads(response_encoded.decode("utf-8", errors='ignore'))
             else:
-                if response.headers["Content-Encoding"] == "br":
-                    response_encoded = response.read()
-                    return loads(brotli.decompress(response_encoded).decode("utf-8", errors='ignore'))
-                else:
-                    response_text = response.read().decode("utf-8", errors='ignore')
-                    return loads(response_text)
-    except urllib.error.HTTPError as e:
+                response_text = api_data.text.decode("utf-8", errors='ignore')
+                return loads(response_text)
+    except Exception as e:
         logging.error(e)
         return None
 

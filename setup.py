@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="altvmasterlist",
-    version="2.1.5",
+    version="2.1.6",
     author="Nickwasused",
     author_email="contact.nickwasused.fa6c8@simplelogin.co",
     description="A package to use the alt:V Masterlist api",
@@ -24,6 +24,7 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=[
           'brotli',
+          'requests'
     ],
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.7",
