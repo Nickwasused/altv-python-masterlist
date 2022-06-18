@@ -4,9 +4,6 @@ from json import loads
 from re import compile
 import requests
 import logging
-import urllib
-import brotli
-import ssl
 import sys
 
 logging.basicConfig(level=logging.INFO)
@@ -164,12 +161,7 @@ def request(url):
             logging.warning(f"the request returned nothing.")
             return None
         else:
-            if api_data.headers["Content-Encoding"] == "br":
-                response_encoded = api_data.content
-                return loads(response_encoded.decode("utf-8", errors='ignore'))
-            else:
-                response_text = api_data.text.decode("utf-8", errors='ignore')
-                return loads(response_text)
+            return loads(api_data.content.decode("utf-8", errors='ignore'))
     except Exception as e:
         logging.error(e)
         return None
