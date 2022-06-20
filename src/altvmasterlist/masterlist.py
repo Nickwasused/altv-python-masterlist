@@ -151,7 +151,7 @@ def request(url):
     # a simple User-Agent check e.g. https://luckyv.de does that
     req_headers = {
         'User-Agent': 'AltPublicAgent',
-        'Accept-Encoding': 'br',
+        'Accept-Encoding': 'gzip, deflate',
         'content-type': 'application/json; charset=utf-8'
     }
 
