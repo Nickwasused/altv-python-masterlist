@@ -39,4 +39,4 @@ You can call the following functions on the server object:
 | - | -
 | get_json() | which is going to return the complete data (active to lastUpdate) as a JSON object.
 | update() | which is going to fetch the API data from alt:V and replace it in the Server object. 
-| fetch_connect_json() | which is going to fetch the "connect.json" from the CDN of the specified server it it has a CDN
+| fetch_connect_json() | which is going to fetch the "connect.json" from the CDN of the specified server if it has a CDN otherwise we are trying to fetch it directly from the alt:V http server
