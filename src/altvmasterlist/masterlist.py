@@ -4,6 +4,7 @@ from json import loads
 from re import compile
 import requests
 import logging
+import secrets
 import sys
 
 logging.basicConfig(level=logging.INFO)
@@ -133,12 +134,17 @@ class Server:
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
     def fetch_connect_json(self):
-        if not self.useCdn:
+        if not self.useCdn and not self.locked and self.active:
             # This Server is not using a CDN.
-            return None
+            cdn_request = request(f"http://{self.host}:{self.port}/connect.json", True, self)
+            if cdn_request is None:
+                # possible server error or blocked by alt:V
+                return None
+            else:
+                return cdn_request
         else:
             # let`s try to get the connect json
-            cdn_request = request(self.cdnUrl + "/connect.json")
+            cdn_request = request(f"{self.cdnUrl}/connect.json")
             if cdn_request is None:
                 # maybe the CDN is offline
                 return None
@@ -146,17 +152,33 @@ class Server:
                 return cdn_request
 
 
-def request(url):
+def request(url, cdn=False, server=[]):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
-    req_headers = {
-        'User-Agent': 'AltPublicAgent',
-        'Accept-Encoding': 'gzip, deflate',
-        'content-type': 'application/json; charset=utf-8'
-    }
+    print(url)
+    if "http://" in url and cdn:
+        req_headers = {
+            "host": "",
+            'user-agent': 'AltPublicAgent',
+            "accept": '*/*',
+            'alt-debug': 'false',
+            'alt-password': '17241709254077376921',
+            'alt-branch': server.branch,
+            'alt-version': server.version,
+            'alt-player-name': secrets.token_urlsafe(10),
+            'alt-social-id': secrets.token_hex(9),
+            'alt-hardware-id2': secrets.token_hex(19),
+            'alt-hardware-id': secrets.token_hex(19)
+        }
+    else:
+        req_headers = {
+            'User-Agent': 'AltPublicAgent',
+            'Accept-Encoding': 'gzip, deflate',
+            'content-type': 'application/json; charset=utf-8'
+        }
 
     try:
-        api_data = requests.get(url, headers=req_headers, timeout=30)
+        api_data = requests.get(url, headers=req_headers, timeout=60)
         if api_data.status_code != 200:
             logging.warning(f"the request returned nothing.")
             return None
