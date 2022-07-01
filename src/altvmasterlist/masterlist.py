@@ -155,7 +155,6 @@ class Server:
 def request(url, cdn=False, server=[]):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
-    print(url)
     if "http://" in url and cdn:
         req_headers = {
             "host": "",
@@ -173,7 +172,6 @@ def request(url, cdn=False, server=[]):
     else:
         req_headers = {
             'User-Agent': 'AltPublicAgent',
-            'Accept-Encoding': 'gzip, deflate',
             'content-type': 'application/json; charset=utf-8'
         }
 
