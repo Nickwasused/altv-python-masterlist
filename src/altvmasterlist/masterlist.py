@@ -152,6 +152,31 @@ class Server:
                 return cdn_request
 
 
+    # get the "Direct Connect Protocol" url
+    # e.g. altv://connect/127.0.0.1:7788?password=xyz
+    # https://docs.altv.mp/articles/connectprotocol.html
+    # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
+    # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
+    def get_dtc_url(self, password=None):
+        dtc_url = ""
+        if self.useCdn:
+            if not "http" in self.cdnUrl:
+                dtc_url = f"altv://connect/http://{self.cdnUrl}"
+            else:
+                dtc_url = f"altv://connect/{self.cdnUrl}"
+        else:
+            dtc_url = f"altv://connect/{self.host}:{self.port}"
+
+        if self.locked and password is None:
+            logging.warn("Your server is password protected but you did not supply a password for the Direct Connect Url.")
+
+        if password is not None:
+            dtc_url += f"?password={password}"
+
+        return dtc_url
+
+
+
 def request(url, cdn=False, server=[]):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
