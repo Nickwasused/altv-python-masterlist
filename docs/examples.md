@@ -65,3 +65,30 @@ servers[0].update()
 for server in servers:
     print(server.players)
 ```
+
+## Get the Direct Connect Url of a Server
+
+```
+import altvmasterlist as altv
+
+# get the server dtc url with a password
+server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+print(server.get_dtc_url(password="test"))
+
+# get the server dtc url without a password
+server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+print(server.get_dtc_url())
+```
+
+## Get the Permissions of a Server
+
+```
+import altvmasterlist as altv
+
+server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
+permissions = server.get_permissions()
+print(permissions)
+
+if permissions["required"]["Screen Capture"]:
+    print("The server requires the screen capture permission")
+```

@@ -33,3 +33,7 @@ print(server.lastUpdate)
 time.sleep(120)
 server.update()
 print(server.lastUpdate)
+
+# get the server permissions
+server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
+print(server.get_permissions())

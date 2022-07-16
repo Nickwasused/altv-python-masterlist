@@ -175,6 +175,42 @@ class Server:
 
         return dtc_url
 
+    # fetch the required and optional permissons of the server
+    # avalible permissions:
+    # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+    # WebRTC: This allows peer-to-peer RTC inside JS
+    # Clipboard Access: This allows to copy content to users clipboard
+    def get_permissions(self):
+        permissions = {
+            "required": {
+                "Screen Capture": False,
+                "WebRTC": False,
+                "Clipboard Access": False
+            },
+            "optional": {
+                "Screen Capture": False,
+                "WebRTC": False,
+                "Clipboard Access": False
+            }
+        }
+
+        # fetch connect json
+        data = self.fetch_connect_json()
+        if data is None:
+            return None
+        optional = data["optional-permissions"]
+        required = data["required-permissions"]
+
+        if optional is not []:
+            for permission in optional:
+                permissions["optional"][permission] = True
+
+        if required is not []:
+            for permission in required:
+                permissions["required"][permission] = True
+
+        return permissions
+
 
 
 def request(url, cdn=False, server=[]):
