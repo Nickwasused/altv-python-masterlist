@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from altvmasterlist import masterlist as altv
+import altvmasterlist as altv
 import logging 
 import time
 

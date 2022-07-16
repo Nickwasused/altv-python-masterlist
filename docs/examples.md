@@ -3,7 +3,7 @@
 ## Get a alt:V Server object
 
 ```
-from altvmasterlist import masterlist as altv
+import altvmasterlist as altv
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
@@ -16,7 +16,7 @@ if (server == None):
 ## Get a alt:V Server object and update it
 
 ```
-from altvmasterlist import masterlist as altv
+import altvmasterlist as altv
 from time import sleep
 
 # get the server json
@@ -38,7 +38,7 @@ print(server.players)
 ## Get a alt:V Server connect.json
 
 ```
-from altvmasterlist import masterlist as altv
+import altvmasterlist as altv
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
@@ -55,7 +55,7 @@ if (connect_json != Null):
 ## Get all alt:V Servers that are active
 
 ```
-from altvmasterlist import masterlist as altv
+import altvmasterlist as altv
 
 servers = altv.get_servers()
 
