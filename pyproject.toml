@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "altvmasterlist"
-version = "2.2.6"
+version = "2.2.7"
 description = "A package to use the alt:V Masterlist api."
 authors = ["Nickwasused <contact.nickwasused.fa6c8@simplelogin.co>"]
 license = "MPL-2.0"
@@ -14,7 +14,8 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 packages = [
-    { include = "altvmasterlist.py", from = "src" },
+    { include = "masterlist.py", from = "src" },
+    { include = "altstats.py", from = "src" }
 ]
 
 [tool.poetry.dependencies]

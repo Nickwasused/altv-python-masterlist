@@ -143,14 +143,13 @@ class Server:
             else:
                 return cdn_request
         else:
-            # let`s try to get the connect json
+            # let`s try to get the connect.json
             cdn_request = request(f"{self.cdnUrl}/connect.json")
             if cdn_request is None:
                 # maybe the CDN is offline
                 return None
             else:
                 return cdn_request
-
 
     # get the "Direct Connect Protocol" url
     # e.g. altv://connect/127.0.0.1:7788?password=xyz
@@ -161,22 +160,23 @@ class Server:
         dtc_url = ""
         if self.useCdn:
             if not "http" in self.cdnUrl:
-                dtc_url = f"altv://connect/http://{self.cdnUrl}"
+                dtc_url += f"altv://connect/http://{self.cdnUrl}"
             else:
-                dtc_url = f"altv://connect/{self.cdnUrl}"
+                dtc_url += f"altv://connect/{self.cdnUrl}"
         else:
-            dtc_url = f"altv://connect/{self.host}:{self.port}"
+            dtc_url += f"altv://connect/{self.host}:{self.port}"
 
         if self.locked and password is None:
-            logging.warn("Your server is password protected but you did not supply a password for the Direct Connect Url.")
+            logging.warning(
+                "Your server is password protected but you did not supply a password for the Direct Connect Url.")
 
         if password is not None:
             dtc_url += f"?password={password}"
 
         return dtc_url
 
-    # fetch the required and optional permissons of the server
-    # avalible permissions:
+    # fetch the required and optional permissions of the server
+    # available permissions:
     # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
     # WebRTC: This allows peer-to-peer RTC inside JS
     # Clipboard Access: This allows to copy content to users clipboard
@@ -210,7 +210,6 @@ class Server:
                 permissions["required"][permission] = True
 
         return permissions
-
 
 
 def request(url, cdn=False, server=[]):

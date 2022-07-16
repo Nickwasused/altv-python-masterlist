@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import altvmasterlist as altv
-import logging 
-import time
+from altvmasterlist import altvmasterlist as altv
+import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)

@@ -1,39 +1,42 @@
 #!/usr/bin/env python3
 
-import altvmasterlist as altv
-import logging 
+import altstats as altv
+import logging
 import time
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)
 
 # Valid id
-print(altv.validate_id("bb7228a0d366fc575a5682a99359424f"))
+print(altv.validate_id(86))
 
 # Invalid id
-print(altv.validate_id("abcdefghijklmnop123"))
+print(altv.validate_id("ag567"))
 
 # get the server cdn connect json
-server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+server = altv.get_server_by_id(86)
 print(server.fetch_connect_json())
 
 # get the server connect json (without cdn)
-server = altv.get_server_by_id("3009f762b255336fed101d97b026fcfa")
+server = altv.get_server_by_id(26)
 print(server.fetch_connect_json())
 
 # get all servers as server object
-altv.get_servers()
+servers = altv.get_servers()
+
+for server in servers:
+    print(server.get_json())
 
 # get all server stats
 altv.get_server_stats()
 
 # get server with update
-server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
-print(server.lastUpdate)
+server = altv.get_server_by_id(86)
+print(server.LastActivity)
 time.sleep(120)
 server.update()
-print(server.lastUpdate)
+print(server.LastActivity)
 
 # get the server permissions
-server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
+server = altv.get_server_by_id(86)
 print(server.get_permissions())
