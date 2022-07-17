@@ -4,13 +4,13 @@ By default, a function will return None when it is failing, so please account fo
 
 Example:
 ```
-import altvmasterlist as altv
+import altstats as altv
 
 # get the server json
-response = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2").get_json()
+response = altv.get_server_by_id(86).get_json()
 
 if (response != None):
-    print(response["active"])
+    print(response["LastFetchOnline"])
 ```
 
 ## Proxy

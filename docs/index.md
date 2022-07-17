@@ -1,11 +1,27 @@
-# Docs for altvmasterlist
+# Docs
 
-Altvmasterlist is a package that interfaces with the [alt:V](https://altv.mp) [Masterlist API](https://docs.altv.mp/articles/master_list_api.html).
+This is the Docs page for the altvmasterlist package.
 
-## Contents
+# Overview
 
-### [General](/general.md)
-### [Server](/server.md)
-### [Functions](/functions.md)
+In this package are two modules:
 
-### [Examples](./examples.md)
+- masterlist 
+- altstats
+
+## [masterlist](./masterlist)
+
+This is the official API for the [alt:V](https://altv.mp) Client
+
+## [altstats](./altstats)
+
+This is an unofficial API that is: 
+> developed and supported by members of the altMP Team
+
+## Comparison
+
+|                                           | masterlist                   | altstats
+|-------------------------------------------|------------------------------| -----
+| server info                               | yes                          | more information than masterlist
+| overall stats (server count, all players) | yes                          | historic data for one day
+| stats for individual servers              | yes (1d, 7d, 31d) (avg, max) | no

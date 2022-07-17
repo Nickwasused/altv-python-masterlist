@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from altvmasterlist import altvmasterlist as altv
+from altvmasterlist import masterlist as altv
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
