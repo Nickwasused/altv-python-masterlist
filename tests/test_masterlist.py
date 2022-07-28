@@ -39,6 +39,7 @@ def test_valid():
 def test_invalid():
     assert altv.validate_id("invalid") is False
 
+
 # server object functions
 # lets get a server
 

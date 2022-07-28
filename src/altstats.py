@@ -365,6 +365,7 @@ def get_server_by_id(server_id):
 
 # validate a given alt:V server id
 def validate_id(server_id):
+    server_id = str(server_id)
     regex = compile(r"^[0-9]{1,}$")
     result = regex.match(server_id)
     if result is not None:
