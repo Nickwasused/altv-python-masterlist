@@ -3,7 +3,7 @@ name: Pytest
 on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -14,10 +14,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        poetry build
-        pip install .
         pip install poetry
         pip install pytest
+    - name: Build and Install
+      run: |
+        poetry build
+        pip install .
     - name: Run pytest
       run: |
         poetry run pytest
