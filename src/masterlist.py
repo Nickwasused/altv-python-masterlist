@@ -133,10 +133,10 @@ class Server:
 
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
-    def fetch_connect_json(self):
+    def fetch_connect_json(self, proxy=None):
         if not self.useCdn and not self.locked and self.active:
             # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.host}:{self.port}/connect.json", True, self)
+            cdn_request = request(f"http://{self.host}:{self.port}/connect.json", True, self, proxy)
             if cdn_request is None:
                 # possible server error or blocked by alt:V
                 return None
@@ -144,7 +144,7 @@ class Server:
                 return cdn_request
         else:
             # let`s try to get the connect.json
-            cdn_request = request(f"{self.cdnUrl}/connect.json")
+            cdn_request = request(f"{self.cdnUrl}/connect.json", proxy=proxy)
             if cdn_request is None:
                 # maybe the CDN is offline
                 return None
@@ -180,7 +180,7 @@ class Server:
     # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
     # WebRTC: This allows peer-to-peer RTC inside JS
     # Clipboard Access: This allows to copy content to users clipboard
-    def get_permissions(self):
+    def get_permissions(self, proxy=None):
         permissions = {
             "required": {
                 "Screen Capture": False,
@@ -195,7 +195,7 @@ class Server:
         }
 
         # fetch connect json
-        data = self.fetch_connect_json()
+        data = self.fetch_connect_json(proxy)
         if data is None:
             return None
         optional = data["optional-permissions"]
@@ -212,7 +212,7 @@ class Server:
         return permissions
 
 
-def request(url, cdn=False, server=[]):
+def request(url, cdn=False, server=[], proxy=None):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
     if "http://" in url and cdn:
@@ -236,7 +236,10 @@ def request(url, cdn=False, server=[]):
         }
 
     try:
-        api_data = requests.get(url, headers=req_headers, timeout=60)
+        if proxy:
+            api_data = requests.get(url, headers=req_headers, timeout=60, proxies=proxy)
+        else:
+            api_data = requests.get(url, headers=req_headers, timeout=60)
         if api_data.status_code != 200:
             logging.warning(f"the request returned nothing.")
             return None
