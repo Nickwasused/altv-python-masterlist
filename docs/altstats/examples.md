@@ -52,6 +52,26 @@ if (connect_json != Null):
     print(connect_json)
 ```
 
+## Get a alt:V Server connect.json with a Proxy
+
+```
+import altstats as altv
+
+# get the server json
+server = altv.get_server_by_id(86)
+
+if (server == None):
+    print("Error while getting Server")
+    sys.exit()
+
+connect_json = server.fetchconnectjson({
+        "http": "http://user:password@host:port/",
+        "https": "http://user:password@host:port/"
+    })
+if (connect_json != Null):
+    print(connect_json)
+```
+
 ## Get all alt:V Servers that are active
 
 ```
@@ -87,6 +107,22 @@ import altstats as altv
 
 server = altv.get_server_by_id(86)
 permissions = server.get_permissions()
+print(permissions)
+
+if permissions["required"]["Screen Capture"]:
+    print("The server requires the screen capture permission")
+```
+
+## Get the Permissions of a Server with a Proxy
+
+```
+import altstats as altv
+
+server = altv.get_server_by_id(86)
+permissions = server.get_permissions({
+        "http": "http://user:password@host:port/",
+        "https": "http://user:password@host:port/"
+    })
 print(permissions)
 
 if permissions["required"]["Screen Capture"]:
