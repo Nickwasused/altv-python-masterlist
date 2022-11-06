@@ -4,6 +4,5 @@ altvcdn is a Module contained in the altvmasterlist package that interfaces with
 
 ## Contents
 
-### [General](/general.md)
-### [Functions](/functions.md)
+### [Functions](functions.md)
 ### [Examples](examples.md)

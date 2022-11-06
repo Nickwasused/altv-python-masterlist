@@ -4,7 +4,7 @@ Altstats is a module contained in the altvmasterlist package that interfaces wit
 
 ## Contents
 
-### [General](/general.md)
-### [Server](/server.md)
-### [Functions](/functions.md)
+### [General](general.md)
+### [Server](server.md)
+### [Functions](functions.md)
 ### [Examples](examples.md)
