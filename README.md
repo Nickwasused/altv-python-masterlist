@@ -14,6 +14,9 @@ import masterlist as altv
 or
 ...
 import altstats as altv
+or
+...
+import altvcdn as altvcdn
 ```
 
 # Docs
