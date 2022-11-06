@@ -2,29 +2,31 @@
 
 ## Get a alt:V Server object
 
-```
+```python3
 import altstats as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id(86)
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 ```
 
 ## Get a alt:V Server object and update it
 
-```
-import altstats as altv
+```python3
 from time import sleep
+import altstats as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id(86)
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 print(server.Players)
 
@@ -37,44 +39,46 @@ print(server.Players)
 
 ## Get a alt:V Server connect.json
 
-```
+```python3
 import altstats as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id(86)
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 connect_json = server.fetchconnectjson()
-if (connect_json != Null):
+if connect_json:
     print(connect_json)
 ```
 
 ## Get a alt:V Server connect.json with a Proxy
 
-```
+```python3
 import altstats as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id(86)
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 connect_json = server.fetchconnectjson({
         "http": "http://user:password@host:port/",
         "https": "http://user:password@host:port/"
     })
-if (connect_json != Null):
+if connect_json:
     print(connect_json)
 ```
 
 ## Get all alt:V Servers that are active
 
-```
+```python3
 import altstats as altv
 
 servers = altv.get_servers()
@@ -88,7 +92,7 @@ for server in servers:
 
 ## Get the Direct Connect Url of a Server
 
-```
+```python3
 import altstats as altv
 
 # get the server dtc url with a password
@@ -102,7 +106,7 @@ print(server.get_dtc_url())
 
 ## Get the Permissions of a Server
 
-```
+```python3
 import altstats as altv
 
 server = altv.get_server_by_id(86)
@@ -115,7 +119,7 @@ if permissions["required"]["Screen Capture"]:
 
 ## Get the Permissions of a Server with a Proxy
 
-```
+```python3
 import altstats as altv
 
 server = altv.get_server_by_id(86)

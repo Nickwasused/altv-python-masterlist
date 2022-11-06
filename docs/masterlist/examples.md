@@ -2,29 +2,31 @@
 
 ## Get a alt:V Server object
 
-```
+```python3
 import masterlist as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 ```
 
 ## Get a alt:V Server object and update it
 
-```
-import masterlist as altv
+```python3
 from time import sleep
+import masterlist as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 print(server.players)
 
@@ -37,45 +39,47 @@ print(server.players)
 
 ## Get a alt:V Server connect.json
 
-```
+```python3
 import masterlist as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 connect_json = server.fetchconnectjson()
-if (connect_json != Null):
+if connect_json:
     print(connect_json)
 ```
 
 ## Get a alt:V Server connect.json with a Proxy
 
-```
+```python3
 import masterlist as altv
+import sys
 
 # get the server json
 server = altv.get_server_by_id("ceaac3d1cc22761223beac38386f5ab2")
 
-if (server == None):
+if server is None:
     print("Error while getting Server")
-    sys.exit()
+    sys.exit(1)
 
 connect_json = server.fetch_connect_json({
         "http": "http://user:password@host:port/",
         "https": "http://user:password@host:port/"
     })
 
-if (connect_json != Null):
+if connect_json:
     print(connect_json)
 ```
 
 ## Get all alt:V Servers that are active
 
-```
+```python3
 import masterlist as altv
 
 servers = altv.get_servers()
@@ -89,7 +93,7 @@ for server in servers:
 
 ## Get the Direct Connect Url of a Server
 
-```
+```python3
 import masterlist as altv
 
 # get the server dtc url with a password
@@ -103,7 +107,7 @@ print(server.get_dtc_url())
 
 ## Get the Permissions of a Server
 
-```
+```python3
 import masterlist as altv
 
 server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
@@ -116,7 +120,7 @@ if permissions["required"]["Screen Capture"]:
 
 ## Get the Permissions of a Server with a Proxy
 
-```
+```python3
 import masterlist as altv
 
 server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
