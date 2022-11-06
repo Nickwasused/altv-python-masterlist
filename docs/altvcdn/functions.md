@@ -9,12 +9,14 @@
 The following Enums are avalible. See the [Examples](./examples.md) on how to use them.
 
 ## Platform
-| Enum    | Value     
+
+| Enum    | Value
 |---------|-----------
 | Windows | x64_win32 
 | Linux   | x64_linux 
 
 ## Branch
+
 | Enum    | Value   
 |---------|---------
 | Dev     | dev     
@@ -22,6 +24,7 @@ The following Enums are avalible. See the [Examples](./examples.md) on how to us
 | Release | release 
 
 ## Files
+
 | Enum        | Value              
 |-------------|--------------------
 | Csharp      | coreclr-module     
