@@ -210,6 +210,19 @@ class Server:
 
         return permissions
 
+    def get_resource_size(self, resource, decimal=2, proxy=None):
+        if self.useCdn:
+            resource_url = f"{self.cdnUrl}/{resource}.resource"
+        else:
+            resource_url = f"http://{self.host}:{self.port}/{resource}.resource"
+
+        data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60, proxies=proxy)
+
+        if data.ok:
+            return round((int(data.headers["Content-Length"]) / 1048576), decimal)
+        else:
+            return None
+
 
 def request(url, cdn=False, server=[], proxy=None):
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
@@ -235,10 +248,9 @@ def request(url, cdn=False, server=[], proxy=None):
         }
 
     try:
-        if proxy:
-            api_data = requests.get(url, headers=req_headers, timeout=60, proxies=proxy)
-        else:
-            api_data = requests.get(url, headers=req_headers, timeout=60)
+
+        api_data = requests.get(url, headers=req_headers, timeout=60, proxies=proxy)
+
         if api_data.status_code != 200:
             logging.warning(f"the request returned nothing.")
             return None
