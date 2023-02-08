@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from json import loads
+from json import loads, dumps
 from re import compile
 import requests
 import logging
@@ -106,6 +106,12 @@ class Server:
             "Level": self.Level,
             "Version": self.Version
         }
+
+    def __repr__(self):
+        return self.get_json()
+
+    def __str__(self):
+        return dumps(self.__repr__())
 
     # fetch the server data and replace it
     def update(self):

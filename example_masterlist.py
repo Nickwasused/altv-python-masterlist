@@ -17,6 +17,10 @@ print(altv.validate_id("abcdefghijklmnop123"))
 server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
 print(server.fetch_connect_json())
 
+# get the server and print it
+server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+print(server)
+
 # get the server cdn connect json with a proxy
 print(server.fetch_connect_json({
         "http": "http://user:password@host:port/",

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
-import src.altstats as altv
+import src.masterlist as altv
+import src.altstats as altv2
 
-server = altv.get_server_by_id("127")
+server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+print(server)
 
-print(server.get_resource_size("gamemode"))
+server2 = altv2.get_server_by_id(127)
+print(server2)
