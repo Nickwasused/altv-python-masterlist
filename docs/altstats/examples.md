@@ -4,14 +4,9 @@
 
 ```python3
 import altstats as altv
-import sys
 
-# get the server json
-server = altv.get_server_by_id(86)
-
-if server is None:
-    print("Error while getting Server")
-    sys.exit(1)
+# get the server
+server = altv.Server(86)
 ```
 
 ## Get a alt:V Server object and update it
@@ -19,14 +14,9 @@ if server is None:
 ```python3
 from time import sleep
 import altstats as altv
-import sys
 
 # get the server json
-server = altv.get_server_by_id(86)
-
-if server is None:
-    print("Error while getting Server")
-    sys.exit(1)
+server = altv.Server(86)
 
 print(server.Players)
 
@@ -41,37 +31,11 @@ print(server.Players)
 
 ```python3
 import altstats as altv
-import sys
 
 # get the server json
-server = altv.get_server_by_id(86)
-
-if server is None:
-    print("Error while getting Server")
-    sys.exit(1)
+server = altv.Server(86)
 
 connect_json = server.fetchconnectjson()
-if connect_json:
-    print(connect_json)
-```
-
-## Get a alt:V Server connect.json with a Proxy
-
-```python3
-import altstats as altv
-import sys
-
-# get the server json
-server = altv.get_server_by_id(86)
-
-if server is None:
-    print("Error while getting Server")
-    sys.exit(1)
-
-connect_json = server.fetchconnectjson({
-        "http": "http://user:password@host:port/",
-        "https": "http://user:password@host:port/"
-    })
 if connect_json:
     print(connect_json)
 ```
@@ -95,12 +59,13 @@ for server in servers:
 ```python3
 import altstats as altv
 
+
+server = altv.Server(86)
+
 # get the server dtc url with a password
-server = altv.get_server_by_id(86)
 print(server.get_dtc_url(password="test"))
 
 # get the server dtc url without a password
-server = altv.get_server_by_id(86)
 print(server.get_dtc_url())
 ```
 
@@ -109,24 +74,8 @@ print(server.get_dtc_url())
 ```python3
 import altstats as altv
 
-server = altv.get_server_by_id(86)
+server = altv.Server(86)
 permissions = server.get_permissions()
-print(permissions)
-
-if permissions["required"]["Screen Capture"]:
-    print("The server requires the screen capture permission")
-```
-
-## Get the Permissions of a Server with a Proxy
-
-```python3
-import altstats as altv
-
-server = altv.get_server_by_id(86)
-permissions = server.get_permissions({
-        "http": "http://user:password@host:port/",
-        "https": "http://user:password@host:port/"
-    })
 print(permissions)
 
 if permissions["required"]["Screen Capture"]:
