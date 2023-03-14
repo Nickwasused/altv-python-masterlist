@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from src.shared import MasterlistUrls, request
-from json import dumps
+from src.shared import MasterlistUrls, request, get_direct_connect_url
+from dataclasses import dataclass
 from re import compile
 import requests
 import logging
@@ -17,72 +17,66 @@ logging.debug(f'starting with base link: {MasterlistUrls.base_link}')
 
 
 # This is the server object
+@dataclass
 class Server:
+    id: int
+    active: bool = False
+    maxPlayers: int = 0
+    players: int = 0
+    name: str = ""
+    locked: bool = False
+    host: str = ""
+    port: int = 0
+    gameMode: str = ""
+    website: str = ""
+    language: str = ""
+    description: str = ""
+    verified: bool = False
+    promoted: bool = False
+    useEarlyAuth: bool = False
+    earlyAuthUrl: str = ""
+    useCdn: bool = False
+    cdnUrl: str = ""
+    useVoiceChat: bool = False
+    tags: list[str] = None
+    bannerUrl: str = ""
+    branch: str = ""
+    build: str = ""
+    version: float = 0.0
+    lastUpdate: int = 0
+
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, active, id, maxPlayers, players, name, locked, host, port, gameMode, website, language,
-                 description, verified, promoted, useEarlyAuth, earlyAuthUrl, useCdn, cdnUrl, useVoiceChat, tags,
-                 bannerUrl, branch, build, version, lastUpdate):
-        self.active = active
+    def __init__(self, id):
         self.id = id
-        self.maxPlayers = maxPlayers
-        self.players = players
-        self.name = name
-        self.locked = locked
-        self.host = host
-        self.port = port
-        self.gameMode = gameMode
-        self.website = website
-        self.language = language
-        self.description = description
-        self.verified = verified
-        self.promoted = promoted
-        self.useEarlyAuth = useEarlyAuth
-        self.earlyAuthUrl = earlyAuthUrl
-        self.useCdn = useCdn
-        self.cdnUrl = cdnUrl
-        self.useVoiceChat = useVoiceChat
-        self.tags = tags
-        self.bannerUrl = bannerUrl
-        self.branch = branch
-        self.build = build
-        self.version = version
-        self.lastUpdate = lastUpdate
-
-    # return the current server data as JSON object
-    def get_json(self):
-        return {
-            "active": self.active,
-            "id": self.id,
-            "maxPlayers": self.maxPlayers,
-            "players": self.players,
-            "name": self.name,
-            "locked": self.locked,
-            "host": self.host,
-            "port": self.port,
-            "gameMode": self.gameMode,
-            "website": self.website,
-            "language": self.language,
-            "description": self.description,
-            "verified": self.verified,
-            "promoted": self.promoted,
-            "useEarlyAuth": self.useEarlyAuth,
-            "earlyAuthUrl": self.earlyAuthUrl,
-            "useCdn": self.useCdn,
-            "cdnUrl": self.cdnUrl,
-            "useVoiceChat": self.useVoiceChat,
-            "tags": self.tags,
-            "bannerUrl": self.bannerUrl,
-            "branch": self.branch,
-            "build": self.build,
-            "version": self.version,
-            "lastUpdate": self.lastUpdate
-        }
-
-    def __repr__(self):
-        return self.get_json()
-
-    def __str__(self):
-        return dumps(self.__repr__())
+        temp_data = request(MasterlistUrls.server_link.format(self.id))
+        if temp_data is None or temp_data == {} or not temp_data["active"]:
+            # the api returned no data or the server is offline
+            pass
+        else:
+            self.active = temp_data["active"]
+            self.maxPlayers = temp_data["info"]["maxPlayers"]
+            self.players = temp_data["info"]["players"]
+            self.name = temp_data["info"]["name"]
+            self.locked = temp_data["info"]["locked"]
+            self.host = temp_data["info"]["host"]
+            self.port = temp_data["info"]["port"]
+            self.gameMode = temp_data["info"]["gameMode"]
+            self.website = temp_data["info"]["website"]
+            self.language = temp_data["info"]["language"]
+            self.description = temp_data["info"]["description"]
+            self.verified = temp_data["info"]["verified"]
+            self.promoted = temp_data["info"]["promoted"]
+            self.useEarlyAuth = temp_data["info"]["useEarlyAuth"]
+            self.earlyAuthUrl = temp_data["info"]["earlyAuthUrl"]
+            self.useCdn = temp_data["info"]["useCdn"]
+            self.cdnUrl = temp_data["info"]["cdnUrl"]
+            self.useVoiceChat = temp_data["info"]["useVoiceChat"]
+            self.tags = temp_data["info"]["tags"]
+            self.bannerUrl = temp_data["info"]["bannerUrl"]
+            self.branch = temp_data["info"]["branch"]
+            self.build = temp_data["info"]["build"]
+            self.version = temp_data["info"]["version"]
+            self.lastUpdate = temp_data["info"]["lastUpdate"]
 
     # fetch the server data and replace it
     def update(self):
@@ -146,29 +140,8 @@ class Server:
             else:
                 return cdn_request
 
-    # get the "Direct Connect Protocol" url
-    # e.g. altv://connect/127.0.0.1:7788?password=xyz
-    # https://docs.altv.mp/articles/connectprotocol.html
-    # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
-    # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
     def get_dtc_url(self, password=None):
-        dtc_url = ""
-        if self.useCdn:
-            if not "http" in self.cdnUrl:
-                dtc_url += f"altv://connect/http://{self.cdnUrl}"
-            else:
-                dtc_url += f"altv://connect/{self.cdnUrl}"
-        else:
-            dtc_url += f"altv://connect/{self.host}:{self.port}"
-
-        if self.locked and password is None:
-            logging.warning(
-                "Your server is password protected but you did not supply a password for the Direct Connect Url.")
-
-        if password is not None:
-            dtc_url += f"?password={password}"
-
-        return dtc_url
+        return get_direct_connect_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
     # fetch the required and optional permissions of the server
     # available permissions:
@@ -253,26 +226,7 @@ def get_servers():
 
 # get a single server by their server id
 def get_server_by_id(server_id):
-    temp_data = request(MasterlistUrls.server_link.format(server_id))
-    if temp_data is None or temp_data == {}:
-        # the api returned no data
-        return None
-    elif not temp_data["active"]:
-        # the server is offline
-        return Server(False, server_id, 0, 0, "", False, "", 0, "", "", "", "", False, False, False, "", False, "",
-                      False, "",
-                      "", "", 0, 0, "")
-    else:
-        # Create a Server object with the data and return that
-        return Server(temp_data["active"], server_id, temp_data["info"]["maxPlayers"], temp_data["info"]["players"],
-                      temp_data["info"]["name"], temp_data["info"]["locked"], temp_data["info"]["host"],
-                      temp_data["info"]["port"], temp_data["info"]["gameMode"], temp_data["info"]["website"],
-                      temp_data["info"]["language"], temp_data["info"]["description"],
-                      temp_data["info"]["verified"], temp_data["info"]["promoted"],
-                      temp_data["info"]["useEarlyAuth"], temp_data["info"]["earlyAuthUrl"],
-                      temp_data["info"]["useCdn"], temp_data["info"]["cdnUrl"], temp_data["info"]["useVoiceChat"],
-                      temp_data["info"]["tags"], temp_data["info"]["bannerUrl"], temp_data["info"]["branch"],
-                      temp_data["info"]["build"], temp_data["info"]["version"], temp_data["info"]["lastUpdate"])
+    return Server(server_id)
 
 
 # get the average player count with a specified time range

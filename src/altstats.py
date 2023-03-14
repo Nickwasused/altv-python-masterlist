@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-from src.shared import AltstatsUrls, request
-from json import loads, dumps
+from src.shared import AltstatsUrls, request, get_direct_connect_url
+from json import dumps
 from re import compile
 import requests
 import logging
-import secrets
 import sys
 
 logging.basicConfig(level=logging.INFO)
@@ -177,23 +176,7 @@ class Server:
     # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
     # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
     def get_dtc_url(self, password=None):
-        dtc_url = ""
-        if self.UseCdn:
-            if not "http" in self.CdnUrl:
-                dtc_url += f"altv://connect/http://{self.CdnUrl}"
-            else:
-                dtc_url += f"altv://connect/{self.CdnUrl}"
-        else:
-            dtc_url += f"altv://connect/{self.Ip}:{self.Port}"
-
-        if self.Locked and password is None:
-            logging.warning(
-                "Your server is password protected but you did not supply a password for the Direct Connect Url.")
-
-        if password is not None:
-            dtc_url += f"?password={password}"
-
-        return dtc_url
+        return get_direct_connect_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
     # fetch the required and optional permissions of the server
     # available permissions:

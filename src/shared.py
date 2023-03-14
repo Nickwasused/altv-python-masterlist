@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from json import dumps, loads
+from io import StringIO
 import requests
 import logging
 import secrets
@@ -85,3 +86,28 @@ def request(url, cdn=False, server=None):
     except Exception as e:
         logging.error(e)
         return None
+
+
+# get the "Direct Connect Protocol" url
+# e.g. altv://connect/127.0.0.1:7788?password=xyz
+# https://docs.altv.mp/articles/connectprotocol.html
+# cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
+# cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
+def get_direct_connect_url(useCdn, cdnUrl, host, port, locked, password=None):
+    dtc_url = StringIO()
+    if useCdn:
+        if not "http" in cdnUrl:
+            dtc_url.write(f"altv://connect/http://{cdnUrl}")
+        else:
+            dtc_url.write(f"altv://connect/{cdnUrl}")
+    else:
+        dtc_url.write(f"altv://connect/{host}:{port}")
+
+    if locked and password is None:
+        logging.warning(
+            "Your server is password protected but you did not supply a password for the Direct Connect Url.")
+
+    if password is not None:
+        dtc_url.write(f"?password={password}")
+
+    return dtc_url.getvalue()
