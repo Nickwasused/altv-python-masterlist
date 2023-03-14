@@ -45,38 +45,40 @@ class Server:
     lastUpdate: int = 0
 
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, id):
+    def __init__(self, id, nofetch=False):
         self.id = id
-        temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
-        if temp_data is None or temp_data == {} or not temp_data["active"]:
-            # the api returned no data or the server is offline
-            self.active = False
-            self.players = 0
-        else:
-            self.active = temp_data["active"]
-            self.maxPlayers = temp_data["info"]["maxPlayers"]
-            self.players = temp_data["info"]["players"]
-            self.name = temp_data["info"]["name"]
-            self.locked = temp_data["info"]["locked"]
-            self.host = temp_data["info"]["host"]
-            self.port = temp_data["info"]["port"]
-            self.gameMode = temp_data["info"]["gameMode"]
-            self.website = temp_data["info"]["website"]
-            self.language = temp_data["info"]["language"]
-            self.description = temp_data["info"]["description"]
-            self.verified = temp_data["info"]["verified"]
-            self.promoted = temp_data["info"]["promoted"]
-            self.useEarlyAuth = temp_data["info"]["useEarlyAuth"]
-            self.earlyAuthUrl = temp_data["info"]["earlyAuthUrl"]
-            self.useCdn = temp_data["info"]["useCdn"]
-            self.cdnUrl = temp_data["info"]["cdnUrl"]
-            self.useVoiceChat = temp_data["info"]["useVoiceChat"]
-            self.tags = temp_data["info"]["tags"]
-            self.bannerUrl = temp_data["info"]["bannerUrl"]
-            self.branch = temp_data["info"]["branch"]
-            self.build = temp_data["info"]["build"]
-            self.version = temp_data["info"]["version"]
-            self.lastUpdate = temp_data["info"]["lastUpdate"]
+
+        if not nofetch:
+            temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
+            if temp_data is None or temp_data == {} or not temp_data["active"]:
+                # the api returned no data or the server is offline
+                self.active = False
+                self.players = 0
+            else:
+                self.active = temp_data["active"]
+                self.maxPlayers = temp_data["info"]["maxPlayers"]
+                self.players = temp_data["info"]["players"]
+                self.name = temp_data["info"]["name"]
+                self.locked = temp_data["info"]["locked"]
+                self.host = temp_data["info"]["host"]
+                self.port = temp_data["info"]["port"]
+                self.gameMode = temp_data["info"]["gameMode"]
+                self.website = temp_data["info"]["website"]
+                self.language = temp_data["info"]["language"]
+                self.description = temp_data["info"]["description"]
+                self.verified = temp_data["info"]["verified"]
+                self.promoted = temp_data["info"]["promoted"]
+                self.useEarlyAuth = temp_data["info"]["useEarlyAuth"]
+                self.earlyAuthUrl = temp_data["info"]["earlyAuthUrl"]
+                self.useCdn = temp_data["info"]["useCdn"]
+                self.cdnUrl = temp_data["info"]["cdnUrl"]
+                self.useVoiceChat = temp_data["info"]["useVoiceChat"]
+                self.tags = temp_data["info"]["tags"]
+                self.bannerUrl = temp_data["info"]["bannerUrl"]
+                self.branch = temp_data["info"]["branch"]
+                self.build = temp_data["info"]["build"]
+                self.version = temp_data["info"]["version"]
+                self.lastUpdate = temp_data["info"]["lastUpdate"]
 
     # fetch the server data and replace it
     def update(self):
@@ -138,8 +140,32 @@ def get_servers():
     else:
         for server in servers:
             # Now change every JSON response to a server object that we can e.g. update it when we want
-            temp_server = Server(server["id"])
-            return_servers.append(temp_server)
+            tmp_server = Server(server["id"], nofetch=True)
+            tmp_server.active = True
+            tmp_server.maxPlayers = server["maxPlayers"]
+            tmp_server.players = server["players"]
+            tmp_server.name = server["name"]
+            tmp_server.locked = server["locked"]
+            tmp_server.host = server["host"]
+            tmp_server.port = server["port"]
+            tmp_server.gameMode = server["gameMode"]
+            tmp_server.website = server["website"]
+            tmp_server.language = server["language"]
+            tmp_server.description = server["description"]
+            tmp_server.verified = server["verified"]
+            tmp_server.promoted = server["promoted"]
+            tmp_server.useEarlyAuth = server["useEarlyAuth"]
+            tmp_server.earlyAuthUrl = server["earlyAuthUrl"]
+            tmp_server.useCdn = server["useCdn"]
+            tmp_server.cdnUrl = server["cdnUrl"]
+            tmp_server.useVoiceChat = server["useVoiceChat"]
+            tmp_server.tags = server["tags"]
+            tmp_server.bannerUrl = server["bannerUrl"]
+            tmp_server.branch = server["branch"]
+            tmp_server.build = server["build"]
+            tmp_server.version = server["version"]
+            tmp_server.lastUpdate = server["lastUpdate"]
+            return_servers.append(tmp_server)
 
         return return_servers
 
