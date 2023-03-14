@@ -106,7 +106,7 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
-        temp_server = get_server_by_id(self.Id)
+        temp_server = Server(self.Id)
 
         # check if the server is returned
         if temp_server is None:
@@ -232,28 +232,6 @@ def get_servers_average():
     player_count_avg = round(player_count_total / len(data), 0)
 
     return start_date, end_date, server_count_avg, player_count_avg
-
-
-# get a single server by their server id
-def get_server_by_id(server_id):
-    temp_data = shared.request(shared.AltstatsUrls.server_link.format(server_id))
-    if temp_data is None or temp_data == {}:
-        # the api returned no data
-        return None
-    else:
-        # Create a Server object with the data and return that
-        return Server(server_id, temp_data["FoundAt"], temp_data["LastActivity"], temp_data["Visible"],
-                      temp_data["ServerId"], temp_data["Players"], temp_data["Name"],
-                      temp_data["Locked"], temp_data["Ip"], temp_data["Port"],
-                      temp_data["MaxPlayers"], temp_data["Ping"],
-                      temp_data["Website"], temp_data["Language"],
-                      temp_data["Description"], temp_data["LastUpdate"],
-                      temp_data["IsOfficial"], temp_data["PlayerRecord"], temp_data["PlayerRecordDate"],
-                      temp_data["LastFetchOnline"], temp_data["LanguageShort"], temp_data["GameMode"],
-                      temp_data["Branch"], temp_data["Build"], temp_data["CdnUrl"], temp_data["EarlyAuthUrl"],
-                      temp_data["Verified"], temp_data["UseCdn"], temp_data["UseEarlyAuth"], temp_data["BannerUrl"],
-                      temp_data["Promoted"], temp_data["Tags"], temp_data["UseVoiceChat"], temp_data["Level"],
-                      temp_data["Version"])
 
 
 # validate a given alt:V server id

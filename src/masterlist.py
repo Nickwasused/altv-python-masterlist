@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 from re import compile
 import src.shared as shared
-import requests
 import logging
 import sys
 
@@ -80,7 +79,7 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
-        temp_server = get_server_by_id(self.id)
+        temp_server = Server(self.id)
 
         # check if the server is returned
         if temp_server is None:
@@ -120,6 +119,30 @@ class Server:
             self.active = False
             self.players = 0
 
+    # get the maximum player count with a specified time range
+    # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
+    # time: 1d, 7d, 31d
+    def get_max(self, time: str = "1d"):
+        return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
+
+    # get the average player count with a specified time range
+    # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
+    # time: 1d, 7d, 31d
+    # return result will return the average of all values e.g. 126
+    def get_avg(self, time: str = "1d", return_result: bool = False):
+        average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+        if not average_data:
+            return None
+
+        if return_result:
+            players_all = 0
+            for entry in average_data:
+                players_all = players_all + entry["c"]
+            result = players_all / len(average_data)
+            return round(result)
+        else:
+            return average_data
+
     def fetch_connect_json(self):
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
@@ -152,57 +175,10 @@ def get_servers():
     else:
         for server in servers:
             # Now change every JSON response to a server object that we can e.g. update it when we want
-            temp_server = Server("unknown", server["id"], server["maxPlayers"], server["players"], server["name"],
-                                 server["locked"], server["host"], server["port"], server["gameMode"],
-                                 server["website"],
-                                 server["language"], server["description"], server["verified"], server["promoted"],
-                                 server["useEarlyAuth"], server["earlyAuthUrl"], server["useCdn"], server["cdnUrl"],
-                                 server["useVoiceChat"], server["tags"], server["bannerUrl"], server["branch"],
-                                 server["build"], server["version"], server["lastUpdate"])
+            temp_server = Server(server["id"])
             return_servers.append(temp_server)
 
         return return_servers
-
-
-# get a single server by their server id
-def get_server_by_id(server_id):
-    return Server(server_id)
-
-
-# get the average player count with a specified time range
-# returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
-# time: 1d, 7d, 31d
-def get_server_by_id_avg(server_id, time):
-    avg_data = shared.request(shared.MasterlistUrls.server_average_link.format(server_id, time))
-    if avg_data is None:
-        return None
-    else:
-        return avg_data
-
-
-# works like get_server_by_id_avg() but returns a integer/number
-# time: 1d, 7d, 31d
-def get_server_by_id_avg_result(server_id, time):
-    avg_result_response = get_server_by_id_avg(server_id, time)
-    if avg_result_response is None:
-        return None
-    else:
-        players_all = 0
-        for entry in avg_result_response:
-            players_all = players_all + entry["c"]
-        result = players_all / len(avg_result_response)
-        return round(result)
-
-
-# get the maximum player count with a specified time range
-# returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
-# time: 1d, 7d, 31d
-def get_server_by_id_max(server_id, time):
-    max_data = shared.request(shared.MasterlistUrls.server_max_link.format(server_id, time))
-    if max_data is None:
-        return None
-    else:
-        return max_data
 
 
 # validate a given alt:V server id
