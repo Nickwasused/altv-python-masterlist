@@ -151,26 +151,16 @@ class Server:
         self.Version = temp_server.Version
 
     def fetch_connect_json(self):
-        return shared.get_connect_json(self.UseCdn, self.Locked, True, self.Ip, self.Port, self.CdnUrl)
+        return shared.fetch_connect_json(self.UseCdn, self.Locked, True, self.Ip, self.Port, self.CdnUrl)
 
     def get_dtc_url(self, password=None):
-        return shared.get_direct_connect_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
+        return shared.get_dtc_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
     def get_permissions(self):
-        return shared.get_permissions_list(self.fetch_connect_json())
+        return shared.get_permissions(self.fetch_connect_json())
 
     def get_resource_size(self, resource, decimal=2):
-        if self.UseCdn:
-            resource_url = f"{self.CdnUrl}/{resource}.resource"
-        else:
-            resource_url = f"http://{self.Ip}:{self.Port}/{resource}.resource"
-
-        data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60)
-
-        if data.ok:
-            return round((int(data.headers["Content-Length"]) / 1048576), decimal)
-        else:
-            return None
+        return shared.get_resource_size(self.UseCdn, self.CdnUrl, resource, self.Ip, self.Port, decimal)
 
 
 # Fetch the stats of all servers that are currently online

@@ -93,7 +93,7 @@ def request(url, cdn=False, server=None):
 # https://docs.altv.mp/articles/connectprotocol.html
 # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
 # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
-def get_direct_connect_url(useCdn, cdnUrl, host, port, locked, password=None):
+def get_dtc_url(useCdn, cdnUrl, host, port, locked, password=None):
     dtc_url = StringIO()
     if useCdn:
         if not "http" in cdnUrl:
@@ -115,7 +115,7 @@ def get_direct_connect_url(useCdn, cdnUrl, host, port, locked, password=None):
 
 # use this function to fetch the server connect json
 # this file has every resource of the server with a hash and name
-def get_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: int, cdnUrl: str):
+def fetch_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: int, cdnUrl: str):
     if not useCdn and not locked and active:
         # This Server is not using a CDN.
         cdn_request = request(f"http://{host}:{port}/connect.json", True)
@@ -139,7 +139,7 @@ def get_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: 
 # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
 # WebRTC: This allows peer-to-peer RTC inside JS
 # Clipboard Access: This allows to copy content to users clipboard
-def get_permissions_list(connect_json):
+def get_permissions(connect_json):
     permissions = {
         "required": {
             "Screen Capture": False,
@@ -167,3 +167,17 @@ def get_permissions_list(connect_json):
             permissions["required"][permission] = True
 
     return permissions
+
+
+def get_resource_size(useCdn, cdnUrl, resource, host, port, decimal):
+    if useCdn:
+        resource_url = f"{cdnUrl}/{resource}.resource"
+    else:
+        resource_url = f"http://{host}:{port}/{resource}.resource"
+
+    data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60)
+
+    if data.ok:
+        return round((int(data.headers["Content-Length"]) / 1048576), decimal)
+    else:
+        return None

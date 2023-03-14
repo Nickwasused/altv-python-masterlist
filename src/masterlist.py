@@ -121,26 +121,16 @@ class Server:
             self.players = 0
 
     def fetch_connect_json(self):
-        return shared.get_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     def get_dtc_url(self, password=None):
-        return shared.get_direct_connect_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
     def get_permissions(self):
-        return shared.get_permissions_list(self.fetch_connect_json())
+        return shared.get_permissions(self.fetch_connect_json())
 
     def get_resource_size(self, resource, decimal=2):
-        if self.useCdn:
-            resource_url = f"{self.cdnUrl}/{resource}.resource"
-        else:
-            resource_url = f"http://{self.host}:{self.port}/{resource}.resource"
-
-        data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60)
-
-        if data.ok:
-            return round((int(data.headers["Content-Length"]) / 1048576), decimal)
-        else:
-            return None
+        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
 
 
 # Fetch the stats of all servers that are currently online
