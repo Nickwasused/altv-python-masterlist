@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from src.shared import AltstatsUrls, request
 from json import loads, dumps
 from re import compile
 import requests
@@ -12,16 +13,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 
-# This is the config object for this package
-# Here can you configure stuff like the api endpoint or the url format
-class Config:
-    base_link = "https://api.altstats.net/api/v1/"
-    all_server_stats_link = f"{base_link}/master"
-    all_servers_link = f"{base_link}/server"
-    server_link = f"{base_link}/server/" + "{}"
-
-
-logging.debug(f'starting with base link: {Config.base_link}')
+logging.debug(f'starting with base link: {AltstatsUrls.base_link}')
 
 
 # This is the server object
@@ -161,10 +153,10 @@ class Server:
 
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
-    def fetch_connect_json(self, proxy=None):
+    def fetch_connect_json(self):
         if not self.UseCdn and not self.Locked and self.LastFetchOnline:
             # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.Ip}:{self.Port}/connect.json", True, self, proxy)
+            cdn_request = request(f"http://{self.Ip}:{self.Port}/connect.json", True, self)
             if cdn_request is None:
                 # possible server error or blocked by alt:V
                 return None
@@ -172,7 +164,7 @@ class Server:
                 return cdn_request
         else:
             # let`s try to get the connect json
-            cdn_request = request(f"{self.CdnUrl}/connect.json", proxy=proxy)
+            cdn_request = request(f"{self.CdnUrl}/connect.json")
             if cdn_request is None:
                 # maybe the CDN is offline
                 return None
@@ -208,7 +200,7 @@ class Server:
     # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
     # WebRTC: This allows peer-to-peer RTC inside JS
     # Clipboard Access: This allows to copy content to users clipboard
-    def get_permissions(self, proxy=None):
+    def get_permissions(self):
         permissions = {
             "required": {
                 "Screen Capture": False,
@@ -223,7 +215,7 @@ class Server:
         }
 
         # fetch connect json
-        data = self.fetch_connect_json(proxy)
+        data = self.fetch_connect_json()
         if data is None:
             return None
         optional = data["optional-permissions"]
@@ -239,54 +231,18 @@ class Server:
 
         return permissions
 
-    def get_resource_size(self, resource, decimal=2, proxy=None):
+    def get_resource_size(self, resource, decimal=2):
         if self.UseCdn:
             resource_url = f"{self.CdnUrl}/{resource}.resource"
         else:
             resource_url = f"http://{self.Ip}:{self.Port}/{resource}.resource"
 
-        data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60, proxies=proxy)
+        data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60)
 
         if data.ok:
             return round((int(data.headers["Content-Length"]) / 1048576), decimal)
         else:
             return None
-
-
-def request(url, cdn=False, server=[], proxy=None):
-    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
-    # a simple User-Agent check e.g. https://luckyv.de does that
-    if "http://" in url and cdn:
-        req_headers = {
-            "host": "",
-            'user-agent': 'AltPublicAgent',
-            "accept": '*/*',
-            'alt-debug': 'false',
-            'alt-password': '17241709254077376921',
-            'alt-branch': server.branch,
-            'alt-version': server.version,
-            'alt-player-name': secrets.token_urlsafe(10),
-            'alt-social-id': secrets.token_hex(9),
-            'alt-hardware-id2': secrets.token_hex(19),
-            'alt-hardware-id': secrets.token_hex(19)
-        }
-    else:
-        req_headers = {
-            'User-Agent': 'AltPublicAgent',
-            'content-type': 'application/json; charset=utf-8'
-        }
-
-    try:
-        api_data = requests.get(url, headers=req_headers, timeout=60, proxies=proxy)
-
-        if api_data.status_code != 200:
-            logging.warning(f"the request returned nothing.")
-            return None
-        else:
-            return loads(api_data.content.decode("utf-8", errors='ignore'))
-    except Exception as e:
-        logging.error(e)
-        return None
 
 
 # Fetch the stats of all servers that are currently online
@@ -306,7 +262,7 @@ def request(url, cdn=False, server=[], proxy=None):
 #   }
 # ]
 def get_server_stats():
-    data = request(Config.all_server_stats_link)
+    data = request(AltstatsUrls.all_server_stats_link)
     if data is None:
         return None
     else:
@@ -316,7 +272,7 @@ def get_server_stats():
 # Get all Servers that are online as Server object
 def get_servers():
     return_servers = []
-    servers = request(Config.all_servers_link)
+    servers = request(AltstatsUrls.all_servers_link)
     if servers is None or servers == "{}":
         return None
     else:
@@ -362,7 +318,7 @@ def get_servers_average():
 
 # get a single server by their server id
 def get_server_by_id(server_id):
-    temp_data = request(Config.server_link.format(server_id))
+    temp_data = request(AltstatsUrls.server_link.format(server_id))
     if temp_data is None or temp_data == {}:
         # the api returned no data
         return None
