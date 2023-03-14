@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from src.shared import MasterlistUrls, request, get_direct_connect_url
 from dataclasses import dataclass
 from re import compile
+import src.shared as shared
 import requests
 import logging
 import sys
@@ -13,7 +13,7 @@ logging.getLogger().setLevel(logging.INFO)
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 
 
-logging.debug(f'starting with base link: {MasterlistUrls.base_link}')
+logging.debug(f'starting with base link: {shared.MasterlistUrls.base_link}')
 
 
 # This is the server object
@@ -48,7 +48,7 @@ class Server:
     # initialize the object with all values that are available in the alt:V masterlist API
     def __init__(self, id):
         self.id = id
-        temp_data = request(MasterlistUrls.server_link.format(self.id))
+        temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
         if temp_data is None or temp_data == {} or not temp_data["active"]:
             # the api returned no data or the server is offline
             pass
@@ -123,25 +123,10 @@ class Server:
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
     def fetch_connect_json(self):
-        if not self.useCdn and not self.locked and self.active:
-            # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.host}:{self.port}/connect.json", True, self)
-            if cdn_request is None:
-                # possible server error or blocked by alt:V
-                return None
-            else:
-                return cdn_request
-        else:
-            # let`s try to get the connect.json
-            cdn_request = request(f"{self.cdnUrl}/connect.json")
-            if cdn_request is None:
-                # maybe the CDN is offline
-                return None
-            else:
-                return cdn_request
+        return shared.get_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     def get_dtc_url(self, password=None):
-        return get_direct_connect_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+        return shared.get_direct_connect_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
     # fetch the required and optional permissions of the server
     # available permissions:
@@ -196,7 +181,7 @@ class Server:
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
 def get_server_stats():
-    data = request(MasterlistUrls.all_server_stats_link)
+    data = shared.request(shared.MasterlistUrls.all_server_stats_link)
     if data is None:
         return None
     else:
@@ -206,7 +191,7 @@ def get_server_stats():
 # Get all Servers that are online as Server object
 def get_servers():
     return_servers = []
-    servers = request(MasterlistUrls.all_servers_link)
+    servers = shared.request(shared.MasterlistUrls.all_servers_link)
     if servers is None or servers == "{}":
         return None
     else:
@@ -233,7 +218,7 @@ def get_server_by_id(server_id):
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
 def get_server_by_id_avg(server_id, time):
-    avg_data = request(MasterlistUrls.server_average_link.format(server_id, time))
+    avg_data = shared.request(shared.MasterlistUrls.server_average_link.format(server_id, time))
     if avg_data is None:
         return None
     else:
@@ -258,7 +243,7 @@ def get_server_by_id_avg_result(server_id, time):
 # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
 # time: 1d, 7d, 31d
 def get_server_by_id_max(server_id, time):
-    max_data = request(MasterlistUrls.server_max_link.format(server_id, time))
+    max_data = shared.request(shared.MasterlistUrls.server_max_link.format(server_id, time))
     if max_data is None:
         return None
     else:

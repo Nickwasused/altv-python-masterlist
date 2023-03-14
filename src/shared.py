@@ -111,3 +111,24 @@ def get_direct_connect_url(useCdn, cdnUrl, host, port, locked, password=None):
         dtc_url.write(f"?password={password}")
 
     return dtc_url.getvalue()
+
+
+# use this function to fetch the server connect json
+# this file has every resource of the server with a hash and name
+def get_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: int, cdnUrl: str):
+    if not useCdn and not locked and active:
+        # This Server is not using a CDN.
+        cdn_request = request(f"http://{host}:{port}/connect.json", True)
+        if cdn_request is None:
+            # possible server error or blocked by alt:V
+            return None
+        else:
+            return cdn_request
+    else:
+        # let`s try to get the connect.json
+        cdn_request = request(f"{cdnUrl}/connect.json")
+        if cdn_request is None:
+            # maybe the CDN is offline
+            return None
+        else:
+            return cdn_request

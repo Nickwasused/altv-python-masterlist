@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from src.shared import AltstatsUrls, request, get_direct_connect_url
 from json import dumps
 from re import compile
+import src.shared as shared
 import requests
 import logging
 import sys
@@ -12,7 +12,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 
-logging.debug(f'starting with base link: {AltstatsUrls.base_link}')
+logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
 
 
 # This is the server object
@@ -153,22 +153,7 @@ class Server:
     # use this function to fetch the server connect json
     # this file has every resource of the server with a hash and name
     def fetch_connect_json(self):
-        if not self.UseCdn and not self.Locked and self.LastFetchOnline:
-            # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.Ip}:{self.Port}/connect.json", True, self)
-            if cdn_request is None:
-                # possible server error or blocked by alt:V
-                return None
-            else:
-                return cdn_request
-        else:
-            # let`s try to get the connect json
-            cdn_request = request(f"{self.CdnUrl}/connect.json")
-            if cdn_request is None:
-                # maybe the CDN is offline
-                return None
-            else:
-                return cdn_request
+        return shared.get_connect_json(self.UseCdn, self.Locked, True, self.Ip, self.Port, self.CdnUrl)
 
     # get the "Direct Connect Protocol" url
     # e.g. altv://connect/127.0.0.1:7788?password=xyz
@@ -176,7 +161,7 @@ class Server:
     # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
     # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
     def get_dtc_url(self, password=None):
-        return get_direct_connect_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
+        return shared.get_direct_connect_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
     # fetch the required and optional permissions of the server
     # available permissions:
@@ -245,7 +230,7 @@ class Server:
 #   }
 # ]
 def get_server_stats():
-    data = request(AltstatsUrls.all_server_stats_link)
+    data = shared.request(shared.AltstatsUrls.all_server_stats_link)
     if data is None:
         return None
     else:
@@ -255,7 +240,7 @@ def get_server_stats():
 # Get all Servers that are online as Server object
 def get_servers():
     return_servers = []
-    servers = request(AltstatsUrls.all_servers_link)
+    servers = shared.request(shared.AltstatsUrls.all_servers_link)
     if servers is None or servers == "{}":
         return None
     else:
@@ -301,7 +286,7 @@ def get_servers_average():
 
 # get a single server by their server id
 def get_server_by_id(server_id):
-    temp_data = request(AltstatsUrls.server_link.format(server_id))
+    temp_data = shared.request(shared.AltstatsUrls.server_link.format(server_id))
     if temp_data is None or temp_data == {}:
         # the api returned no data
         return None
