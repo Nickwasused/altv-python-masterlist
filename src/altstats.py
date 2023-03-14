@@ -54,48 +54,50 @@ class Server:
     Version: float = 0.0
 
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, Id):
+    def __init__(self, Id, nofetch=False):
         self.Id = Id
-        temp_data = shared.request(shared.AltstatsUrls.server_link.format(self.Id))
-        if temp_data is None or temp_data == {} or not temp_data["LastUpdate"]:
-            # the api returned no data or the server is offline
-            self.LastActivity = False
-            self.Players = 0
-        else:
-            self.FoundAt = temp_data["FoundAt"]
-            self.LastActivity = temp_data["LastActivity"]
-            self.Visible = temp_data["Visible"]
-            self.ServerId = temp_data["ServerId"]
-            self.Players = temp_data["Players"]
-            self.Name = temp_data["Name"]
-            self.Locked = temp_data["Locked"]
-            self.Ip = temp_data["Ip"]
-            self.Port = temp_data["Port"]
-            self.MaxPlayers = temp_data["MaxPlayers"]
-            self.Ping = temp_data["Ping"]
-            self.Website = temp_data["Website"]
-            self.Language = temp_data["Language"]
-            self.Description = temp_data["Description"]
-            self.LastUpdate = temp_data["LastUpdate"]
-            self.IsOfficial = temp_data["IsOfficial"]
-            self.PlayerRecord = temp_data["PlayerRecord"]
-            self.PlayerRecordDate = temp_data["PlayerRecordDate"]
-            self.LastFetchOnline = temp_data["LastFetchOnline"]
-            self.LanguageShort = temp_data["LanguageShort"]
-            self.GameMode = temp_data["GameMode"]
-            self.Branch = temp_data["Branch"]
-            self.Build = temp_data["Build"]
-            self.CdnUrl = temp_data["CdnUrl"]
-            self.EarlyAuthUrl = temp_data["EarlyAuthUrl"]
-            self.Verified = temp_data["Verified"]
-            self.UseCdn = temp_data["UseCdn"]
-            self.UseEarlyAuth = temp_data["UseEarlyAuth"]
-            self.BannerUrl = temp_data["BannerUrl"]
-            self.Promoted = temp_data["Promoted"]
-            self.Tags = temp_data["Tags"]
-            self.UseVoiceChat = temp_data["UseVoiceChat"]
-            self.Level = temp_data["Level"]
-            self.Version = temp_data["Version"]
+
+        if not nofetch:
+            temp_data = shared.request(shared.AltstatsUrls.server_link.format(self.Id))
+            if temp_data is None or temp_data == {} or not temp_data["LastUpdate"]:
+                # the api returned no data or the server is offline
+                self.LastActivity = False
+                self.Players = 0
+            else:
+                self.FoundAt = temp_data["FoundAt"]
+                self.LastActivity = temp_data["LastActivity"]
+                self.Visible = temp_data["Visible"]
+                self.ServerId = temp_data["ServerId"]
+                self.Players = temp_data["Players"]
+                self.Name = temp_data["Name"]
+                self.Locked = temp_data["Locked"]
+                self.Ip = temp_data["Ip"]
+                self.Port = temp_data["Port"]
+                self.MaxPlayers = temp_data["MaxPlayers"]
+                self.Ping = temp_data["Ping"]
+                self.Website = temp_data["Website"]
+                self.Language = temp_data["Language"]
+                self.Description = temp_data["Description"]
+                self.LastUpdate = temp_data["LastUpdate"]
+                self.IsOfficial = temp_data["IsOfficial"]
+                self.PlayerRecord = temp_data["PlayerRecord"]
+                self.PlayerRecordDate = temp_data["PlayerRecordDate"]
+                self.LastFetchOnline = temp_data["LastFetchOnline"]
+                self.LanguageShort = temp_data["LanguageShort"]
+                self.GameMode = temp_data["GameMode"]
+                self.Branch = temp_data["Branch"]
+                self.Build = temp_data["Build"]
+                self.CdnUrl = temp_data["CdnUrl"]
+                self.EarlyAuthUrl = temp_data["EarlyAuthUrl"]
+                self.Verified = temp_data["Verified"]
+                self.UseCdn = temp_data["UseCdn"]
+                self.UseEarlyAuth = temp_data["UseEarlyAuth"]
+                self.BannerUrl = temp_data["BannerUrl"]
+                self.Promoted = temp_data["Promoted"]
+                self.Tags = temp_data["Tags"]
+                self.UseVoiceChat = temp_data["UseVoiceChat"]
+                self.Level = temp_data["Level"]
+                self.Version = temp_data["Version"]
 
     # fetch the server data and replace it
     def update(self):
@@ -147,19 +149,18 @@ def get_servers():
     else:
         for server in servers:
             # Now change every JSON response to a server object that we can e.g. update it when we want
-            temp_server = Server(server["id"], None, None, None,
-                                 None, server["playerCount"], server["name"],
-                                 bool(server["locked"]), None, None,
-                                 server["slots"], None,
-                                 None, server["language"]["full"],
-                                 None, None,
-                                 bool(server["official"]), None, None,
-                                 None, server["language"]["short"], server["gameMode"],
-                                 None, None, None, None,
-                                 bool(server["verified"]), None, None, None,
-                                 bool(server["promoted"]), server["tags"], None, None,
-                                 None)
-            return_servers.append(temp_server)
+            tmp_server = Server(server["id"], True)
+            tmp_server.Name = server["name"]
+            tmp_server.Locked = bool(server["locked"])
+            tmp_server.Players = server["playerCount"]
+            tmp_server.MaxPlayers = server["slots"]
+            tmp_server.gameMode = server["gameMode"]
+            tmp_server.language = server["language"]
+            tmp_server.IsOfficial = bool(server["official"])
+            tmp_server.Verified = bool(server["verified"])
+            tmp_server.Promoted = bool(server["promoted"])
+            tmp_server.Tags = server["tags"]
+            return_servers.append(tmp_server)
 
         return return_servers
 
