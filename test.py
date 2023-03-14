@@ -6,9 +6,8 @@ import src.altstats as altv2
 
 server = altv.Server("bb7228a0d366fc575a5682a99359424f")
 
-print(server.fetch_connect_json())
+print(server.get_permissions())
 
-exit()
 
 server2 = altv2.get_server_by_id(127)
-print(server2.fetch_connect_json())
+print(server2.get_permissions())

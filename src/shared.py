@@ -132,3 +132,38 @@ def get_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: 
             return None
         else:
             return cdn_request
+
+
+# fetch the required and optional permissions of the server
+# available permissions:
+# Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+# WebRTC: This allows peer-to-peer RTC inside JS
+# Clipboard Access: This allows to copy content to users clipboard
+def get_permissions_list(connect_json):
+    permissions = {
+        "required": {
+            "Screen Capture": False,
+            "WebRTC": False,
+            "Clipboard Access": False
+        },
+        "optional": {
+            "Screen Capture": False,
+            "WebRTC": False,
+            "Clipboard Access": False
+        }
+    }
+
+    if connect_json is None:
+        return None
+    optional = connect_json["optional-permissions"]
+    required = connect_json["required-permissions"]
+
+    if optional is not []:
+        for permission in optional:
+            permissions["optional"][permission] = True
+
+    if required is not []:
+        for permission in required:
+            permissions["required"][permission] = True
+
+    return permissions

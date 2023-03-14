@@ -150,54 +150,14 @@ class Server:
         self.Level = temp_server.Level
         self.Version = temp_server.Version
 
-    # use this function to fetch the server connect json
-    # this file has every resource of the server with a hash and name
     def fetch_connect_json(self):
         return shared.get_connect_json(self.UseCdn, self.Locked, True, self.Ip, self.Port, self.CdnUrl)
 
-    # get the "Direct Connect Protocol" url
-    # e.g. altv://connect/127.0.0.1:7788?password=xyz
-    # https://docs.altv.mp/articles/connectprotocol.html
-    # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
-    # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
     def get_dtc_url(self, password=None):
         return shared.get_direct_connect_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
-    # fetch the required and optional permissions of the server
-    # available permissions:
-    # Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
-    # WebRTC: This allows peer-to-peer RTC inside JS
-    # Clipboard Access: This allows to copy content to users clipboard
     def get_permissions(self):
-        permissions = {
-            "required": {
-                "Screen Capture": False,
-                "WebRTC": False,
-                "Clipboard Access": False
-            },
-            "optional": {
-                "Screen Capture": False,
-                "WebRTC": False,
-                "Clipboard Access": False
-            }
-        }
-
-        # fetch connect json
-        data = self.fetch_connect_json()
-        if data is None:
-            return None
-        optional = data["optional-permissions"]
-        required = data["required-permissions"]
-
-        if optional is not []:
-            for permission in optional:
-                permissions["optional"][permission] = True
-
-        if required is not []:
-            for permission in required:
-                permissions["required"][permission] = True
-
-        return permissions
+        return shared.get_permissions_list(self.fetch_connect_json())
 
     def get_resource_size(self, resource, decimal=2):
         if self.UseCdn:
