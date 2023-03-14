@@ -7,10 +7,7 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-
-
 # Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
-
 logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
 
 
