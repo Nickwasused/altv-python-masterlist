@@ -31,7 +31,6 @@ This is the server object:
 | version | string
 | lastUpdate | int
 | connect_json | json
-| dtc_url | string
 | permissions | json
 
 You can create a Server object like this: Server(server_id)
@@ -46,3 +45,4 @@ You can call the following functions on the server object:
 | get_max(time) | Get the maximum player data of the server
 | get_avg(time, return_result=False) | Get the average player data of the server
 | get_resource_size(resource) | Get the size of an alt:V resource in MB
+| get_dtc_url(password=None) | Get the servers direct connect Url

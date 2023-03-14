@@ -1,4 +1,4 @@
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 
 # general functions
@@ -32,12 +32,12 @@ server = altv.Server(86)
 
 
 def test_dtc_url():
-    url = server.dtc_url
+    url = server.get_dtc_url()
     assert "altv://connect/" in url
 
 
 def test_dtc_url_password():
-    url = server.dtc_url("test")
+    url = server.get_dtc_url("test")
     assert "altv://connect/" in url and "test" in url and "password" in url
 
 

@@ -3,7 +3,7 @@
 ## Get a alt:V Server object
 
 ```python3
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 # create Server object
 server = altv.Server("ceaac3d1cc22761223beac38386f5ab2")
@@ -15,7 +15,7 @@ print(server)
 
 ```python3
 from time import sleep
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 # get the server json
 server = altv.Server("ceaac3d1cc22761223beac38386f5ab2")
@@ -32,7 +32,7 @@ print(server.players)
 ## Get a alt:V Server connect.json
 
 ```python3
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 # get the server json
 server = altv.Server("ceaac3d1cc22761223beac38386f5ab2")
@@ -45,7 +45,7 @@ if connect_json:
 ## Get all alt:V Servers that are active
 
 ```python3
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 servers = altv.get_servers()
 
@@ -59,21 +59,21 @@ for server in servers:
 ## Get the Direct Connect Url of a Server
 
 ```python3
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 # get the server dtc url with a password
 server = altv.Server("bb7228a0d366fc575a5682a99359424f")
-print(server.dtc_url(password="test"))
+print(server.get_dtc_url(password="test"))
 
 # get the server dtc url without a password
 server = altv.Server("bb7228a0d366fc575a5682a99359424f")
-print(server.dtc_url)
+print(server.get_dtc_url())
 ```
 
 ## Get the Permissions of a Server
 
 ```python3
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 server = altv.Server("0330ffff0c5e97e277d038a707701024")
 permissions = server.permissions

@@ -42,7 +42,6 @@ This is the server object:
 | Level             | int
 | Version           | string
 | connect_json      | json
-| dtc_url           | string
 | permissions       | json
 
 ## Functions
@@ -53,5 +52,6 @@ You can call the following functions on the server object:
 |---------------------------| -------
 | update()                  | which is going to fetch the API data from alt:V and replace it in the Server object. 
 | get_resource_size(resource, decimal, proxy) | Get the size of a alt:V resource.
+| get_dtc_url(password=None) | Get the server direct connect Url
   
 You can print the server object directly to get the JSON Object as a string.

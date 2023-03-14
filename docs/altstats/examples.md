@@ -3,7 +3,8 @@
 ## Get a alt:V Server object
 
 ```python3
-import altstats as altv
+
+from altvmasterlist import altstats as altv
 
 # get the server
 server = altv.Server(86)
@@ -13,7 +14,7 @@ server = altv.Server(86)
 
 ```python3
 from time import sleep
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 # get the server json
 server = altv.Server(86)
@@ -30,7 +31,7 @@ print(server.Players)
 ## Get a alt:V Server connect.json
 
 ```python3
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 # get the server json
 server = altv.Server(86)
@@ -43,7 +44,7 @@ if connect_json:
 ## Get all alt:V Servers that are active
 
 ```python3
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 servers = altv.get_servers()
 
@@ -57,22 +58,22 @@ for server in servers:
 ## Get the Direct Connect Url of a Server
 
 ```python3
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 
 server = altv.Server(86)
 
 # get the server dtc url with a password
-print(server.dtc_url(password="test"))
+print(server.get_dtc_url(password="test"))
 
 # get the server dtc url without a password
-print(server.dtc_url)
+print(server.get_dtc_url())
 ```
 
 ## Get the Permissions of a Server
 
 ```python3
-import altstats as altv
+from altvmasterlist import altstats as altv
 
 server = altv.Server(86)
 permissions = server.permissions

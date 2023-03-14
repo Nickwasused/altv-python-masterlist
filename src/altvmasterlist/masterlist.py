@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+from altvmasterlist import shared
 from dataclasses import dataclass
 from re import compile
-import src.shared as shared
 import logging
 import sys
 
@@ -109,12 +109,11 @@ class Server:
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     @property
-    def dtc_url(self, password=None):
-        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
-
-    @property
     def permissions(self):
         return shared.get_permissions(self.connect_json)
+
+    def get_dtc_url(self, password=None):
+        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
     def get_resource_size(self, resource, decimal=2):
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)

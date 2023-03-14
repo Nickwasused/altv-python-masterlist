@@ -1,4 +1,4 @@
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 
 
 # general functions
@@ -52,12 +52,12 @@ def test_fetch_connect_json():
 
 
 def test_dtc_url():
-    url = server.dtc_url
+    url = server.get_dtc_url()
     assert "altv://connect/" in url
 
 
 def test_dtc_url_password():
-    url = server.dtc_url("test")
+    url = server.get_dtc_url("test")
     assert "altv://connect/" in url and "test" in url and "password" in url
 
 
