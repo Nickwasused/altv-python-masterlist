@@ -5,5 +5,5 @@
 import src.masterlist as altv
 import src.altstats as altv2
 
-server = altv2.get_servers()
+server = altv.Server("bb7228a0d366fc575a5682a99359424f")
 print(server)

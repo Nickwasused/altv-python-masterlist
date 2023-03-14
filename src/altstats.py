@@ -165,27 +165,6 @@ def get_servers():
         return return_servers
 
 
-# get all servers and calculate the average values
-def get_servers_average():
-    data = get_server_stats()
-    if data is None:
-        return None
-    start_date = data[-1]["TimeStamp"]
-    end_date = data[0]["TimeStamp"]
-
-    server_count_total = 0
-    player_count_total = 0
-
-    for entry in data:
-        server_count_total += entry["ServerCount"]
-        player_count_total += entry["PlayerCount"]
-
-    server_count_avg = round(server_count_total / len(data), 0)
-    player_count_avg = round(player_count_total / len(data), 0)
-
-    return start_date, end_date, server_count_avg, player_count_avg
-
-
 # validate a given alt:V server id
 def validate_id(server_id):
     server_id = str(server_id)
