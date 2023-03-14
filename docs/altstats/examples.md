@@ -35,7 +35,7 @@ import altstats as altv
 # get the server json
 server = altv.Server(86)
 
-connect_json = server.fetchconnectjson()
+connect_json = server.connect_json
 if connect_json:
     print(connect_json)
 ```
@@ -63,10 +63,10 @@ import altstats as altv
 server = altv.Server(86)
 
 # get the server dtc url with a password
-print(server.get_dtc_url(password="test"))
+print(server.dtc_url(password="test"))
 
 # get the server dtc url without a password
-print(server.get_dtc_url())
+print(server.dtc_url)
 ```
 
 ## Get the Permissions of a Server
@@ -75,7 +75,7 @@ print(server.get_dtc_url())
 import altstats as altv
 
 server = altv.Server(86)
-permissions = server.get_permissions()
+permissions = server.permissions
 print(permissions)
 
 if permissions["required"]["Screen Capture"]:

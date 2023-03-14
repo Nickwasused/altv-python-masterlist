@@ -104,14 +104,17 @@ class Server:
         else:
             return average_data
 
-    def fetch_connect_json(self):
+    @property
+    def connect_json(self):
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
-    def get_dtc_url(self, password=None):
+    @property
+    def dtc_url(self, password=None):
         return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
-    def get_permissions(self):
-        return shared.get_permissions(self.fetch_connect_json())
+    @property
+    def permissions(self):
+        return shared.get_permissions(self.connect_json)
 
     def get_resource_size(self, resource, decimal=2):
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)

@@ -14,22 +14,16 @@ print(altv.validate_id("bb7228a0d366fc575a5682a99359424f"))
 print(altv.validate_id("abcdefghijklmnop123"))
 
 # get the server cdn connect json
-server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
-print(server.fetch_connect_json())
+server = altv.Server("bb7228a0d366fc575a5682a99359424f")
+print(server.connect_json)
 
 # get the server and print it
-server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+server = altv.Server("bb7228a0d366fc575a5682a99359424f")
 print(server)
 
-# get the server cdn connect json with a proxy
-print(server.fetch_connect_json({
-        "http": "http://user:password@host:port/",
-        "https": "http://user:password@host:port/"
-    }))
-
 # get the server connect json (without cdn)
-server = altv.get_server_by_id("3009f762b255336fed101d97b026fcfa")
-print(server.fetch_connect_json())
+server = altv.Server("3009f762b255336fed101d97b026fcfa")
+print(server.connect_json)
 
 # get all servers as server object
 altv.get_servers()
@@ -38,12 +32,12 @@ altv.get_servers()
 altv.get_server_stats()
 
 # get server with update
-server = altv.get_server_by_id("bb7228a0d366fc575a5682a99359424f")
+server = altv.Server("bb7228a0d366fc575a5682a99359424f")
 print(server.lastUpdate)
 time.sleep(120)
 server.update()
 print(server.lastUpdate)
 
 # get the server permissions
-server = altv.get_server_by_id("0330ffff0c5e97e277d038a707701024")
-print(server.get_permissions())
+server = altv.Server("0330ffff0c5e97e277d038a707701024")
+print(server.permissions)

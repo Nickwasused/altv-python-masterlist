@@ -37,7 +37,7 @@ import masterlist as altv
 # get the server json
 server = altv.Server("ceaac3d1cc22761223beac38386f5ab2")
 
-connect_json = server.fetch_connect_json()
+connect_json = server.connect_json
 if connect_json:
     print(connect_json)
 ```
@@ -63,11 +63,11 @@ import masterlist as altv
 
 # get the server dtc url with a password
 server = altv.Server("bb7228a0d366fc575a5682a99359424f")
-print(server.get_dtc_url(password="test"))
+print(server.dtc_url(password="test"))
 
 # get the server dtc url without a password
 server = altv.Server("bb7228a0d366fc575a5682a99359424f")
-print(server.get_dtc_url())
+print(server.dtc_url)
 ```
 
 ## Get the Permissions of a Server
@@ -76,7 +76,7 @@ print(server.get_dtc_url())
 import masterlist as altv
 
 server = altv.Server("0330ffff0c5e97e277d038a707701024")
-permissions = server.get_permissions()
+permissions = server.permissions
 print(permissions)
 
 if permissions["required"]["Screen Capture"]:

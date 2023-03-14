@@ -14,39 +14,36 @@ print(altv.validate_id(86))
 print(altv.validate_id("ag567"))
 
 # get the server cdn connect json
-server = altv.get_server_by_id(86)
-print(server.fetch_connect_json())
+server = altv.Server(86)
+print(server.connect_json)
 
 # get the server and print it
-server = altv.get_server_by_id(127)
+server = altv.Server(127)
 print(server)
 
 # get the server cdn connect json with a proxy
-print(server.fetch_connect_json({
-        "http": "http://user:password@host:port/",
-        "https": "http://user:password@host:port/"
-    }))
+print(server.connect_json)
 
 # get the server connect json (without cdn)
-server = altv.get_server_by_id(26)
-print(server.fetch_connect_json())
+server = altv.Server(26)
+print(server.connect_json)
 
 # get all servers as server object
 servers = altv.get_servers()
 
 for server in servers:
-    print(server.get_json())
+    print(server)
 
 # get all server stats
 altv.get_server_stats()
 
 # get server with update
-server = altv.get_server_by_id(86)
+server = altv.Server(86)
 print(server.LastActivity)
 time.sleep(120)
 server.update()
 print(server.LastActivity)
 
 # get the server permissions
-server = altv.get_server_by_id(86)
-print(server.get_permissions())
+server = altv.Server(86)
+print(server.permissions)

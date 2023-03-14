@@ -30,6 +30,9 @@ This is the server object:
 | build | int
 | version | string
 | lastUpdate | int
+| connect_json | json
+| dtc_url | string
+| permissions | json
 
 You can create a Server object like this: Server(server_id)
 
@@ -42,7 +45,4 @@ You can call the following functions on the server object:
 | update() | Update the server object by calling __init__
 | get_max(time) | Get the maximum player data of the server
 | get_avg(time, return_result=False) | Get the average player data of the server
-| fetch_connect_json() | Fetch the connect.json of the server
-| get_dtc_url(password=None) | Get the "Direct Connect Protocol" URL. You can supply a password. E.g. altv://connect/1.1.1.1:7788?password=test
-| get_permissions() | Get the permissions of the Server in JSON
 | get_resource_size(resource) | Get the size of an alt:V resource in MB

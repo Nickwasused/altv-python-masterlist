@@ -5,5 +5,7 @@
 import src.masterlist as altv
 import src.altstats as altv2
 
-server = altv.Server("bb7228a0d366fc575a5682a99359424f")
-print(server)
+server = altv2.Server(127)
+print(server.connect_json)
+print(server.dtc_url)
+print(server.permissions)

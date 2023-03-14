@@ -100,14 +100,17 @@ class Server:
     def update(self):
         self.__init__(self.Id)
 
-    def fetch_connect_json(self):
+    @property
+    def connect_json(self):
         return shared.fetch_connect_json(self.UseCdn, self.Locked, self.LastFetchOnline, self.Ip, self.Port, self.CdnUrl)
 
-    def get_dtc_url(self, password=None):
+    @property
+    def dtc_url(self, password=None):
         return shared.get_dtc_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
-    def get_permissions(self):
-        return shared.get_permissions(self.fetch_connect_json())
+    @property
+    def permissions(self):
+        return shared.get_permissions(self.connect_json)
 
     def get_resource_size(self, resource, decimal=2):
         return shared.get_resource_size(self.UseCdn, self.CdnUrl, resource, self.Ip, self.Port, decimal)
