@@ -50,7 +50,8 @@ class Server:
         temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
         if temp_data is None or temp_data == {} or not temp_data["active"]:
             # the api returned no data or the server is offline
-            pass
+            self.active = False
+            self.players = 0
         else:
             self.active = temp_data["active"]
             self.maxPlayers = temp_data["info"]["maxPlayers"]
@@ -79,45 +80,7 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
-        temp_server = Server(self.id)
-
-        # check if the server is returned
-        if temp_server is None:
-            # don`t update the server object because the API returned invalid, broken, or no data
-            logging.warning(f"the alt:V API returned nothing.")
-            return
-
-        # check if the server is online
-        if temp_server.active:
-            # these values are only available when the server is online
-            self.active = temp_server.active
-            self.maxPlayers = temp_server.maxPlayers
-            self.players = temp_server.players
-            self.name = temp_server.name
-            self.locked = temp_server.locked
-            self.host = temp_server.host
-            self.port = temp_server.port
-            self.gameMode = temp_server.gameMode
-            self.website = temp_server.website
-            self.language = temp_server.language
-            self.description = temp_server.description
-            self.verified = temp_server.verified
-            self.promoted = temp_server.promoted
-            self.useEarlyAuth = temp_server.useEarlyAuth
-            self.earlyAuthUrl = temp_server.earlyAuthUrl
-            self.useCdn = temp_server.useCdn
-            self.cdnUrl = temp_server.cdnUrl
-            self.useVoiceChat = temp_server.useVoiceChat
-            self.tags = temp_server.tags
-            self.bannerUrl = temp_server.bannerUrl
-            self.branch = temp_server.branch
-            self.build = temp_server.build
-            self.version = temp_server.version
-            self.lastUpdate = temp_server.lastUpdate
-        else:
-            # set the server to be offline and the players to 0, because the server is offline
-            self.active = False
-            self.players = 0
+        self.__init__(self.id)
 
     # get the maximum player count with a specified time range
     # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]

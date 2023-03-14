@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-from json import dumps
+from dataclasses import dataclass
 from re import compile
 import src.shared as shared
-import requests
 import logging
 import sys
 
@@ -16,142 +15,94 @@ logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
 
 
 # This is the server object
+@dataclass
 class Server:
+    Id: int
+    FoundAt: str = ""
+    LastActivity: str = ""
+    Visible: bool = False
+    ServerId: str = ""
+    Players: int = 0
+    Name: str = ""
+    Locked: bool = False
+    Ip: str = ""
+    Port: int = 0
+    MaxPlayers: int = 0
+    Ping: int = 0
+    Website: str = ""
+    Language: str = ""
+    Description: str = ""
+    LastUpdate: int = 0
+    IsOfficial: bool = False
+    PlayerRecord: int = 0
+    PlayerRecordDate: str = ""
+    LastFetchOnline: bool = False
+    LanguageShort: str = ""
+    GameMode: str = ""
+    Branch: str = ""
+    Build: int = 0
+    CdnUrl: str = ""
+    EarlyAuthUrl: str = ""
+    Verified: bool = False
+    UseCdn: bool = False
+    UseEarlyAuth: bool = False
+    BannerUrl: str = ""
+    Promoted: bool = False
+    Tags: list[str] = None
+    UseVoiceChat: bool = False
+    Level: int = 0
+    Version: float = 0.0
+
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, Id, FoundAt, LastActivity, Visible, ServerId, Players, Name, Locked, Ip, Port, MaxPlayers, Ping,
-                 Website, Language, Description, LastUpdate, IsOfficial, PlayerRecord, PlayerRecordDate,
-                 LastFetchOnline, LanguageShort, GameMode, Branch, Build, CdnUrl, EarlyAuthUrl, Verified, UseCdn,
-                 UseEarlyAuth, BannerUrl, Promoted, Tags, UseVoiceChat, Level, Version):
+    def __init__(self, Id):
         self.Id = Id
-        self.FoundAt = FoundAt
-        self.LastActivity = LastActivity
-        self.Visible = Visible
-        self.ServerId = ServerId
-        self.Players = Players
-        self.Name = Name
-        self.Locked = Locked
-        self.Ip = Ip
-        self.Port = Port
-        self.MaxPlayers = MaxPlayers
-        self.Ping = Ping
-        self.Website = Website
-        self.Language = Language
-        self.Description = Description
-        self.LastUpdate = LastUpdate
-        self.IsOfficial = IsOfficial
-        self.PlayerRecord = PlayerRecord
-        self.PlayerRecordDate = PlayerRecordDate
-        self.LastFetchOnline = LastFetchOnline
-        self.LanguageShort = LanguageShort
-        self.GameMode = GameMode
-        self.Branch = Branch
-        self.Build = Build
-        self.CdnUrl = CdnUrl
-        self.EarlyAuthUrl = EarlyAuthUrl
-        self.Verified = Verified
-        self.UseCdn = UseCdn
-        self.UseEarlyAuth = UseEarlyAuth
-        self.BannerUrl = BannerUrl
-        self.Promoted = Promoted
-        self.Tags = Tags
-        self.UseVoiceChat = UseVoiceChat
-        self.Level = Level
-        self.Version = Version
-
-    # return the current server data as JSON object
-    def get_json(self):
-        return {
-            "Id": self.Id,
-            "FoundAt": self.FoundAt,
-            "LastActivity": self.LastActivity,
-            "Visible": self.Visible,
-            "ServerId": self.ServerId,
-            "Players": self.Players,
-            "Name": self.Name,
-            "Locked": self.Locked,
-            "Ip": self.Ip,
-            "Port": self.Port,
-            "MaxPlayers": self.MaxPlayers,
-            "Ping": self.Ping,
-            "Website": self.Website,
-            "Language": self.Language,
-            "Description": self.Description,
-            "LastUpdate": self.LastUpdate,
-            "IsOfficial": self.IsOfficial,
-            "PlayerRecord": self.PlayerRecord,
-            "PlayerRecordDate": self.PlayerRecordDate,
-            "LastFetchOnline": self.LastFetchOnline,
-            "LanguageShort": self.LanguageShort,
-            "GameMode": self.GameMode,
-            "Branch": self.Branch,
-            "Build": self.Build,
-            "CdnUrl": self.CdnUrl,
-            "EarlyAuthUrl": self.EarlyAuthUrl,
-            "Verified": self.Verified,
-            "UseCdn": self.UseCdn,
-            "UseEarlyAuth": self.UseEarlyAuth,
-            "BannerUrl": self.BannerUrl,
-            "Promoted": self.Promoted,
-            "Tags": self.Tags,
-            "UseVoiceChat": self.UseVoiceChat,
-            "Level": self.Level,
-            "Version": self.Version
-        }
-
-    def __repr__(self):
-        return self.get_json()
-
-    def __str__(self):
-        return dumps(self.__repr__())
+        temp_data = shared.request(shared.AltstatsUrls.server_link.format(self.Id))
+        if temp_data is None or temp_data == {} or not temp_data["LastUpdate"]:
+            # the api returned no data or the server is offline
+            self.LastActivity = False
+            self.Players = 0
+        else:
+            self.FoundAt = temp_data["FoundAt"]
+            self.LastActivity = temp_data["LastActivity"]
+            self.Visible = temp_data["Visible"]
+            self.ServerId = temp_data["ServerId"]
+            self.Players = temp_data["Players"]
+            self.Name = temp_data["Name"]
+            self.Locked = temp_data["Locked"]
+            self.Ip = temp_data["Ip"]
+            self.Port = temp_data["Port"]
+            self.MaxPlayers = temp_data["MaxPlayers"]
+            self.Ping = temp_data["Ping"]
+            self.Website = temp_data["Website"]
+            self.Language = temp_data["Language"]
+            self.Description = temp_data["Description"]
+            self.LastUpdate = temp_data["LastUpdate"]
+            self.IsOfficial = temp_data["IsOfficial"]
+            self.PlayerRecord = temp_data["PlayerRecord"]
+            self.PlayerRecordDate = temp_data["PlayerRecordDate"]
+            self.LastFetchOnline = temp_data["LastFetchOnline"]
+            self.LanguageShort = temp_data["LanguageShort"]
+            self.GameMode = temp_data["GameMode"]
+            self.Branch = temp_data["Branch"]
+            self.Build = temp_data["Build"]
+            self.CdnUrl = temp_data["CdnUrl"]
+            self.EarlyAuthUrl = temp_data["EarlyAuthUrl"]
+            self.Verified = temp_data["Verified"]
+            self.UseCdn = temp_data["UseCdn"]
+            self.UseEarlyAuth = temp_data["UseEarlyAuth"]
+            self.BannerUrl = temp_data["BannerUrl"]
+            self.Promoted = temp_data["Promoted"]
+            self.Tags = temp_data["Tags"]
+            self.UseVoiceChat = temp_data["UseVoiceChat"]
+            self.Level = temp_data["Level"]
+            self.Version = temp_data["Version"]
 
     # fetch the server data and replace it
     def update(self):
-        temp_server = Server(self.Id)
-
-        # check if the server is returned
-        if temp_server is None:
-            # don`t update the server object because the API returned invalid, broken, or no data
-            logging.warning(f"the alt:V API returned nothing.")
-            return
-
-        self.Id = temp_server.Id
-        self.FoundAt = temp_server.FoundAt
-        self.LastActivity = temp_server.LastActivity
-        self.Visible = temp_server.Visible
-        self.ServerId = temp_server.ServerId
-        self.Players = temp_server.Players
-        self.Name = temp_server.Name
-        self.Locked = temp_server.Locked
-        self.Ip = temp_server.Ip
-        self.Port = temp_server.Port
-        self.MaxPlayers = temp_server.MaxPlayers
-        self.Ping = temp_server.Ping
-        self.Website = temp_server.Website
-        self.Language = temp_server.Language
-        self.Description = temp_server.Description
-        self.LastUpdate = temp_server.LastUpdate
-        self.IsOfficial = temp_server.IsOfficial
-        self.PlayerRecord = temp_server.PlayerRecord
-        self.PlayerRecordDate = temp_server.PlayerRecordDate
-        self.LastFetchOnline = temp_server.LastFetchOnline
-        self.LanguageShort = temp_server.LanguageShort
-        self.GameMode = temp_server.GameMode
-        self.Branch = temp_server.Branch
-        self.Build = temp_server.Build
-        self.CdnUrl = temp_server.CdnUrl
-        self.EarlyAuthUrl = temp_server.EarlyAuthUrl
-        self.Verified = temp_server.Verified
-        self.UseCdn = temp_server.UseCdn
-        self.UseEarlyAuth = temp_server.UseEarlyAuth
-        self.BannerUrl = temp_server.BannerUrl
-        self.Promoted = temp_server.Promoted
-        self.Tags = temp_server.Tags
-        self.UseVoiceChat = temp_server.UseVoiceChat
-        self.Level = temp_server.Level
-        self.Version = temp_server.Version
+        self.__init__(self.Id)
 
     def fetch_connect_json(self):
-        return shared.fetch_connect_json(self.UseCdn, self.Locked, True, self.Ip, self.Port, self.CdnUrl)
+        return shared.fetch_connect_json(self.UseCdn, self.Locked, self.LastFetchOnline, self.Ip, self.Port, self.CdnUrl)
 
     def get_dtc_url(self, password=None):
         return shared.get_dtc_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
