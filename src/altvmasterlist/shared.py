@@ -93,13 +93,13 @@ def request(url, cdn=False, server=None):
 # https://docs.altv.mp/articles/connectprotocol.html
 # cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
 # cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
-def get_dtc_url(useCdn, cdnUrl, host, port, locked, password=None):
+def get_dtc_url(use_cdn, cdn_url, host, port, locked, password=None):
     dtc_url = StringIO()
-    if useCdn:
-        if not "http" in cdnUrl:
-            dtc_url.write(f"altv://connect/http://{cdnUrl}")
+    if use_cdn:
+        if not "http" in cdn_url:
+            dtc_url.write(f"altv://connect/http://{cdn_url}")
         else:
-            dtc_url.write(f"altv://connect/{cdnUrl}")
+            dtc_url.write(f"altv://connect/{cdn_url}")
     else:
         dtc_url.write(f"altv://connect/{host}:{port}")
 
@@ -115,8 +115,8 @@ def get_dtc_url(useCdn, cdnUrl, host, port, locked, password=None):
 
 # use this function to fetch the server connect json
 # this file has every resource of the server with a hash and name
-def fetch_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port: int, cdnUrl: str):
-    if not useCdn and not locked and active:
+def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str):
+    if not use_cdn and not locked and active:
         # This Server is not using a CDN.
         cdn_request = request(f"http://{host}:{port}/connect.json", True)
         if cdn_request is None:
@@ -126,7 +126,7 @@ def fetch_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port
             return cdn_request
     else:
         # let`s try to get the connect.json
-        cdn_request = request(f"{cdnUrl}/connect.json")
+        cdn_request = request(f"{cdn_url}/connect.json")
         if cdn_request is None:
             # maybe the CDN is offline
             return None
@@ -134,44 +134,67 @@ def fetch_connect_json(useCdn: bool, locked: bool, active: bool, host: str, port
             return cdn_request
 
 
-# fetch the required and optional permissions of the server
-# available permissions:
-# Screen Capture: This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
-# WebRTC: This allows peer-to-peer RTC inside JS
-# Clipboard Access: This allows to copy content to users clipboard
-def get_permissions(connect_json):
-    permissions = {
-        "required": {
-            "Screen Capture": False,
-            "WebRTC": False,
-            "Clipboard Access": False
-        },
-        "optional": {
-            "Screen Capture": False,
-            "WebRTC": False,
-            "Clipboard Access": False
-        }
-    }
+class Permissions:
+    @dataclass
+    class Required:
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False
 
+    @dataclass
+    class Optional:
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False
+
+
+# fetch the required and optional permissions of the server
+def get_permissions(connect_json):
     if connect_json is None:
         return None
     optional = connect_json["optional-permissions"]
     required = connect_json["required-permissions"]
 
+    permissions = Permissions()
+
     if optional is not []:
-        for permission in optional:
-            permissions["optional"][permission] = True
+        try:
+            permissions.Optional.screen_capture = optional["Screen Capture"]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Optional.webrtc = optional["WebRTC"]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Optional.clipboard_access = optional["Clipboard Access"]
+        except TypeError:
+            pass
 
     if required is not []:
-        for permission in required:
-            permissions["required"][permission] = True
+        try:
+            permissions.Required.screen_capture = required["Screen Capture"]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Required.webrtc = required["WebRTC"]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Required.clipboard_access = required["Clipboard Access"]
+        except TypeError:
+            pass
 
     return permissions
 
 
-def get_resource_size(useCdn, cdnUrl, resource, host, port, decimal):
-    if useCdn:
-        resource_url = f"{cdnUrl}/{resource}.resource"
+def get_resource_size(use_cdn, cdn_url, resource, host, port, decimal):
+    if use_cdn:
+        resource_url = f"{cdn_url}/{resource}.resource"
     else:
         resource_url = f"http://{host}:{port}/{resource}.resource"
 

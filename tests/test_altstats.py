@@ -1,4 +1,5 @@
 from altvmasterlist import altstats as altv
+from altvmasterlist import shared as shared
 
 
 # general functions
@@ -43,4 +44,4 @@ def test_dtc_url_password():
 
 def test_get_permissions():
     permissions = server.permissions
-    assert type(permissions) is dict or permissions is None
+    assert type(permissions) is shared.Permissions or permissions is None
