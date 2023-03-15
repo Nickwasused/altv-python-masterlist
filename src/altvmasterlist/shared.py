@@ -119,23 +119,23 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
         None: When an error occurred. But exceptions will still be logged!
         str: The direct connect protocol url.
     """
-    dtc_url = StringIO()
-    if use_cdn:
-        if "http" not in cdn_url:
-            dtc_url.write(f"altv://connect/http://{cdn_url}")
+    with StringIO() as dtc_url:
+        if use_cdn:
+            if "http" not in cdn_url:
+                dtc_url.write(f"altv://connect/http://{cdn_url}")
+            else:
+                dtc_url.write(f"altv://connect/{cdn_url}")
         else:
-            dtc_url.write(f"altv://connect/{cdn_url}")
-    else:
-        dtc_url.write(f"altv://connect/{host}:{port}")
+            dtc_url.write(f"altv://connect/{host}:{port}")
 
-    if locked and password is None:
-        logging.warning(
-            "Your server is password protected but you did not supply a password for the Direct Connect Url.")
+        if locked and password is None:
+            logging.warning(
+                "Your server is password protected but you did not supply a password for the Direct Connect Url.")
 
-    if password is not None:
-        dtc_url.write(f"?password={password}")
+        if password is not None:
+            dtc_url.write(f"?password={password}")
 
-    return dtc_url.getvalue()
+        return dtc_url.getvalue()
 
 
 def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -> dict | None:
