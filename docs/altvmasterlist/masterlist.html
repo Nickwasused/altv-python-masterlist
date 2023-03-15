@@ -35,14 +35,21 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-# Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 logging.debug(f&#39;starting with base link: {shared.MasterlistUrls.base_link}&#39;)
 
+&#34;&#34;&#34;You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html&#34;&#34;&#34;
 
-# This is the server object
+
 @dataclass
 class Server:
-    id: int
+    &#34;&#34;&#34;This is the server object. All values will be fetched from the api
+    in the __init__ function. You just need to provide the id like this: Server(&#34;example_id&#34;)
+
+    Attributes:
+        id: The server id.
+        no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
+    &#34;&#34;&#34;
+    id: str
     active: bool = False
     maxPlayers: int = 0
     players: int = 0
@@ -68,8 +75,8 @@ class Server:
     version: float = 0.0
     lastUpdate: int = 0
 
-    # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, server_id, no_fetch=False):
+    def __init__(self, server_id: str, no_fetch: bool = False) -&gt; None:
+        &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.id = server_id
 
         if not no_fetch:
@@ -106,19 +113,33 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
+        &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.__init__(self.id)
 
-    # get the maximum player count with a specified time range
-    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
-    # time: 1d, 7d, 31d
-    def get_max(self, time: str = &#34;1d&#34;):
+    def get_max(self, time: str = &#34;1d&#34;) -&gt; dict | None:
+        &#34;&#34;&#34;Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+        &#34;&#34;&#34;
         return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
 
-    # get the average player count with a specified time range
-    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
-    # time: 1d, 7d, 31d
-    # return result will return the average of all values e.g. 126
-    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
+        &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+            return_result (bool): Define if you want the overall average.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+            int: Overall average of defined timerange
+        &#34;&#34;&#34;
         average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
         if not average_data:
             return None
@@ -133,23 +154,33 @@ class Server:
             return average_data
 
     @property
-    def connect_json(self):
+    def connect_json(self) -&gt; dict | None:
+        &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     @property
-    def permissions(self):
+    def permissions(self) -&gt; shared.Permissions | None:
+        &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
         return shared.get_permissions(self.connect_json)
 
-    def get_dtc_url(self, password=None):
+    def get_dtc_url(self, password=None) -&gt; str | None:
+        &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
         return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
-    def get_resource_size(self, resource, decimal=2):
+    def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
+        &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
 
 
 # Fetch the stats of all servers that are currently online
 # e.g. {&#34;serversCount&#34;:121,&#34;playersCount&#34;:1595}
-def get_server_stats():
+def get_server_stats() -&gt; dict | None:
+    &#34;&#34;&#34;Statistics - Player Count across all servers &amp; The amount of servers online
+
+    Returns:
+        None: When an error occurs
+        dict: The stats
+    &#34;&#34;&#34;
     data = shared.request(shared.MasterlistUrls.all_server_stats_link)
     if data is None:
         return None
@@ -157,8 +188,14 @@ def get_server_stats():
         return data
 
 
-# Get all Servers that are online as Server object
-def get_servers():
+def get_servers() -&gt; list[Server] | None:
+    &#34;&#34;&#34;Generates a list of all servers that are currently online.
+    Note that the server objects returned are not complete!
+
+    Returns:
+        None: When an error occurs
+        list: List object that contains all servers.
+    &#34;&#34;&#34;
     return_servers = []
     servers = shared.request(shared.MasterlistUrls.all_servers_link)
     if servers is None or servers == &#34;{}&#34;:
@@ -196,8 +233,17 @@ def get_servers():
         return return_servers
 
 
-# validate a given alt:V server id
-def validate_id(server_id):
+def validate_id(server_id: str) -&gt; bool:
+    &#34;&#34;&#34;Validate a server id
+
+    Args:
+        server_id (str): The id you want to check.
+
+    Returns:
+        bool: True = valid, False = invalid
+    &#34;&#34;&#34;
+    if not isinstance(server_id, str):
+        return False
     regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
     result = regex.match(server_id)
     if result is not None:
@@ -219,15 +265,28 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="altvmasterlist.masterlist.get_server_stats"><code class="name flex">
-<span>def <span class="ident">get_server_stats</span></span>(<span>)</span>
+<span>def <span class="ident">get_server_stats</span></span>(<span>) ‑> dict | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Statistics - Player Count across all servers &amp; The amount of servers online</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurs</dd>
+<dt><code>dict</code></dt>
+<dd>The stats</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_server_stats():
+<pre><code class="python">def get_server_stats() -&gt; dict | None:
+    &#34;&#34;&#34;Statistics - Player Count across all servers &amp; The amount of servers online
+
+    Returns:
+        None: When an error occurs
+        dict: The stats
+    &#34;&#34;&#34;
     data = shared.request(shared.MasterlistUrls.all_server_stats_link)
     if data is None:
         return None
@@ -236,15 +295,30 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.get_servers"><code class="name flex">
-<span>def <span class="ident">get_servers</span></span>(<span>)</span>
+<span>def <span class="ident">get_servers</span></span>(<span>) ‑> list[<a title="altvmasterlist.masterlist.Server" href="#altvmasterlist.masterlist.Server">Server</a>] | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Generates a list of all servers that are currently online.
+Note that the server objects returned are not complete!</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurs</dd>
+<dt><code>list</code></dt>
+<dd>List object that contains all servers.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_servers():
+<pre><code class="python">def get_servers() -&gt; list[Server] | None:
+    &#34;&#34;&#34;Generates a list of all servers that are currently online.
+    Note that the server objects returned are not complete!
+
+    Returns:
+        None: When an error occurs
+        list: List object that contains all servers.
+    &#34;&#34;&#34;
     return_servers = []
     servers = shared.request(shared.MasterlistUrls.all_servers_link)
     if servers is None or servers == &#34;{}&#34;:
@@ -283,15 +357,35 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.validate_id"><code class="name flex">
-<span>def <span class="ident">validate_id</span></span>(<span>server_id)</span>
+<span>def <span class="ident">validate_id</span></span>(<span>server_id: str) ‑> bool</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Validate a server id</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>server_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The id you want to check.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True = valid, False = invalid</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def validate_id(server_id):
+<pre><code class="python">def validate_id(server_id: str) -&gt; bool:
+    &#34;&#34;&#34;Validate a server id
+
+    Args:
+        server_id (str): The id you want to check.
+
+    Returns:
+        bool: True = valid, False = invalid
+    &#34;&#34;&#34;
+    if not isinstance(server_id, str):
+        return False
     regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
     result = regex.match(server_id)
     if result is not None:
@@ -307,17 +401,33 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="altvmasterlist.masterlist.Server"><code class="flex name class">
 <span>class <span class="ident">Server</span></span>
-<span>(</span><span>server_id, no_fetch=False)</span>
+<span>(</span><span>server_id: str, no_fetch: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Server(server_id, no_fetch=False)</p></div>
+<div class="desc"><p>This is the server object. All values will be fetched from the api
+in the <strong>init</strong> function. You just need to provide the id like this: Server("example_id")</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong></dt>
+<dd>The server id.</dd>
+<dt><strong><code>no_fetch</code></strong></dt>
+<dd>Define if you want to fetch the api data. This can be used when we already have data.</dd>
+</dl>
+<p>Update the server data using the api.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class Server:
-    id: int
+    &#34;&#34;&#34;This is the server object. All values will be fetched from the api
+    in the __init__ function. You just need to provide the id like this: Server(&#34;example_id&#34;)
+
+    Attributes:
+        id: The server id.
+        no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
+    &#34;&#34;&#34;
+    id: str
     active: bool = False
     maxPlayers: int = 0
     players: int = 0
@@ -343,8 +453,8 @@ class Server:
     version: float = 0.0
     lastUpdate: int = 0
 
-    # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, server_id, no_fetch=False):
+    def __init__(self, server_id: str, no_fetch: bool = False) -&gt; None:
+        &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.id = server_id
 
         if not no_fetch:
@@ -381,19 +491,33 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
+        &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.__init__(self.id)
 
-    # get the maximum player count with a specified time range
-    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
-    # time: 1d, 7d, 31d
-    def get_max(self, time: str = &#34;1d&#34;):
+    def get_max(self, time: str = &#34;1d&#34;) -&gt; dict | None:
+        &#34;&#34;&#34;Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+        &#34;&#34;&#34;
         return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
 
-    # get the average player count with a specified time range
-    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
-    # time: 1d, 7d, 31d
-    # return result will return the average of all values e.g. 126
-    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
+        &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+            return_result (bool): Define if you want the overall average.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+            int: Overall average of defined timerange
+        &#34;&#34;&#34;
         average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
         if not average_data:
             return None
@@ -408,17 +532,21 @@ class Server:
             return average_data
 
     @property
-    def connect_json(self):
+    def connect_json(self) -&gt; dict | None:
+        &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     @property
-    def permissions(self):
+    def permissions(self) -&gt; shared.Permissions | None:
+        &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
         return shared.get_permissions(self.connect_json)
 
-    def get_dtc_url(self, password=None):
+    def get_dtc_url(self, password=None) -&gt; str | None:
+        &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
         return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
-    def get_resource_size(self, resource, decimal=2):
+    def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
+        &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -459,7 +587,7 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.id"><code class="name">var <span class="ident">id</span> : int</code></dt>
+<dt id="altvmasterlist.masterlist.Server.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -526,27 +654,29 @@ class Server:
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="altvmasterlist.masterlist.Server.connect_json"><code class="name">var <span class="ident">connect_json</span></code></dt>
+<dt id="altvmasterlist.masterlist.Server.connect_json"><code class="name">var <span class="ident">connect_json</span> : dict | None</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the connect.json of the server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def connect_json(self):
+def connect_json(self) -&gt; dict | None:
+    &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
     return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)</code></pre>
 </details>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.permissions"><code class="name">var <span class="ident">permissions</span></code></dt>
+<dt id="altvmasterlist.masterlist.Server.permissions"><code class="name">var <span class="ident">permissions</span> : <a title="altvmasterlist.shared.Permissions" href="shared.html#altvmasterlist.shared.Permissions">Permissions</a> | None</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the permissions of the server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def permissions(self):
+def permissions(self) -&gt; shared.Permissions | None:
+    &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
     return shared.get_permissions(self.connect_json)</code></pre>
 </details>
 </dd>
@@ -554,15 +684,42 @@ def permissions(self):
 <h3>Methods</h3>
 <dl>
 <dt id="altvmasterlist.masterlist.Server.get_avg"><code class="name flex">
-<span>def <span class="ident">get_avg</span></span>(<span>self, time: str = '1d', return_result: bool = False)</span>
+<span>def <span class="ident">get_avg</span></span>(<span>self, time: str = '1d', return_result: bool = False) ‑> dict | int | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>time</code></strong> :&ensp;<code>str</code></dt>
+<dd>The timerange of the data. Can be 1d, 7d, 31d.</dd>
+<dt><strong><code>return_result</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Define if you want the overall average.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurs</dd>
+<dt><code>dict</code></dt>
+<dd>The maximum player data</dd>
+<dt><code>int</code></dt>
+<dd>Overall average of defined timerange</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+<pre><code class="python">def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
+    &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
+
+    Args:
+        time (str): The timerange of the data. Can be 1d, 7d, 31d.
+        return_result (bool): Define if you want the overall average.
+
+    Returns:
+        None: When an error occurs
+        dict: The maximum player data
+        int: Overall average of defined timerange
+    &#34;&#34;&#34;
     average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
     if not average_data:
         return None
@@ -578,41 +735,64 @@ def permissions(self):
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.get_dtc_url"><code class="name flex">
-<span>def <span class="ident">get_dtc_url</span></span>(<span>self, password=None)</span>
+<span>def <span class="ident">get_dtc_url</span></span>(<span>self, password=None) ‑> str | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the dtc url of the server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_dtc_url(self, password=None):
+<pre><code class="python">def get_dtc_url(self, password=None) -&gt; str | None:
+    &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
     return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.get_max"><code class="name flex">
-<span>def <span class="ident">get_max</span></span>(<span>self, time: str = '1d')</span>
+<span>def <span class="ident">get_max</span></span>(<span>self, time: str = '1d') ‑> dict | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>time</code></strong> :&ensp;<code>str</code></dt>
+<dd>The timerange of the data. Can be 1d, 7d, 31d.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurs</dd>
+<dt><code>dict</code></dt>
+<dd>The maximum player data</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_max(self, time: str = &#34;1d&#34;):
+<pre><code class="python">def get_max(self, time: str = &#34;1d&#34;) -&gt; dict | None:
+    &#34;&#34;&#34;Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
+
+    Args:
+        time (str): The timerange of the data. Can be 1d, 7d, 31d.
+
+    Returns:
+        None: When an error occurs
+        dict: The maximum player data
+    &#34;&#34;&#34;
     return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.get_resource_size"><code class="name flex">
-<span>def <span class="ident">get_resource_size</span></span>(<span>self, resource, decimal=2)</span>
+<span>def <span class="ident">get_resource_size</span></span>(<span>self, resource: str, decimal: int = 2) ‑> float | None</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the size of a server resource.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_resource_size(self, resource, decimal=2):
+<pre><code class="python">def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
+    &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
     return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
 </details>
 </dd>
@@ -620,12 +800,13 @@ def permissions(self):
 <span>def <span class="ident">update</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Update the server data using the api.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def update(self):
+    &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
     self.__init__(self.id)</code></pre>
 </details>
 </dd>

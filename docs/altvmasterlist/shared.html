@@ -39,11 +39,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 @dataclass
 class MasterlistUrls:
-    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.
-
-    Returns:
-        MasterlistUrls: A MasterlistUrls object
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
     base_link: str = &#34;https://api.altv.mp&#34;
     all_server_stats_link: str = f&#34;{base_link}/servers&#34;
     all_servers_link: str = f&#34;{base_link}/servers/list&#34;
@@ -54,11 +50,7 @@ class MasterlistUrls:
 
 @dataclass
 class AltstatsUrls:
-    &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.
-
-    Returns:
-        AltstatsUrls: A AltstatsUrls object
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.&#34;&#34;&#34;
     base_link: str = &#34;https://api.altstats.net/api/v1/&#34;
     all_server_stats_link: str = f&#34;{base_link}/master&#34;
     all_servers_link: str = f&#34;{base_link}/server&#34;
@@ -67,11 +59,8 @@ class AltstatsUrls:
 
 @dataclass
 class RequestHeaders:
-    &#34;&#34;&#34;This are the common request headers used by the request function.
+    &#34;&#34;&#34;These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
-
-    Returns:
-        RequestHeaders: A RequestHeaders object
     &#34;&#34;&#34;
     host: str = &#34;&#34;,
     user_agent: str = &#39;AltPublicAgent&#39;,
@@ -669,23 +658,14 @@ e.g. Server(127).connect_json</dd>
 <span>(</span><span>base_link: str = 'https://api.altstats.net/api/v1/', all_server_stats_link: str = 'https://api.altstats.net/api/v1//master', all_servers_link: str = 'https://api.altstats.net/api/v1//server', server_link: str = 'https://api.altstats.net/api/v1//server/{}')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class is used for the altstats submodule. It provides all urls needed.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="altvmasterlist.shared.AltstatsUrls" href="#altvmasterlist.shared.AltstatsUrls">AltstatsUrls</a></code></dt>
-<dd>A AltstatsUrls object</dd>
-</dl></div>
+<div class="desc"><p>This class is used for the altstats submodule. It provides all urls needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class AltstatsUrls:
-    &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.
-
-    Returns:
-        AltstatsUrls: A AltstatsUrls object
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.&#34;&#34;&#34;
     base_link: str = &#34;https://api.altstats.net/api/v1/&#34;
     all_server_stats_link: str = f&#34;{base_link}/master&#34;
     all_servers_link: str = f&#34;{base_link}/server&#34;
@@ -716,23 +696,14 @@ class AltstatsUrls:
 <span>(</span><span>base_link: str = 'https://api.altv.mp', all_server_stats_link: str = 'https://api.altv.mp/servers', all_servers_link: str = 'https://api.altv.mp/servers/list', server_link: str = 'https://api.altv.mp/server/{}', server_average_link: str = 'https://api.altv.mp/avg/{}/{}', server_max_link: str = 'https://api.altv.mp/max/{}/{}')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class is used for the masterlist submodule. It provides all urls needed.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="altvmasterlist.shared.MasterlistUrls" href="#altvmasterlist.shared.MasterlistUrls">MasterlistUrls</a></code></dt>
-<dd>A MasterlistUrls object</dd>
-</dl></div>
+<div class="desc"><p>This class is used for the masterlist submodule. It provides all urls needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class MasterlistUrls:
-    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.
-
-    Returns:
-        MasterlistUrls: A MasterlistUrls object
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
     base_link: str = &#34;https://api.altv.mp&#34;
     all_server_stats_link: str = f&#34;{base_link}/servers&#34;
     all_servers_link: str = f&#34;{base_link}/servers/list&#34;
@@ -853,24 +824,16 @@ class MasterlistUrls:
 <span>(</span><span>version, debug='false', branch='release')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This are the common request headers used by the request function.
-They are commonly used to emulate an alt:V client.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="altvmasterlist.shared.RequestHeaders" href="#altvmasterlist.shared.RequestHeaders">RequestHeaders</a></code></dt>
-<dd>A RequestHeaders object</dd>
-</dl></div>
+<div class="desc"><p>These are the common request headers used by the request function.
+They are commonly used to emulate an alt:V client.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class RequestHeaders:
-    &#34;&#34;&#34;This are the common request headers used by the request function.
+    &#34;&#34;&#34;These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
-
-    Returns:
-        RequestHeaders: A RequestHeaders object
     &#34;&#34;&#34;
     host: str = &#34;&#34;,
     user_agent: str = &#39;AltPublicAgent&#39;,

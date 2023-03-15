@@ -11,11 +11,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 @dataclass
 class MasterlistUrls:
-    """This class is used for the masterlist submodule. It provides all urls needed.
-
-    Returns:
-        MasterlistUrls: A MasterlistUrls object
-    """
+    """This class is used for the masterlist submodule. It provides all urls needed."""
     base_link: str = "https://api.altv.mp"
     all_server_stats_link: str = f"{base_link}/servers"
     all_servers_link: str = f"{base_link}/servers/list"
@@ -26,11 +22,7 @@ class MasterlistUrls:
 
 @dataclass
 class AltstatsUrls:
-    """This class is used for the altstats submodule. It provides all urls needed.
-
-    Returns:
-        AltstatsUrls: A AltstatsUrls object
-    """
+    """This class is used for the altstats submodule. It provides all urls needed."""
     base_link: str = "https://api.altstats.net/api/v1/"
     all_server_stats_link: str = f"{base_link}/master"
     all_servers_link: str = f"{base_link}/server"
@@ -41,9 +33,6 @@ class AltstatsUrls:
 class RequestHeaders:
     """These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
-
-    Returns:
-        RequestHeaders: A RequestHeaders object
     """
     host: str = "",
     user_agent: str = 'AltPublicAgent',

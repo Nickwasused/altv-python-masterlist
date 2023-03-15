@@ -7,14 +7,21 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-# Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 logging.debug(f'starting with base link: {shared.MasterlistUrls.base_link}')
 
+"""You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html"""
 
-# This is the server object
+
 @dataclass
 class Server:
-    id: int
+    """This is the server object. All values will be fetched from the api
+    in the __init__ function. You just need to provide the id like this: Server("example_id")
+
+    Attributes:
+        id: The server id.
+        no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
+    """
+    id: str
     active: bool = False
     maxPlayers: int = 0
     players: int = 0
@@ -40,8 +47,8 @@ class Server:
     version: float = 0.0
     lastUpdate: int = 0
 
-    # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, server_id, no_fetch=False):
+    def __init__(self, server_id: str, no_fetch: bool = False) -> None:
+        """Update the server data using the api."""
         self.id = server_id
 
         if not no_fetch:
@@ -78,19 +85,33 @@ class Server:
 
     # fetch the server data and replace it
     def update(self):
+        """Update the server data using the api."""
         self.__init__(self.id)
 
-    # get the maximum player count with a specified time range
-    # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
-    # time: 1d, 7d, 31d
-    def get_max(self, time: str = "1d"):
+    def get_max(self, time: str = "1d") -> dict | None:
+        """Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+        """
         return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
 
-    # get the average player count with a specified time range
-    # returns a JSON object e.g. [{"t":1652096100,"c":50},{"t":1652096400,"c":52},{"t":1652096700,"c":57}]
-    # time: 1d, 7d, 31d
-    # return result will return the average of all values e.g. 126
-    def get_avg(self, time: str = "1d", return_result: bool = False):
+    def get_avg(self, time: str = "1d", return_result: bool = False) -> dict | int | None:
+        """Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
+
+        Args:
+            time (str): The timerange of the data. Can be 1d, 7d, 31d.
+            return_result (bool): Define if you want the overall average.
+
+        Returns:
+            None: When an error occurs
+            dict: The maximum player data
+            int: Overall average of defined timerange
+        """
         average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
         if not average_data:
             return None
@@ -105,23 +126,33 @@ class Server:
             return average_data
 
     @property
-    def connect_json(self):
+    def connect_json(self) -> dict | None:
+        """Get the connect.json of the server."""
         return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
 
     @property
-    def permissions(self):
+    def permissions(self) -> shared.Permissions | None:
+        """Get the permissions of the server."""
         return shared.get_permissions(self.connect_json)
 
-    def get_dtc_url(self, password=None):
+    def get_dtc_url(self, password=None) -> str | None:
+        """Get the dtc url of the server."""
         return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
 
-    def get_resource_size(self, resource, decimal=2):
+    def get_resource_size(self, resource: str, decimal: int = 2) -> float | None:
+        """Get the size of a server resource."""
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
 
 
 # Fetch the stats of all servers that are currently online
 # e.g. {"serversCount":121,"playersCount":1595}
-def get_server_stats():
+def get_server_stats() -> dict | None:
+    """Statistics - Player Count across all servers & The amount of servers online
+
+    Returns:
+        None: When an error occurs
+        dict: The stats
+    """
     data = shared.request(shared.MasterlistUrls.all_server_stats_link)
     if data is None:
         return None
@@ -129,8 +160,14 @@ def get_server_stats():
         return data
 
 
-# Get all Servers that are online as Server object
-def get_servers():
+def get_servers() -> list[Server] | None:
+    """Generates a list of all servers that are currently online.
+    Note that the server objects returned are not complete!
+
+    Returns:
+        None: When an error occurs
+        list: List object that contains all servers.
+    """
     return_servers = []
     servers = shared.request(shared.MasterlistUrls.all_servers_link)
     if servers is None or servers == "{}":
@@ -168,8 +205,17 @@ def get_servers():
         return return_servers
 
 
-# validate a given alt:V server id
-def validate_id(server_id):
+def validate_id(server_id: str) -> bool:
+    """Validate a server id
+
+    Args:
+        server_id (str): The id you want to check.
+
+    Returns:
+        bool: True = valid, False = invalid
+    """
+    if not isinstance(server_id, str):
+        return False
     regex = compile(r"^[\da-zA-Z]{32}$")
     result = regex.match(server_id)
     if result is not None:
