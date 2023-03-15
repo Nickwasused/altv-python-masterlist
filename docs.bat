@@ -1,0 +1,1 @@
+pdoc3.exe --html .\src\altvmasterlist\ -o .\docs --force

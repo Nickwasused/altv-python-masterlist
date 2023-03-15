@@ -7,13 +7,19 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-# Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
 logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
+"""You can find the altstats api docs here: https://docs.altv.mp/articles/master_list_api.html#information-1"""
 
 
-# This is the server object
 @dataclass
 class Server:
+    """This is the server object. All values will be fetched from the api
+        in the __init__ function. You just need to provide the id like this: Server("example_id")
+
+    Attributes:
+        Id: The server id.
+        no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
+    """
     Id: int
     FoundAt: str = ""
     LastActivity: bool = False
@@ -50,8 +56,8 @@ class Server:
     Level: int = 0
     Version: float = 0.0
 
-    # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, server_id, no_fetch=False):
+    def __init__(self, server_id: int, no_fetch: bool = False) -> None:
+        """Update the server data using the api."""
         self.Id = server_id
 
         if not no_fetch:
@@ -96,42 +102,36 @@ class Server:
                 self.Level = temp_data["Level"]
                 self.Version = temp_data["Version"]
 
-    # fetch the server data and replace it
-    def update(self):
+    def update(self) -> None:
+        """Update the server data using the api."""
         self.__init__(self.Id)
 
     @property
-    def connect_json(self):
+    def connect_json(self) -> dict | None:
+        """Get the connect.json of the server."""
         return shared.fetch_connect_json(self.UseCdn, self.Locked, self.LastFetchOnline, self.Ip, self.Port, self.CdnUrl)
 
     @property
-    def permissions(self):
+    def permissions(self) -> shared.Permissions | None:
+        """Get the permissions of the server."""
         return shared.get_permissions(self.connect_json)
 
-    def get_dtc_url(self, password=None):
+    def get_dtc_url(self, password: str = None) -> str | None:
+        """Get the dtc url of the server."""
         return shared.get_dtc_url(self.UseCdn, self.CdnUrl, self.Ip, self.Port, self.Locked, password)
 
-    def get_resource_size(self, resource, decimal=2):
+    def get_resource_size(self, resource: str, decimal: int = 2) -> float | None:
+        """Get the size of a server resource."""
         return shared.get_resource_size(self.UseCdn, self.CdnUrl, resource, self.Ip, self.Port, decimal)
 
 
-# Fetch the stats of all servers that are currently online
-# e.g. [
-#   {
-#     "ServerCount": 72,
-#     "PlayerCount": 958,
-#     "TimeStamp": "2021-01-01T12:15:00.464Z"
-#   },
-#   {
-#     "ServerCount": 73,
-#     "PlayerCount": 945,
-#     "TimeStamp": "2021-01-01T12:10:00.465Z"
-#   },
-#   {
-#     "others": "..."
-#   }
-# ]
-def get_server_stats():
+def get_server_stats() -> dict | None:
+    """Statistics - Player Count across all servers & The amount of servers online
+
+    Returns:
+        None: When an error occurs
+        dict: The stats
+    """
     data = shared.request(shared.AltstatsUrls.all_server_stats_link)
     if data is None:
         return None
@@ -139,15 +139,20 @@ def get_server_stats():
         return data
 
 
-# Get all Servers that are online as Server object
-def get_servers():
+def get_servers() -> list[Server] | None:
+    """Generates a list of all servers that are currently online.
+        Note that the server objects returned are not complete!
+
+    Returns:
+        None: When an error occurs
+        list: List object that contains all servers.
+    """
     return_servers = []
     servers = shared.request(shared.AltstatsUrls.all_servers_link)
     if servers is None or servers == "{}":
         return None
     else:
         for server in servers:
-            # Now change every JSON response to a server object that we can e.g. update it when we want
             tmp_server = Server(server["id"], True)
             tmp_server.Name = server["name"]
             tmp_server.Locked = bool(server["locked"])
@@ -164,8 +169,17 @@ def get_servers():
         return return_servers
 
 
-# validate a given alt:V server id
-def validate_id(server_id):
+def validate_id(server_id: any) -> bool:
+    """Validate a server id
+
+    Args:
+        server_id (any): The id you want to check.
+
+    Returns:
+        bool: True = valid, False = invalid
+    """
+    if not isinstance(server_id, str) and not isinstance(server_id, int):
+        return False
     server_id = str(server_id)
     regex = compile(r"^\d+$")
     result = regex.match(server_id)
