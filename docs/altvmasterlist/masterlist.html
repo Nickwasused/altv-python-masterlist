@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>altvmasterlist.masterlist API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>altvmasterlist.masterlist</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+from altvmasterlist import shared
+from dataclasses import dataclass
+from re import compile
+import logging
+import sys
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(logging.INFO)
+# Masterlist API Docs: https://docs.altv.mp/articles/master_list_api.html
+logging.debug(f&#39;starting with base link: {shared.MasterlistUrls.base_link}&#39;)
+
+
+# This is the server object
+@dataclass
+class Server:
+    id: int
+    active: bool = False
+    maxPlayers: int = 0
+    players: int = 0
+    name: str = &#34;&#34;
+    locked: bool = False
+    host: str = &#34;&#34;
+    port: int = 0
+    gameMode: str = &#34;&#34;
+    website: str = &#34;&#34;
+    language: str = &#34;&#34;
+    description: str = &#34;&#34;
+    verified: bool = False
+    promoted: bool = False
+    useEarlyAuth: bool = False
+    earlyAuthUrl: str = &#34;&#34;
+    useCdn: bool = False
+    cdnUrl: str = &#34;&#34;
+    useVoiceChat: bool = False
+    tags: list[str] = None
+    bannerUrl: str = &#34;&#34;
+    branch: str = &#34;&#34;
+    build: str = &#34;&#34;
+    version: float = 0.0
+    lastUpdate: int = 0
+
+    # initialize the object with all values that are available in the alt:V masterlist API
+    def __init__(self, server_id, no_fetch=False):
+        self.id = server_id
+
+        if not no_fetch:
+            temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
+            if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
+                # the api returned no data or the server is offline
+                self.active = False
+                self.players = 0
+            else:
+                self.active = temp_data[&#34;active&#34;]
+                self.maxPlayers = temp_data[&#34;info&#34;][&#34;maxPlayers&#34;]
+                self.players = temp_data[&#34;info&#34;][&#34;players&#34;]
+                self.name = temp_data[&#34;info&#34;][&#34;name&#34;]
+                self.locked = temp_data[&#34;info&#34;][&#34;locked&#34;]
+                self.host = temp_data[&#34;info&#34;][&#34;host&#34;]
+                self.port = temp_data[&#34;info&#34;][&#34;port&#34;]
+                self.gameMode = temp_data[&#34;info&#34;][&#34;gameMode&#34;]
+                self.website = temp_data[&#34;info&#34;][&#34;website&#34;]
+                self.language = temp_data[&#34;info&#34;][&#34;language&#34;]
+                self.description = temp_data[&#34;info&#34;][&#34;description&#34;]
+                self.verified = temp_data[&#34;info&#34;][&#34;verified&#34;]
+                self.promoted = temp_data[&#34;info&#34;][&#34;promoted&#34;]
+                self.useEarlyAuth = temp_data[&#34;info&#34;][&#34;useEarlyAuth&#34;]
+                self.earlyAuthUrl = temp_data[&#34;info&#34;][&#34;earlyAuthUrl&#34;]
+                self.useCdn = temp_data[&#34;info&#34;][&#34;useCdn&#34;]
+                self.cdnUrl = temp_data[&#34;info&#34;][&#34;cdnUrl&#34;]
+                self.useVoiceChat = temp_data[&#34;info&#34;][&#34;useVoiceChat&#34;]
+                self.tags = temp_data[&#34;info&#34;][&#34;tags&#34;]
+                self.bannerUrl = temp_data[&#34;info&#34;][&#34;bannerUrl&#34;]
+                self.branch = temp_data[&#34;info&#34;][&#34;branch&#34;]
+                self.build = temp_data[&#34;info&#34;][&#34;build&#34;]
+                self.version = temp_data[&#34;info&#34;][&#34;version&#34;]
+                self.lastUpdate = temp_data[&#34;info&#34;][&#34;lastUpdate&#34;]
+
+    # fetch the server data and replace it
+    def update(self):
+        self.__init__(self.id)
+
+    # get the maximum player count with a specified time range
+    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
+    # time: 1d, 7d, 31d
+    def get_max(self, time: str = &#34;1d&#34;):
+        return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
+
+    # get the average player count with a specified time range
+    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
+    # time: 1d, 7d, 31d
+    # return result will return the average of all values e.g. 126
+    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+        average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+        if not average_data:
+            return None
+
+        if return_result:
+            players_all = 0
+            for entry in average_data:
+                players_all = players_all + entry[&#34;c&#34;]
+            result = players_all / len(average_data)
+            return round(result)
+        else:
+            return average_data
+
+    @property
+    def connect_json(self):
+        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+
+    @property
+    def permissions(self):
+        return shared.get_permissions(self.connect_json)
+
+    def get_dtc_url(self, password=None):
+        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+
+    def get_resource_size(self, resource, decimal=2):
+        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
+
+
+# Fetch the stats of all servers that are currently online
+# e.g. {&#34;serversCount&#34;:121,&#34;playersCount&#34;:1595}
+def get_server_stats():
+    data = shared.request(shared.MasterlistUrls.all_server_stats_link)
+    if data is None:
+        return None
+    else:
+        return data
+
+
+# Get all Servers that are online as Server object
+def get_servers():
+    return_servers = []
+    servers = shared.request(shared.MasterlistUrls.all_servers_link)
+    if servers is None or servers == &#34;{}&#34;:
+        return None
+    else:
+        for server in servers:
+            # Now change every JSON response to a server object that we can e.g. update it when we want
+            tmp_server = Server(server[&#34;id&#34;], no_fetch=True)
+            tmp_server.active = True
+            tmp_server.maxPlayers = server[&#34;maxPlayers&#34;]
+            tmp_server.players = server[&#34;players&#34;]
+            tmp_server.name = server[&#34;name&#34;]
+            tmp_server.locked = server[&#34;locked&#34;]
+            tmp_server.host = server[&#34;host&#34;]
+            tmp_server.port = server[&#34;port&#34;]
+            tmp_server.gameMode = server[&#34;gameMode&#34;]
+            tmp_server.website = server[&#34;website&#34;]
+            tmp_server.language = server[&#34;language&#34;]
+            tmp_server.description = server[&#34;description&#34;]
+            tmp_server.verified = server[&#34;verified&#34;]
+            tmp_server.promoted = server[&#34;promoted&#34;]
+            tmp_server.useEarlyAuth = server[&#34;useEarlyAuth&#34;]
+            tmp_server.earlyAuthUrl = server[&#34;earlyAuthUrl&#34;]
+            tmp_server.useCdn = server[&#34;useCdn&#34;]
+            tmp_server.cdnUrl = server[&#34;cdnUrl&#34;]
+            tmp_server.useVoiceChat = server[&#34;useVoiceChat&#34;]
+            tmp_server.tags = server[&#34;tags&#34;]
+            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
+            tmp_server.branch = server[&#34;branch&#34;]
+            tmp_server.build = server[&#34;build&#34;]
+            tmp_server.version = server[&#34;version&#34;]
+            tmp_server.lastUpdate = server[&#34;lastUpdate&#34;]
+            return_servers.append(tmp_server)
+
+        return return_servers
+
+
+# validate a given alt:V server id
+def validate_id(server_id):
+    regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
+    result = regex.match(server_id)
+    if result is not None:
+        return True
+    else:
+        return False
+
+
+if __name__ == &#34;__main__&#34;:
+    print(&#34;This is a Module!&#34;)
+    sys.exit()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="altvmasterlist.masterlist.get_server_stats"><code class="name flex">
+<span>def <span class="ident">get_server_stats</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_server_stats():
+    data = shared.request(shared.MasterlistUrls.all_server_stats_link)
+    if data is None:
+        return None
+    else:
+        return data</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.get_servers"><code class="name flex">
+<span>def <span class="ident">get_servers</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_servers():
+    return_servers = []
+    servers = shared.request(shared.MasterlistUrls.all_servers_link)
+    if servers is None or servers == &#34;{}&#34;:
+        return None
+    else:
+        for server in servers:
+            # Now change every JSON response to a server object that we can e.g. update it when we want
+            tmp_server = Server(server[&#34;id&#34;], no_fetch=True)
+            tmp_server.active = True
+            tmp_server.maxPlayers = server[&#34;maxPlayers&#34;]
+            tmp_server.players = server[&#34;players&#34;]
+            tmp_server.name = server[&#34;name&#34;]
+            tmp_server.locked = server[&#34;locked&#34;]
+            tmp_server.host = server[&#34;host&#34;]
+            tmp_server.port = server[&#34;port&#34;]
+            tmp_server.gameMode = server[&#34;gameMode&#34;]
+            tmp_server.website = server[&#34;website&#34;]
+            tmp_server.language = server[&#34;language&#34;]
+            tmp_server.description = server[&#34;description&#34;]
+            tmp_server.verified = server[&#34;verified&#34;]
+            tmp_server.promoted = server[&#34;promoted&#34;]
+            tmp_server.useEarlyAuth = server[&#34;useEarlyAuth&#34;]
+            tmp_server.earlyAuthUrl = server[&#34;earlyAuthUrl&#34;]
+            tmp_server.useCdn = server[&#34;useCdn&#34;]
+            tmp_server.cdnUrl = server[&#34;cdnUrl&#34;]
+            tmp_server.useVoiceChat = server[&#34;useVoiceChat&#34;]
+            tmp_server.tags = server[&#34;tags&#34;]
+            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
+            tmp_server.branch = server[&#34;branch&#34;]
+            tmp_server.build = server[&#34;build&#34;]
+            tmp_server.version = server[&#34;version&#34;]
+            tmp_server.lastUpdate = server[&#34;lastUpdate&#34;]
+            return_servers.append(tmp_server)
+
+        return return_servers</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.validate_id"><code class="name flex">
+<span>def <span class="ident">validate_id</span></span>(<span>server_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_id(server_id):
+    regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
+    result = regex.match(server_id)
+    if result is not None:
+        return True
+    else:
+        return False</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="altvmasterlist.masterlist.Server"><code class="flex name class">
+<span>class <span class="ident">Server</span></span>
+<span>(</span><span>server_id, no_fetch=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Server(server_id, no_fetch=False)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class Server:
+    id: int
+    active: bool = False
+    maxPlayers: int = 0
+    players: int = 0
+    name: str = &#34;&#34;
+    locked: bool = False
+    host: str = &#34;&#34;
+    port: int = 0
+    gameMode: str = &#34;&#34;
+    website: str = &#34;&#34;
+    language: str = &#34;&#34;
+    description: str = &#34;&#34;
+    verified: bool = False
+    promoted: bool = False
+    useEarlyAuth: bool = False
+    earlyAuthUrl: str = &#34;&#34;
+    useCdn: bool = False
+    cdnUrl: str = &#34;&#34;
+    useVoiceChat: bool = False
+    tags: list[str] = None
+    bannerUrl: str = &#34;&#34;
+    branch: str = &#34;&#34;
+    build: str = &#34;&#34;
+    version: float = 0.0
+    lastUpdate: int = 0
+
+    # initialize the object with all values that are available in the alt:V masterlist API
+    def __init__(self, server_id, no_fetch=False):
+        self.id = server_id
+
+        if not no_fetch:
+            temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
+            if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
+                # the api returned no data or the server is offline
+                self.active = False
+                self.players = 0
+            else:
+                self.active = temp_data[&#34;active&#34;]
+                self.maxPlayers = temp_data[&#34;info&#34;][&#34;maxPlayers&#34;]
+                self.players = temp_data[&#34;info&#34;][&#34;players&#34;]
+                self.name = temp_data[&#34;info&#34;][&#34;name&#34;]
+                self.locked = temp_data[&#34;info&#34;][&#34;locked&#34;]
+                self.host = temp_data[&#34;info&#34;][&#34;host&#34;]
+                self.port = temp_data[&#34;info&#34;][&#34;port&#34;]
+                self.gameMode = temp_data[&#34;info&#34;][&#34;gameMode&#34;]
+                self.website = temp_data[&#34;info&#34;][&#34;website&#34;]
+                self.language = temp_data[&#34;info&#34;][&#34;language&#34;]
+                self.description = temp_data[&#34;info&#34;][&#34;description&#34;]
+                self.verified = temp_data[&#34;info&#34;][&#34;verified&#34;]
+                self.promoted = temp_data[&#34;info&#34;][&#34;promoted&#34;]
+                self.useEarlyAuth = temp_data[&#34;info&#34;][&#34;useEarlyAuth&#34;]
+                self.earlyAuthUrl = temp_data[&#34;info&#34;][&#34;earlyAuthUrl&#34;]
+                self.useCdn = temp_data[&#34;info&#34;][&#34;useCdn&#34;]
+                self.cdnUrl = temp_data[&#34;info&#34;][&#34;cdnUrl&#34;]
+                self.useVoiceChat = temp_data[&#34;info&#34;][&#34;useVoiceChat&#34;]
+                self.tags = temp_data[&#34;info&#34;][&#34;tags&#34;]
+                self.bannerUrl = temp_data[&#34;info&#34;][&#34;bannerUrl&#34;]
+                self.branch = temp_data[&#34;info&#34;][&#34;branch&#34;]
+                self.build = temp_data[&#34;info&#34;][&#34;build&#34;]
+                self.version = temp_data[&#34;info&#34;][&#34;version&#34;]
+                self.lastUpdate = temp_data[&#34;info&#34;][&#34;lastUpdate&#34;]
+
+    # fetch the server data and replace it
+    def update(self):
+        self.__init__(self.id)
+
+    # get the maximum player count with a specified time range
+    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
+    # time: 1d, 7d, 31d
+    def get_max(self, time: str = &#34;1d&#34;):
+        return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
+
+    # get the average player count with a specified time range
+    # returns a JSON object e.g. [{&#34;t&#34;:1652096100,&#34;c&#34;:50},{&#34;t&#34;:1652096400,&#34;c&#34;:52},{&#34;t&#34;:1652096700,&#34;c&#34;:57}]
+    # time: 1d, 7d, 31d
+    # return result will return the average of all values e.g. 126
+    def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+        average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+        if not average_data:
+            return None
+
+        if return_result:
+            players_all = 0
+            for entry in average_data:
+                players_all = players_all + entry[&#34;c&#34;]
+            result = players_all / len(average_data)
+            return round(result)
+        else:
+            return average_data
+
+    @property
+    def connect_json(self):
+        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+
+    @property
+    def permissions(self):
+        return shared.get_permissions(self.connect_json)
+
+    def get_dtc_url(self, password=None):
+        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+
+    def get_resource_size(self, resource, decimal=2):
+        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.Server.active"><code class="name">var <span class="ident">active</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.bannerUrl"><code class="name">var <span class="ident">bannerUrl</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.branch"><code class="name">var <span class="ident">branch</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.build"><code class="name">var <span class="ident">build</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.cdnUrl"><code class="name">var <span class="ident">cdnUrl</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.description"><code class="name">var <span class="ident">description</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.earlyAuthUrl"><code class="name">var <span class="ident">earlyAuthUrl</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.gameMode"><code class="name">var <span class="ident">gameMode</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.id"><code class="name">var <span class="ident">id</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.language"><code class="name">var <span class="ident">language</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.lastUpdate"><code class="name">var <span class="ident">lastUpdate</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.locked"><code class="name">var <span class="ident">locked</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.maxPlayers"><code class="name">var <span class="ident">maxPlayers</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.players"><code class="name">var <span class="ident">players</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.port"><code class="name">var <span class="ident">port</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.promoted"><code class="name">var <span class="ident">promoted</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.tags"><code class="name">var <span class="ident">tags</span> : list[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.useCdn"><code class="name">var <span class="ident">useCdn</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.useEarlyAuth"><code class="name">var <span class="ident">useEarlyAuth</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.useVoiceChat"><code class="name">var <span class="ident">useVoiceChat</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.verified"><code class="name">var <span class="ident">verified</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.version"><code class="name">var <span class="ident">version</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.website"><code class="name">var <span class="ident">website</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.Server.connect_json"><code class="name">var <span class="ident">connect_json</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def connect_json(self):
+    return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.permissions"><code class="name">var <span class="ident">permissions</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def permissions(self):
+    return shared.get_permissions(self.connect_json)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.Server.get_avg"><code class="name flex">
+<span>def <span class="ident">get_avg</span></span>(<span>self, time: str = '1d', return_result: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False):
+    average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+    if not average_data:
+        return None
+
+    if return_result:
+        players_all = 0
+        for entry in average_data:
+            players_all = players_all + entry[&#34;c&#34;]
+        result = players_all / len(average_data)
+        return round(result)
+    else:
+        return average_data</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.get_dtc_url"><code class="name flex">
+<span>def <span class="ident">get_dtc_url</span></span>(<span>self, password=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dtc_url(self, password=None):
+    return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.get_max"><code class="name flex">
+<span>def <span class="ident">get_max</span></span>(<span>self, time: str = '1d')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_max(self, time: str = &#34;1d&#34;):
+    return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.get_resource_size"><code class="name flex">
+<span>def <span class="ident">get_resource_size</span></span>(<span>self, resource, decimal=2)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_resource_size(self, resource, decimal=2):
+    return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.update"><code class="name flex">
+<span>def <span class="ident">update</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update(self):
+    self.__init__(self.id)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="altvmasterlist" href="index.html">altvmasterlist</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="altvmasterlist.masterlist.get_server_stats" href="#altvmasterlist.masterlist.get_server_stats">get_server_stats</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.get_servers" href="#altvmasterlist.masterlist.get_servers">get_servers</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.validate_id" href="#altvmasterlist.masterlist.validate_id">validate_id</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="altvmasterlist.masterlist.Server" href="#altvmasterlist.masterlist.Server">Server</a></code></h4>
+<ul class="two-column">
+<li><code><a title="altvmasterlist.masterlist.Server.active" href="#altvmasterlist.masterlist.Server.active">active</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.bannerUrl" href="#altvmasterlist.masterlist.Server.bannerUrl">bannerUrl</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.branch" href="#altvmasterlist.masterlist.Server.branch">branch</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.build" href="#altvmasterlist.masterlist.Server.build">build</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.cdnUrl" href="#altvmasterlist.masterlist.Server.cdnUrl">cdnUrl</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.connect_json" href="#altvmasterlist.masterlist.Server.connect_json">connect_json</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.description" href="#altvmasterlist.masterlist.Server.description">description</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.earlyAuthUrl" href="#altvmasterlist.masterlist.Server.earlyAuthUrl">earlyAuthUrl</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.gameMode" href="#altvmasterlist.masterlist.Server.gameMode">gameMode</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.get_avg" href="#altvmasterlist.masterlist.Server.get_avg">get_avg</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.get_dtc_url" href="#altvmasterlist.masterlist.Server.get_dtc_url">get_dtc_url</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.get_max" href="#altvmasterlist.masterlist.Server.get_max">get_max</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.get_resource_size" href="#altvmasterlist.masterlist.Server.get_resource_size">get_resource_size</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.host" href="#altvmasterlist.masterlist.Server.host">host</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.id" href="#altvmasterlist.masterlist.Server.id">id</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.language" href="#altvmasterlist.masterlist.Server.language">language</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.lastUpdate" href="#altvmasterlist.masterlist.Server.lastUpdate">lastUpdate</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.locked" href="#altvmasterlist.masterlist.Server.locked">locked</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.maxPlayers" href="#altvmasterlist.masterlist.Server.maxPlayers">maxPlayers</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.name" href="#altvmasterlist.masterlist.Server.name">name</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.permissions" href="#altvmasterlist.masterlist.Server.permissions">permissions</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.players" href="#altvmasterlist.masterlist.Server.players">players</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.port" href="#altvmasterlist.masterlist.Server.port">port</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.promoted" href="#altvmasterlist.masterlist.Server.promoted">promoted</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.tags" href="#altvmasterlist.masterlist.Server.tags">tags</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.update" href="#altvmasterlist.masterlist.Server.update">update</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.useCdn" href="#altvmasterlist.masterlist.Server.useCdn">useCdn</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.useEarlyAuth" href="#altvmasterlist.masterlist.Server.useEarlyAuth">useEarlyAuth</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.useVoiceChat" href="#altvmasterlist.masterlist.Server.useVoiceChat">useVoiceChat</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.verified" href="#altvmasterlist.masterlist.Server.verified">verified</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.version" href="#altvmasterlist.masterlist.Server.version">version</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.website" href="#altvmasterlist.masterlist.Server.website">website</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

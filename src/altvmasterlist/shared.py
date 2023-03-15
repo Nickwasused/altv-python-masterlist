@@ -11,6 +11,11 @@ logging.getLogger().setLevel(logging.INFO)
 
 @dataclass
 class MasterlistUrls:
+    """This class is used for the masterlist submodule. It provides all urls needed.
+
+    Returns:
+        MasterlistUrls: A MasterlistUrls object
+    """
     base_link: str = "https://api.altv.mp"
     all_server_stats_link: str = f"{base_link}/servers"
     all_servers_link: str = f"{base_link}/servers/list"
@@ -21,6 +26,11 @@ class MasterlistUrls:
 
 @dataclass
 class AltstatsUrls:
+    """This class is used for the altstats submodule. It provides all urls needed.
+
+    Returns:
+        AltstatsUrls: A AltstatsUrls object
+    """
     base_link: str = "https://api.altstats.net/api/v1/"
     all_server_stats_link: str = f"{base_link}/master"
     all_servers_link: str = f"{base_link}/server"
@@ -29,7 +39,11 @@ class AltstatsUrls:
 
 @dataclass
 class RequestHeaders:
-    """Common headers"""
+    """This are the common request headers used by the request function. They are commonly used to emulate an alt:V client.
+
+    Returns:
+        RequestHeaders: A RequestHeaders object
+    """
     host: str = "",
     user_agent: str = 'AltPublicAgent',
     accept: str = '*/*',
@@ -63,8 +77,18 @@ class RequestHeaders:
         })
 
 
-# custom request function
-def request(url, cdn=False, server=None):
+def request(url: str, cdn: bool = False, server: any = None) -> object | None:
+    """This is the common request function to fetch remote data.
+
+    Args:
+        url (str): The Url to fetch.
+        cdn (bool): Define if the request goes to an alt:V CDN. Then the emulated alt:V Client will be used.
+        server (Server): An alt:V masterlist or altstats Server object.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        json: As data
+    """
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
     if "http://" in url and cdn:
@@ -88,12 +112,21 @@ def request(url, cdn=False, server=None):
         return None
 
 
-# get the "Direct Connect Protocol" url
-# e.g. altv://connect/127.0.0.1:7788?password=xyz
-# https://docs.altv.mp/articles/connectprotocol.html
-# cdn off: altv://connect/${IP_ADDRESS}:${PORT}?password=${PASSWORD}
-# cdn on: altv://connect/{CDN_URL}?password=${PASSWORD}
-def get_dtc_url(use_cdn, cdn_url, host, port, locked, password=None):
+def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -> str | None:
+    """This function gets the direct connect protocol url of an alt:V Server. (https://docs.altv.mp/articles/connectprotocol.html)
+
+    Args:
+        use_cdn (bool): Define if the Server is using a CDN.
+        cdn_url (str): The CDN url of the server.
+        host (str): The host IP adress of the server.
+        port (int): The port of the server.
+        locked (bool): Define if the server is locked. Locked servers have a password.
+        password (str): The password of the server.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        str: The direct connect protocol url.
+    """
     dtc_url = StringIO()
     if use_cdn:
         if not "http" in cdn_url:
@@ -113,9 +146,21 @@ def get_dtc_url(use_cdn, cdn_url, host, port, locked, password=None):
     return dtc_url.getvalue()
 
 
-# use this function to fetch the server connect json
-# this file has every resource of the server with a hash and name
-def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str):
+def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -> object | None:
+    """This function fetched the connect.json of an alt:V server.
+
+    Args:
+        use_cdn (bool): Define if the Server is using a CDN.
+        locked (bool): Define if the server is locked. Locked servers have a password.
+        active (bool): Define if the server is active. Active means Online.
+        host (str): The host IP adress of the server.
+        port (int): The port of the server.
+        cdn_url (str): The CDN url of the server.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        str: The direct connect protocol url.
+    """
     if not use_cdn and not locked and active:
         # This Server is not using a CDN.
         cdn_request = request(f"http://{host}:{port}/connect.json", True)
@@ -135,23 +180,52 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
 
 
 class Permissions:
+    """This is the Permission class used by get_permissions.
+
+    Returns:
+        Required: The required permissions of an alt:V server. Without them, you can not play on the server.
+        Optional: The optional permissions of an alt:V server. You can play without them.
+    """
     @dataclass
     class Required:
+        """Required Permissions of an alt:V server.
+
+        Attributes:
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        """
         screen_capture: bool = False
         webrtc: bool = False
         clipboard_access: bool = False
 
     @dataclass
     class Optional:
+        """Optional Permissions of an alt:V server.
+
+        Attributes:
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        """
         screen_capture: bool = False
         webrtc: bool = False
         clipboard_access: bool = False
 
 
-# fetch the required and optional permissions of the server
-def get_permissions(connect_json):
+def get_permissions(connect_json) -> Permissions | None:
+    """This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
+
+    Args:
+        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object e.g. Server(127).connect_json
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        Permissions: The permissions of the server.
+    """
     if connect_json is None:
         return None
+
     optional = connect_json["optional-permissions"]
     required = connect_json["required-permissions"]
 
@@ -192,7 +266,21 @@ def get_permissions(connect_json):
     return permissions
 
 
-def get_resource_size(use_cdn, cdn_url, resource, host, port, decimal):
+def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, port: int, decimal: int) -> float | None:
+    """This function returns the resource size of a server in MB.
+
+    Args:
+        use_cdn (bool): Define if the server is using a CDN.
+        cdn_url (str): The CDN url of the server.
+        resource (str): The name of the alt:V resource.
+        host (str): The IP address of the server.
+        port (int): The port of the server.
+        decimal (int): The number of decimal point that you need.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        float: The size of the resource.
+    """
     if use_cdn:
         resource_url = f"{cdn_url}/{resource}.resource"
     else:
