@@ -8,7 +8,7 @@ This is the server object:
 |-------------------| -----
 | Id                | int
 | FoundAt           | string
-| LastActivity      | string
+| LastActivity      | boolean
 | Visible           | boolean
 | ServerId          | string
 | Players           | int
@@ -43,6 +43,8 @@ This is the server object:
 | Version           | string
 | connect_json      | json
 | permissions       | json
+
+You can create a Server object like this: Server(server_id)
 
 ## Functions
 
