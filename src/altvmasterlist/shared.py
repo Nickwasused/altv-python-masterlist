@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from dataclasses import dataclass
 from json import dumps, loads
 from io import StringIO

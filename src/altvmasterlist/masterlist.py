@@ -8,7 +8,6 @@ import sys
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 logging.debug(f'starting with base link: {shared.MasterlistUrls.base_link}')
-
 """You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html"""
 
 
@@ -83,8 +82,7 @@ class Server:
                 self.version = temp_data["info"]["version"]
                 self.lastUpdate = temp_data["info"]["lastUpdate"]
 
-    # fetch the server data and replace it
-    def update(self):
+    def update(self) -> None:
         """Update the server data using the api."""
         self.__init__(self.id)
 
@@ -144,8 +142,6 @@ class Server:
         return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
 
 
-# Fetch the stats of all servers that are currently online
-# e.g. {"serversCount":121,"playersCount":1595}
 def get_server_stats() -> dict | None:
     """Statistics - Player Count across all servers & The amount of servers online
 
@@ -174,7 +170,6 @@ def get_servers() -> list[Server] | None:
         return None
     else:
         for server in servers:
-            # Now change every JSON response to a server object that we can e.g. update it when we want
             tmp_server = Server(server["id"], no_fetch=True)
             tmp_server.active = True
             tmp_server.maxPlayers = server["maxPlayers"]
@@ -205,11 +200,11 @@ def get_servers() -> list[Server] | None:
         return return_servers
 
 
-def validate_id(server_id: str) -> bool:
+def validate_id(server_id: any) -> bool:
     """Validate a server id
 
     Args:
-        server_id (str): The id you want to check.
+        server_id (any): The id you want to check.
 
     Returns:
         bool: True = valid, False = invalid
