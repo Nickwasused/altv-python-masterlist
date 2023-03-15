@@ -41,10 +41,10 @@ class Server:
     lastUpdate: int = 0
 
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, id, nofetch=False):
-        self.id = id
+    def __init__(self, server_id, no_fetch=False):
+        self.id = server_id
 
-        if not nofetch:
+        if not no_fetch:
             temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
             if temp_data is None or temp_data == {} or not temp_data["active"]:
                 # the api returned no data or the server is offline
@@ -138,7 +138,7 @@ def get_servers():
     else:
         for server in servers:
             # Now change every JSON response to a server object that we can e.g. update it when we want
-            tmp_server = Server(server["id"], nofetch=True)
+            tmp_server = Server(server["id"], no_fetch=True)
             tmp_server.active = True
             tmp_server.maxPlayers = server["maxPlayers"]
             tmp_server.players = server["players"]

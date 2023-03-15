@@ -16,7 +16,7 @@ logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
 class Server:
     Id: int
     FoundAt: str = ""
-    LastActivity: str = ""
+    LastActivity: bool = False
     Visible: bool = False
     ServerId: str = ""
     Players: int = 0
@@ -51,10 +51,10 @@ class Server:
     Version: float = 0.0
 
     # initialize the object with all values that are available in the alt:V masterlist API
-    def __init__(self, Id, nofetch=False):
-        self.Id = Id
+    def __init__(self, server_id, no_fetch=False):
+        self.Id = server_id
 
-        if not nofetch:
+        if not no_fetch:
             temp_data = shared.request(shared.AltstatsUrls.server_link.format(self.Id))
             if temp_data is None or temp_data == {} or not temp_data["LastUpdate"]:
                 # the api returned no data or the server is offline
@@ -167,7 +167,7 @@ def get_servers():
 # validate a given alt:V server id
 def validate_id(server_id):
     server_id = str(server_id)
-    regex = compile(r"^[0-9]{1,}$")
+    regex = compile(r"^\d+$")
     result = regex.match(server_id)
     if result is not None:
         return True
