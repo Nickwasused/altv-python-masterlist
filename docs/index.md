@@ -8,7 +8,7 @@ In this package are two modules:
 
 - masterlist 
 - altstats
-- altvcdn
+- shared
 
 ## [masterlist](./masterlist)
 
@@ -19,9 +19,9 @@ This is the official API for the [alt:V](https://altv.mp) Client
 This is an unofficial API that is: 
 > developed and supported by members of the altMP Team
 
-## [altvcdn](./altvcdn)
+## [shared](./shared)
 
-With this module, you can get version info about certain files.
+Shared functions that are used in masterlist and altstats.
 
 ## Comparison
 

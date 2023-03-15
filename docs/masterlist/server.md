@@ -30,6 +30,10 @@ This is the server object:
 | build | int
 | version | string
 | lastUpdate | int
+| connect_json | json
+| permissions | json
+
+You can create a Server object like this: Server(server_id)
 
 ## Functions
 
@@ -37,11 +41,8 @@ You can call the following functions on the server object:
 
 | Function | Description
 | - | -
-| get_json() | which is going to return the complete data (active to lastUpdate) as a JSON object.
-| update() | which is going to fetch the API data from alt:V and replace it in the Server object. 
-| fetch_connect_json(proxy) | which is going to fetch the "connect.json" from the CDN of the specified server if it has a CDN otherwise we are trying to fetch it directly from the alt:V http server. You can define a proxy server here because this is connecting to the server directly.
-| get_dtc_url(password) | Get the "Direct Connect Protocol" URL. You can supply a password. E.g. altv://connect/1.1.1.1:7788?password=test
-| get_permissions(proxy) | Get the Permissions of the Server as JSON. E.g. ```{'required': {'Screen Capture': True, 'WebRTC': False, 'Clipboard Access': False}, 'optional':{'Screen Capture': False, 'WebRTC': False, 'Clipboard Access': False}}``` You can define a proxy server here because this is connecting to the server directly.
-| get_resource_size(resource, decimal, proxy) | Get the size of a alt:V resource. 
-  
-You can print the server object directly to get the JSON Object as a string.
+| update() | Update the server object by calling __init__
+| get_max(time) | Get the maximum player data of the server
+| get_avg(time, return_result=False) | Get the average player data of the server
+| get_resource_size(resource) | Get the size of an alt:V resource in MB
+| get_dtc_url(password=None) | Get the servers direct connect Url

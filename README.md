@@ -9,14 +9,11 @@ You can use this Package to interface with the alt:V master list API and with th
 # Usage
 
 ```
-import masterlist as altv
+from altvmasterlist import masterlist as altv
 ...
 or
 ...
-import altstats as altv
-or
-...
-import altvcdn as altvcdn
+from altvmasterlist import altstats as altv
 ```
 
 # Docs
