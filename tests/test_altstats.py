@@ -24,6 +24,9 @@ def test_validate_id():
 
 def test_validate_id_invalid():
     assert altv.validate_id("invalid") is False
+    assert altv.validate_id([]) is False
+    assert altv.validate_id({}) is False
+    assert altv.validate_id(None) is False
 
 
 # server object functions
