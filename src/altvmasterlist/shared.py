@@ -39,7 +39,8 @@ class AltstatsUrls:
 
 @dataclass
 class RequestHeaders:
-    """This are the common request headers used by the request function. They are commonly used to emulate an alt:V client.
+    """These are the common request headers used by the request function.
+    They are commonly used to emulate an alt:V client.
 
     Returns:
         RequestHeaders: A RequestHeaders object
@@ -77,7 +78,7 @@ class RequestHeaders:
         })
 
 
-def request(url: str, cdn: bool = False, server: any = None) -> object | None:
+def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
     """This is the common request function to fetch remote data.
 
     Args:
@@ -113,7 +114,8 @@ def request(url: str, cdn: bool = False, server: any = None) -> object | None:
 
 
 def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -> str | None:
-    """This function gets the direct connect protocol url of an alt:V Server. (https://docs.altv.mp/articles/connectprotocol.html)
+    """This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
 
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
@@ -129,7 +131,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     """
     dtc_url = StringIO()
     if use_cdn:
-        if not "http" in cdn_url:
+        if "http" not in cdn_url:
             dtc_url.write(f"altv://connect/http://{cdn_url}")
         else:
             dtc_url.write(f"altv://connect/{cdn_url}")
@@ -146,7 +148,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     return dtc_url.getvalue()
 
 
-def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -> object | None:
+def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -> dict | None:
     """This function fetched the connect.json of an alt:V server.
 
     Args:
@@ -186,6 +188,7 @@ class Permissions:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     """
+
     @dataclass
     class Required:
         """Required Permissions of an alt:V server.
@@ -213,11 +216,12 @@ class Permissions:
         clipboard_access: bool = False
 
 
-def get_permissions(connect_json) -> Permissions | None:
+def get_permissions(connect_json: dict) -> Permissions | None:
     """This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
 
     Args:
-        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object e.g. Server(127).connect_json
+        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object
+                                e.g. Server(127).connect_json
 
     Returns:
         None: When an error occurred. But exceptions will still be logged!

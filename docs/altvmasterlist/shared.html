@@ -67,7 +67,8 @@ class AltstatsUrls:
 
 @dataclass
 class RequestHeaders:
-    &#34;&#34;&#34;This are the common request headers used by the request function. They are commonly used to emulate an alt:V client.
+    &#34;&#34;&#34;This are the common request headers used by the request function.
+    They are commonly used to emulate an alt:V client.
 
     Returns:
         RequestHeaders: A RequestHeaders object
@@ -105,7 +106,7 @@ class RequestHeaders:
         })
 
 
-def request(url: str, cdn: bool = False, server: any = None) -&gt; object | None:
+def request(url: str, cdn: bool = False, server: any = None) -&gt; dict | None:
     &#34;&#34;&#34;This is the common request function to fetch remote data.
 
     Args:
@@ -141,7 +142,8 @@ def request(url: str, cdn: bool = False, server: any = None) -&gt; object | None
 
 
 def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -&gt; str | None:
-    &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server. (https://docs.altv.mp/articles/connectprotocol.html)
+    &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
 
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
@@ -157,7 +159,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     &#34;&#34;&#34;
     dtc_url = StringIO()
     if use_cdn:
-        if not &#34;http&#34; in cdn_url:
+        if &#34;http&#34; not in cdn_url:
             dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
         else:
             dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
@@ -174,7 +176,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     return dtc_url.getvalue()
 
 
-def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -&gt; object | None:
+def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -&gt; dict | None:
     &#34;&#34;&#34;This function fetched the connect.json of an alt:V server.
 
     Args:
@@ -214,6 +216,7 @@ class Permissions:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     &#34;&#34;&#34;
+
     @dataclass
     class Required:
         &#34;&#34;&#34;Required Permissions of an alt:V server.
@@ -241,11 +244,12 @@ class Permissions:
         clipboard_access: bool = False
 
 
-def get_permissions(connect_json) -&gt; Permissions | None:
+def get_permissions(connect_json: dict) -&gt; Permissions | None:
     &#34;&#34;&#34;This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
 
     Args:
-        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object e.g. Server(127).connect_json
+        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object
+                                e.g. Server(127).connect_json
 
     Returns:
         None: When an error occurred. But exceptions will still be logged!
@@ -330,7 +334,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="altvmasterlist.shared.fetch_connect_json"><code class="name flex">
-<span>def <span class="ident">fetch_connect_json</span></span>(<span>use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) ‑> object | None</span>
+<span>def <span class="ident">fetch_connect_json</span></span>(<span>use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) ‑> dict | None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This function fetched the connect.json of an alt:V server.</p>
@@ -360,7 +364,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -&gt; object | None:
+<pre><code class="python">def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -&gt; dict | None:
     &#34;&#34;&#34;This function fetched the connect.json of an alt:V server.
 
     Args:
@@ -397,7 +401,8 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <span>def <span class="ident">get_dtc_url</span></span>(<span>use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) ‑> str | None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This function gets the direct connect protocol url of an alt:V Server. (<a href="https://docs.altv.mp/articles/connectprotocol.html">https://docs.altv.mp/articles/connectprotocol.html</a>)</p>
+<div class="desc"><p>This function gets the direct connect protocol url of an alt:V Server.
+(<a href="https://docs.altv.mp/articles/connectprotocol.html">https://docs.altv.mp/articles/connectprotocol.html</a>)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>use_cdn</code></strong> :&ensp;<code>bool</code></dt>
@@ -425,7 +430,8 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -&gt; str | None:
-    &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server. (https://docs.altv.mp/articles/connectprotocol.html)
+    &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
 
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
@@ -441,7 +447,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     &#34;&#34;&#34;
     dtc_url = StringIO()
     if use_cdn:
-        if not &#34;http&#34; in cdn_url:
+        if &#34;http&#34; not in cdn_url:
             dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
         else:
             dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
@@ -459,14 +465,15 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 </details>
 </dd>
 <dt id="altvmasterlist.shared.get_permissions"><code class="name flex">
-<span>def <span class="ident">get_permissions</span></span>(<span>connect_json) ‑> <a title="altvmasterlist.shared.Permissions" href="#altvmasterlist.shared.Permissions">Permissions</a> | None</span>
+<span>def <span class="ident">get_permissions</span></span>(<span>connect_json: dict) ‑> <a title="altvmasterlist.shared.Permissions" href="#altvmasterlist.shared.Permissions">Permissions</a> | None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This function returns the Permissions defined by the server. <a href="https://docs.altv.mp/articles/permissions.html">https://docs.altv.mp/articles/permissions.html</a></p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>connect_json</code></strong> :&ensp;<code>json</code></dt>
-<dd>The connect.json of the server. You can get the connect.json from the Server object e.g. Server(127).connect_json</dd>
+<dd>The connect.json of the server. You can get the connect.json from the Server object
+e.g. Server(127).connect_json</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -479,11 +486,12 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_permissions(connect_json) -&gt; Permissions | None:
+<pre><code class="python">def get_permissions(connect_json: dict) -&gt; Permissions | None:
     &#34;&#34;&#34;This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
 
     Args:
-        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object e.g. Server(127).connect_json
+        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object
+                                e.g. Server(127).connect_json
 
     Returns:
         None: When an error occurred. But exceptions will still be logged!
@@ -592,7 +600,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 </details>
 </dd>
 <dt id="altvmasterlist.shared.request"><code class="name flex">
-<span>def <span class="ident">request</span></span>(<span>url: str, cdn: bool = False, server: <built-in function any> = None) ‑> object | None</span>
+<span>def <span class="ident">request</span></span>(<span>url: str, cdn: bool = False, server: <built-in function any> = None) ‑> dict | None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This is the common request function to fetch remote data.</p>
@@ -616,7 +624,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def request(url: str, cdn: bool = False, server: any = None) -&gt; object | None:
+<pre><code class="python">def request(url: str, cdn: bool = False, server: any = None) -&gt; dict | None:
     &#34;&#34;&#34;This is the common request function to fetch remote data.
 
     Args:
@@ -783,6 +791,7 @@ class MasterlistUrls:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     &#34;&#34;&#34;
+
     @dataclass
     class Required:
         &#34;&#34;&#34;Required Permissions of an alt:V server.
@@ -844,7 +853,8 @@ class MasterlistUrls:
 <span>(</span><span>version, debug='false', branch='release')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This are the common request headers used by the request function. They are commonly used to emulate an alt:V client.</p>
+<div class="desc"><p>This are the common request headers used by the request function.
+They are commonly used to emulate an alt:V client.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code><a title="altvmasterlist.shared.RequestHeaders" href="#altvmasterlist.shared.RequestHeaders">RequestHeaders</a></code></dt>
@@ -856,7 +866,8 @@ class MasterlistUrls:
 </summary>
 <pre><code class="python">@dataclass
 class RequestHeaders:
-    &#34;&#34;&#34;This are the common request headers used by the request function. They are commonly used to emulate an alt:V client.
+    &#34;&#34;&#34;This are the common request headers used by the request function.
+    They are commonly used to emulate an alt:V client.
 
     Returns:
         RequestHeaders: A RequestHeaders object
