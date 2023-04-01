@@ -13,7 +13,7 @@ logging.getLogger().setLevel(logging.INFO)
 @dataclass
 class MasterlistUrls:
     """This class is used for the masterlist submodule. It provides all urls needed."""
-    base_link: str = "https://api.altv.mp"
+    base_link: str = "https://api.alt-mp.com"
     all_server_stats_link: str = f"{base_link}/servers"
     all_servers_link: str = f"{base_link}/servers/list"
     server_link: str = f"{base_link}/server" + "/{}"
