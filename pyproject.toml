@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "altvmasterlist"
-version = "2.4.2"
+version = "2.4.3"
 description = "A package to use the alt:V Masterlist api."
 authors = ["Nickwasused <contact.nickwasused.fa6c8@simplelogin.co>"]
 license = "MPL-2.0"
@@ -18,9 +18,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-requests = "^2.28.2"
-Brotli = "^1.0.9"
+python = "^3.11"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.0"
 
 [tool.poetry.dev-dependencies]
 

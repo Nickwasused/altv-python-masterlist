@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+from urllib.request import urlopen, Request
 from dataclasses import dataclass
 from json import dumps, loads
 from io import StringIO
-import requests
 import logging
 import secrets
 
@@ -91,13 +91,13 @@ def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
         }
 
     try:
-        api_data = requests.get(url, headers=req_headers, timeout=60)
-
-        if api_data.status_code != 200:
-            logging.warning(f"the request returned nothing.")
-            return None
-        else:
-            return loads(api_data.content.decode("utf-8", errors='ignore'))
+        api_request = Request(url, headers=req_headers, method="GET")
+        with urlopen(api_request, timeout=60) as api_data:
+            if api_data.status != 200:
+                logging.warning(f"the request returned nothing.")
+                return None
+            else:
+                return loads(api_data.read().decode("utf-8", errors='ignore'))
     except Exception as e:
         logging.error(e)
         return None
