@@ -27,10 +27,10 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
+from urllib.request import urlopen, Request
 from dataclasses import dataclass
 from json import dumps, loads
 from io import StringIO
-import requests
 import logging
 import secrets
 
@@ -41,12 +41,15 @@ logging.getLogger().setLevel(logging.INFO)
 @dataclass
 class MasterlistUrls:
     &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.altv.mp&#34;
+    base_link: str = &#34;https://api.alt-mp.com&#34;
+    base_cdn: str = &#34;https://cdn.alt-mp.com&#34;
     all_server_stats_link: str = f&#34;{base_link}/servers&#34;
     all_servers_link: str = f&#34;{base_link}/servers/list&#34;
     server_link: str = f&#34;{base_link}/server&#34; + &#34;/{}&#34;
     server_average_link: str = f&#34;{base_link}/avg&#34; + &#34;/{}/{}&#34;
     server_max_link: str = f&#34;{base_link}/max&#34; + &#34;/{}/{}&#34;
+    launcher_skins: str = f&#34;{base_cdn}/launcher-skins/index.json&#34;
+    launcher_file: str = f&#34;{base_cdn}/launcher-skins/files/&#34; + &#34;{}&#34;
 
 
 @dataclass
@@ -119,13 +122,13 @@ def request(url: str, cdn: bool = False, server: any = None) -&gt; dict | None:
         }
 
     try:
-        api_data = requests.get(url, headers=req_headers, timeout=60)
-
-        if api_data.status_code != 200:
-            logging.warning(f&#34;the request returned nothing.&#34;)
-            return None
-        else:
-            return loads(api_data.content.decode(&#34;utf-8&#34;, errors=&#39;ignore&#39;))
+        api_request = Request(url, headers=req_headers, method=&#34;GET&#34;)
+        with urlopen(api_request, timeout=60) as api_data:
+            if api_data.status != 200:
+                logging.warning(f&#34;the request returned nothing.&#34;)
+                return None
+            else:
+                return loads(api_data.read().decode(&#34;utf-8&#34;, errors=&#39;ignore&#39;))
     except Exception as e:
         logging.error(e)
         return None
@@ -147,23 +150,23 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
         None: When an error occurred. But exceptions will still be logged!
         str: The direct connect protocol url.
     &#34;&#34;&#34;
-    dtc_url = StringIO()
-    if use_cdn:
-        if &#34;http&#34; not in cdn_url:
-            dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
+    with StringIO() as dtc_url:
+        if use_cdn:
+            if &#34;http&#34; not in cdn_url:
+                dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
+            else:
+                dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
         else:
-            dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
-    else:
-        dtc_url.write(f&#34;altv://connect/{host}:{port}&#34;)
+            dtc_url.write(f&#34;altv://connect/{host}:{port}&#34;)
 
-    if locked and password is None:
-        logging.warning(
-            &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
+        if locked and password is None:
+            logging.warning(
+                &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
 
-    if password is not None:
-        dtc_url.write(f&#34;?password={password}&#34;)
+        if password is not None:
+            dtc_url.write(f&#34;?password={password}&#34;)
 
-    return dtc_url.getvalue()
+        return dtc_url.getvalue()
 
 
 def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -&gt; dict | None:
@@ -435,23 +438,23 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
         None: When an error occurred. But exceptions will still be logged!
         str: The direct connect protocol url.
     &#34;&#34;&#34;
-    dtc_url = StringIO()
-    if use_cdn:
-        if &#34;http&#34; not in cdn_url:
-            dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
+    with StringIO() as dtc_url:
+        if use_cdn:
+            if &#34;http&#34; not in cdn_url:
+                dtc_url.write(f&#34;altv://connect/http://{cdn_url}&#34;)
+            else:
+                dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
         else:
-            dtc_url.write(f&#34;altv://connect/{cdn_url}&#34;)
-    else:
-        dtc_url.write(f&#34;altv://connect/{host}:{port}&#34;)
+            dtc_url.write(f&#34;altv://connect/{host}:{port}&#34;)
 
-    if locked and password is None:
-        logging.warning(
-            &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
+        if locked and password is None:
+            logging.warning(
+                &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
 
-    if password is not None:
-        dtc_url.write(f&#34;?password={password}&#34;)
+        if password is not None:
+            dtc_url.write(f&#34;?password={password}&#34;)
 
-    return dtc_url.getvalue()</code></pre>
+        return dtc_url.getvalue()</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.shared.get_permissions"><code class="name flex">
@@ -637,13 +640,13 @@ e.g. Server(127).connect_json</dd>
         }
 
     try:
-        api_data = requests.get(url, headers=req_headers, timeout=60)
-
-        if api_data.status_code != 200:
-            logging.warning(f&#34;the request returned nothing.&#34;)
-            return None
-        else:
-            return loads(api_data.content.decode(&#34;utf-8&#34;, errors=&#39;ignore&#39;))
+        api_request = Request(url, headers=req_headers, method=&#34;GET&#34;)
+        with urlopen(api_request, timeout=60) as api_data:
+            if api_data.status != 200:
+                logging.warning(f&#34;the request returned nothing.&#34;)
+                return None
+            else:
+                return loads(api_data.read().decode(&#34;utf-8&#34;, errors=&#39;ignore&#39;))
     except Exception as e:
         logging.error(e)
         return None</code></pre>
@@ -694,7 +697,7 @@ class AltstatsUrls:
 </dd>
 <dt id="altvmasterlist.shared.MasterlistUrls"><code class="flex name class">
 <span>class <span class="ident">MasterlistUrls</span></span>
-<span>(</span><span>base_link: str = 'https://api.altv.mp', all_server_stats_link: str = 'https://api.altv.mp/servers', all_servers_link: str = 'https://api.altv.mp/servers/list', server_link: str = 'https://api.altv.mp/server/{}', server_average_link: str = 'https://api.altv.mp/avg/{}/{}', server_max_link: str = 'https://api.altv.mp/max/{}/{}')</span>
+<span>(</span><span>base_link: str = 'https://api.alt-mp.com', base_cdn: str = 'https://cdn.alt-mp.com', all_server_stats_link: str = 'https://api.alt-mp.com/servers', all_servers_link: str = 'https://api.alt-mp.com/servers/list', server_link: str = 'https://api.alt-mp.com/server/{}', server_average_link: str = 'https://api.alt-mp.com/avg/{}/{}', server_max_link: str = 'https://api.alt-mp.com/max/{}/{}', launcher_skins: str = 'https://cdn.alt-mp.com/launcher-skins/index.json', launcher_file: str = 'https://cdn.alt-mp.com/launcher-skins/files/{}')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class is used for the masterlist submodule. It provides all urls needed.</p></div>
@@ -705,12 +708,15 @@ class AltstatsUrls:
 <pre><code class="python">@dataclass
 class MasterlistUrls:
     &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.altv.mp&#34;
+    base_link: str = &#34;https://api.alt-mp.com&#34;
+    base_cdn: str = &#34;https://cdn.alt-mp.com&#34;
     all_server_stats_link: str = f&#34;{base_link}/servers&#34;
     all_servers_link: str = f&#34;{base_link}/servers/list&#34;
     server_link: str = f&#34;{base_link}/server&#34; + &#34;/{}&#34;
     server_average_link: str = f&#34;{base_link}/avg&#34; + &#34;/{}/{}&#34;
-    server_max_link: str = f&#34;{base_link}/max&#34; + &#34;/{}/{}&#34;</code></pre>
+    server_max_link: str = f&#34;{base_link}/max&#34; + &#34;/{}/{}&#34;
+    launcher_skins: str = f&#34;{base_cdn}/launcher-skins/index.json&#34;
+    launcher_file: str = f&#34;{base_cdn}/launcher-skins/files/&#34; + &#34;{}&#34;</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -722,7 +728,19 @@ class MasterlistUrls:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="altvmasterlist.shared.MasterlistUrls.base_cdn"><code class="name">var <span class="ident">base_cdn</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="altvmasterlist.shared.MasterlistUrls.base_link"><code class="name">var <span class="ident">base_link</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.shared.MasterlistUrls.launcher_file"><code class="name">var <span class="ident">launcher_file</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.shared.MasterlistUrls.launcher_skins"><code class="name">var <span class="ident">launcher_skins</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -955,7 +973,10 @@ class RequestHeaders:
 <ul class="">
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.all_server_stats_link" href="#altvmasterlist.shared.MasterlistUrls.all_server_stats_link">all_server_stats_link</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.all_servers_link" href="#altvmasterlist.shared.MasterlistUrls.all_servers_link">all_servers_link</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.base_cdn" href="#altvmasterlist.shared.MasterlistUrls.base_cdn">base_cdn</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.base_link" href="#altvmasterlist.shared.MasterlistUrls.base_link">base_link</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.launcher_file" href="#altvmasterlist.shared.MasterlistUrls.launcher_file">launcher_file</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.launcher_skins" href="#altvmasterlist.shared.MasterlistUrls.launcher_skins">launcher_skins</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.server_average_link" href="#altvmasterlist.shared.MasterlistUrls.server_average_link">server_average_link</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.server_link" href="#altvmasterlist.shared.MasterlistUrls.server_link">server_link</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.server_max_link" href="#altvmasterlist.shared.MasterlistUrls.server_max_link">server_max_link</a></code></li>

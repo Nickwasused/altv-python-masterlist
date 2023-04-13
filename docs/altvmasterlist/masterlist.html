@@ -247,6 +247,56 @@ def validate_id(server_id: any) -&gt; bool:
         return False
 
 
+def get_launcher_skins():
+    &#34;&#34;&#34;Get a list of all available launcher skins.
+
+    Returns:
+        json: A json array of all launcher skins.
+
+    The elements have the following keys: serverId, xxHash64 and fileName.
+    &#34;&#34;&#34;
+    skins = shared.request(shared.MasterlistUrls.launcher_skins)
+
+    if skins is None or skins == &#34;{}&#34;:
+        return None
+    else:
+        return skins[&#34;indexEntries&#34;]
+
+
+def get_launcher_skin(filename: str):
+    &#34;&#34;&#34;Get a specific launcher skin by filename
+
+    Args:
+        filename (str): filename of the launcher skin
+
+    Returns:
+        json: Object
+
+    The json object has the following keys:
+        - name: the name of the server
+        - id: the server id
+        - rss: the custom rss feed of the server
+        - primaryColor: the custom color of the server
+        - servers (array): list of servers
+            - name: server name
+            - url: direct connect url
+            - id: server id
+            - imageSplash64: base64 splash image
+            - imageLogo64: base64 Logo
+            - imageBackground64: base64 background image
+
+    &#34;&#34;&#34;
+    if not filename or filename == &#34;&#34;:
+        return None
+
+    skin = shared.request(shared.MasterlistUrls.launcher_file.format(filename))
+
+    if skin is None or skin == {}:
+        return None
+    else:
+        return skin
+
+
 if __name__ == &#34;__main__&#34;:
     print(&#34;This is a Module!&#34;)
     sys.exit()</code></pre>
@@ -259,6 +309,102 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="altvmasterlist.masterlist.get_launcher_skin"><code class="name flex">
+<span>def <span class="ident">get_launcher_skin</span></span>(<span>filename: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a specific launcher skin by filename</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>filename of the launcher skin</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>json</code></dt>
+<dd>Object</dd>
+</dl>
+<p>The json object has the following keys:
+- name: the name of the server
+- id: the server id
+- rss: the custom rss feed of the server
+- primaryColor: the custom color of the server
+- servers (array): list of servers
+- name: server name
+- url: direct connect url
+- id: server id
+- imageSplash64: base64 splash image
+- imageLogo64: base64 Logo
+- imageBackground64: base64 background image</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_launcher_skin(filename: str):
+    &#34;&#34;&#34;Get a specific launcher skin by filename
+
+    Args:
+        filename (str): filename of the launcher skin
+
+    Returns:
+        json: Object
+
+    The json object has the following keys:
+        - name: the name of the server
+        - id: the server id
+        - rss: the custom rss feed of the server
+        - primaryColor: the custom color of the server
+        - servers (array): list of servers
+            - name: server name
+            - url: direct connect url
+            - id: server id
+            - imageSplash64: base64 splash image
+            - imageLogo64: base64 Logo
+            - imageBackground64: base64 background image
+
+    &#34;&#34;&#34;
+    if not filename or filename == &#34;&#34;:
+        return None
+
+    skin = shared.request(shared.MasterlistUrls.launcher_file.format(filename))
+
+    if skin is None or skin == {}:
+        return None
+    else:
+        return skin</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.get_launcher_skins"><code class="name flex">
+<span>def <span class="ident">get_launcher_skins</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a list of all available launcher skins.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>json</code></dt>
+<dd>A json array of all launcher skins.</dd>
+</dl>
+<p>The elements have the following keys: serverId, xxHash64 and fileName.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_launcher_skins():
+    &#34;&#34;&#34;Get a list of all available launcher skins.
+
+    Returns:
+        json: A json array of all launcher skins.
+
+    The elements have the following keys: serverId, xxHash64 and fileName.
+    &#34;&#34;&#34;
+    skins = shared.request(shared.MasterlistUrls.launcher_skins)
+
+    if skins is None or skins == &#34;{}&#34;:
+        return None
+    else:
+        return skins[&#34;indexEntries&#34;]</code></pre>
+</details>
+</dd>
 <dt id="altvmasterlist.masterlist.get_server_stats"><code class="name flex">
 <span>def <span class="ident">get_server_stats</span></span>(<span>) ‑> dict | None</span>
 </code></dt>
@@ -821,6 +967,8 @@ def permissions(self) -&gt; shared.Permissions | None:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="altvmasterlist.masterlist.get_launcher_skin" href="#altvmasterlist.masterlist.get_launcher_skin">get_launcher_skin</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.get_launcher_skins" href="#altvmasterlist.masterlist.get_launcher_skins">get_launcher_skins</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.get_server_stats" href="#altvmasterlist.masterlist.get_server_stats">get_server_stats</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.get_servers" href="#altvmasterlist.masterlist.get_servers">get_servers</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.validate_id" href="#altvmasterlist.masterlist.validate_id">validate_id</a></code></li>
