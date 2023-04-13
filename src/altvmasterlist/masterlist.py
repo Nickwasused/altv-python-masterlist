@@ -219,7 +219,7 @@ def validate_id(server_id: any) -> bool:
         return False
 
 
-def get_launcher_skins():
+def get_launcher_skins() -> dict | None:
     """Get a list of all available launcher skins.
 
     Returns:
@@ -235,7 +235,7 @@ def get_launcher_skins():
         return skins["indexEntries"]
 
 
-def get_launcher_skin(filename: str):
+def get_launcher_skin(filename: str) -> dict | None:
     """Get a specific launcher skin by filename
 
     Args:

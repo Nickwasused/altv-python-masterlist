@@ -247,7 +247,7 @@ def validate_id(server_id: any) -&gt; bool:
         return False
 
 
-def get_launcher_skins():
+def get_launcher_skins() -&gt; dict | None:
     &#34;&#34;&#34;Get a list of all available launcher skins.
 
     Returns:
@@ -263,7 +263,7 @@ def get_launcher_skins():
         return skins[&#34;indexEntries&#34;]
 
 
-def get_launcher_skin(filename: str):
+def get_launcher_skin(filename: str) -&gt; dict | None:
     &#34;&#34;&#34;Get a specific launcher skin by filename
 
     Args:
@@ -310,7 +310,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="altvmasterlist.masterlist.get_launcher_skin"><code class="name flex">
-<span>def <span class="ident">get_launcher_skin</span></span>(<span>filename: str)</span>
+<span>def <span class="ident">get_launcher_skin</span></span>(<span>filename: str) ‑> dict | None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a specific launcher skin by filename</p>
@@ -340,7 +340,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_launcher_skin(filename: str):
+<pre><code class="python">def get_launcher_skin(filename: str) -&gt; dict | None:
     &#34;&#34;&#34;Get a specific launcher skin by filename
 
     Args:
@@ -375,7 +375,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.get_launcher_skins"><code class="name flex">
-<span>def <span class="ident">get_launcher_skins</span></span>(<span>)</span>
+<span>def <span class="ident">get_launcher_skins</span></span>(<span>) ‑> dict | None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a list of all available launcher skins.</p>
@@ -389,7 +389,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_launcher_skins():
+<pre><code class="python">def get_launcher_skins() -&gt; dict | None:
     &#34;&#34;&#34;Get a list of all available launcher skins.
 
     Returns:
