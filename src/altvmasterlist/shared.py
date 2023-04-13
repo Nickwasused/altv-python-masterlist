@@ -14,11 +14,14 @@ logging.getLogger().setLevel(logging.INFO)
 class MasterlistUrls:
     """This class is used for the masterlist submodule. It provides all urls needed."""
     base_link: str = "https://api.alt-mp.com"
+    base_cdn: str = "https://cdn.alt-mp.com"
     all_server_stats_link: str = f"{base_link}/servers"
     all_servers_link: str = f"{base_link}/servers/list"
     server_link: str = f"{base_link}/server" + "/{}"
     server_average_link: str = f"{base_link}/avg" + "/{}/{}"
     server_max_link: str = f"{base_link}/max" + "/{}/{}"
+    launcher_skins: str = f"{base_cdn}/launcher-skins/index.json"
+    launcher_file: str = f"{base_cdn}/launcher-skins/files/" + "{}"
 
 
 @dataclass
