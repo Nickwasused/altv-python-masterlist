@@ -283,9 +283,10 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     else:
         resource_url = f"http://{host}:{port}/{resource}.resource"
 
-    data = requests.head(resource_url, headers={"User-Agent": "AltPublicAgent"}, timeout=60)
+    size_request = Request(resource_url, headers={"User-Agent": "AltPublicAgent"}, method="HEAD")
 
-    if data.ok:
-        return round((int(data.headers["Content-Length"]) / 1048576), decimal)
-    else:
-        return None
+    with urlopen(size_request, timeout=60) as size_data:
+        if size_data.status == 200:
+            return round((int(size_data.headers["Content-Length"]) / 1048576), decimal)
+        else:
+            return None

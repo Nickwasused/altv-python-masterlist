@@ -56,6 +56,11 @@ def test_fetch_connect_json():
     assert type(connect_json) is dict or connect_json is None
 
 
+def test_get_resource_size():
+    size = server.get_resource_size("gamemode")
+    assert type(size) is float or size is None
+
+
 def test_dtc_url():
     url = server.get_dtc_url()
     assert "altv://connect/" in url

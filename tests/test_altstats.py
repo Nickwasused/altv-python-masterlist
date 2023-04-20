@@ -32,7 +32,12 @@ def test_validate_id_invalid():
 # server object functions
 # lets get a server
 
-server = altv.Server(86)
+server = altv.Server(127)
+
+
+def test_get_resource_size():
+    size = server.get_resource_size("gamemode")
+    assert type(size) is float or size is None
 
 
 def test_dtc_url():
