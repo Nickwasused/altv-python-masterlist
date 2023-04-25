@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from urllib.request import urlopen, Request
 from dataclasses import dataclass
-from enum import Enum
 from json import dumps, loads
 from io import StringIO
+from enum import Enum
 import logging
 import secrets
 
@@ -29,16 +29,22 @@ class AltstatsUrls(Enum):
     specific_server = "https://api.altstats.net/api/v1//server/{}"
 
 
+class Extra(Enum):
+    """This class defines extra values."""
+    user_agent = "AltPublicAgent"
+    default_password = "17241709254077376921"
+
+
 @dataclass
 class RequestHeaders:
     """These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
     """
     host: str = "",
-    user_agent: str = 'AltPublicAgent',
+    user_agent: str = Extra.user_agent.value,
     accept: str = '*/*',
     alt_debug: str = 'false',
-    alt_password: str = '17241709254077376921',
+    alt_password: str = Extra.default_password.value,
     alt_branch: str = "",
     alt_version: str = "",
     alt_player_name: str = secrets.token_urlsafe(10),
@@ -85,7 +91,7 @@ def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
         req_headers = RequestHeaders(server.version, server.branch)
     else:
         req_headers = {
-            'User-Agent': 'AltPublicAgent',
+            'User-Agent': Extra.user_agent.value,
             'content-type': 'application/json; charset=utf-8'
         }
 
@@ -109,7 +115,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
         cdn_url (str): The CDN url of the server.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         locked (bool): Define if the server is locked. Locked servers have a password.
         password (str): The password of the server.
@@ -144,7 +150,7 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
         use_cdn (bool): Define if the Server is using a CDN.
         locked (bool): Define if the server is locked. Locked servers have a password.
         active (bool): Define if the server is active. Active means Online.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         cdn_url (str): The CDN url of the server.
 
@@ -177,12 +183,12 @@ class Permissions:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     """
-
     @dataclass
     class Required:
         """Required Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -196,6 +202,7 @@ class Permissions:
         """Optional Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -216,43 +223,50 @@ def get_permissions(connect_json: dict) -> Permissions | None:
         None: When an error occurred. But exceptions will still be logged!
         Permissions: The permissions of the server.
     """
+    class Permission(Enum):
+        screen_capture = "Screen Capture"
+        webrtc = "WebRTC"
+        clipboard_access = "Clipboard Access"
+        optional = "optional-permissions"
+        required = "required-permissions"
+
     if connect_json is None:
         return None
 
-    optional = connect_json["optional-permissions"]
-    required = connect_json["required-permissions"]
+    optional = connect_json[Permission.optional.value]
+    required = connect_json[Permission.required.value]
 
     permissions = Permissions()
 
     if optional is not []:
         try:
-            permissions.Optional.screen_capture = optional["Screen Capture"]
+            permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.webrtc = optional["WebRTC"]
+            permissions.Optional.webrtc = optional[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.clipboard_access = optional["Clipboard Access"]
+            permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
         except TypeError:
             pass
 
     if required is not []:
         try:
-            permissions.Required.screen_capture = required["Screen Capture"]
+            permissions.Required.screen_capture = required[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.webrtc = required["WebRTC"]
+            permissions.Required.webrtc = required[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.clipboard_access = required["Clipboard Access"]
+            permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
         except TypeError:
             pass
 
@@ -279,7 +293,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     else:
         resource_url = f"http://{host}:{port}/{resource}.resource"
 
-    size_request = Request(resource_url, headers={"User-Agent": "AltPublicAgent"}, method="HEAD")
+    size_request = Request(resource_url, headers={"User-Agent": Extra.user_agent.value}, method="HEAD")
 
     with urlopen(size_request, timeout=60) as size_data:
         if size_data.status == 200:
