@@ -35,7 +35,6 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-logging.debug(f&#39;starting with base link: {shared.MasterlistUrls.base_link}&#39;)
 &#34;&#34;&#34;You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html&#34;&#34;&#34;
 
 
@@ -79,7 +78,7 @@ class Server:
         self.id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
+            temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
             if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
                 # the api returned no data or the server is offline
                 self.active = False
@@ -124,7 +123,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         &#34;&#34;&#34;
-        return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
+        return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
 
     def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
         &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -138,7 +137,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         &#34;&#34;&#34;
-        average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+        average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
         if not average_data:
             return None
 
@@ -177,7 +176,7 @@ def get_server_stats() -&gt; dict | None:
         None: When an error occurs
         dict: The stats
     &#34;&#34;&#34;
-    data = shared.request(shared.MasterlistUrls.all_server_stats_link)
+    data = shared.request(shared.MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -193,7 +192,7 @@ def get_servers() -&gt; list[Server] | None:
         list: List object that contains all servers.
     &#34;&#34;&#34;
     return_servers = []
-    servers = shared.request(shared.MasterlistUrls.all_servers_link)
+    servers = shared.request(shared.MasterlistUrls.all_servers.value)
     if servers is None or servers == &#34;{}&#34;:
         return None
     else:
@@ -255,7 +254,7 @@ def get_launcher_skins() -&gt; dict | None:
 
     The elements have the following keys: serverId, xxHash64 and fileName.
     &#34;&#34;&#34;
-    skins = shared.request(shared.MasterlistUrls.launcher_skins)
+    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
 
     if skins is None or skins == &#34;{}&#34;:
         return None
@@ -289,7 +288,7 @@ def get_launcher_skin(filename: str) -&gt; dict | None:
     if not filename or filename == &#34;&#34;:
         return None
 
-    skin = shared.request(shared.MasterlistUrls.launcher_file.format(filename))
+    skin = shared.request(shared.MasterlistUrls.launcher_skins_file.value.format(filename))
 
     if skin is None or skin == {}:
         return None
@@ -366,7 +365,7 @@ if __name__ == &#34;__main__&#34;:
     if not filename or filename == &#34;&#34;:
         return None
 
-    skin = shared.request(shared.MasterlistUrls.launcher_file.format(filename))
+    skin = shared.request(shared.MasterlistUrls.launcher_skins_file.value.format(filename))
 
     if skin is None or skin == {}:
         return None
@@ -397,7 +396,7 @@ if __name__ == &#34;__main__&#34;:
 
     The elements have the following keys: serverId, xxHash64 and fileName.
     &#34;&#34;&#34;
-    skins = shared.request(shared.MasterlistUrls.launcher_skins)
+    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
 
     if skins is None or skins == &#34;{}&#34;:
         return None
@@ -428,7 +427,7 @@ if __name__ == &#34;__main__&#34;:
         None: When an error occurs
         dict: The stats
     &#34;&#34;&#34;
-    data = shared.request(shared.MasterlistUrls.all_server_stats_link)
+    data = shared.request(shared.MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -461,7 +460,7 @@ Note that the server objects returned are not complete!</p>
         list: List object that contains all servers.
     &#34;&#34;&#34;
     return_servers = []
-    servers = shared.request(shared.MasterlistUrls.all_servers_link)
+    servers = shared.request(shared.MasterlistUrls.all_servers.value)
     if servers is None or servers == &#34;{}&#34;:
         return None
     else:
@@ -598,7 +597,7 @@ class Server:
         self.id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.MasterlistUrls.server_link.format(self.id))
+            temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
             if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
                 # the api returned no data or the server is offline
                 self.active = False
@@ -643,7 +642,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         &#34;&#34;&#34;
-        return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))
+        return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
 
     def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
         &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -657,7 +656,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         &#34;&#34;&#34;
-        average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+        average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
         if not average_data:
             return None
 
@@ -859,7 +858,7 @@ def permissions(self) -&gt; shared.Permissions | None:
         dict: The maximum player data
         int: Overall average of defined timerange
     &#34;&#34;&#34;
-    average_data = shared.request(shared.MasterlistUrls.server_average_link.format(self.id, time))
+    average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
     if not average_data:
         return None
 
@@ -918,7 +917,7 @@ def permissions(self) -&gt; shared.Permissions | None:
         None: When an error occurs
         dict: The maximum player data
     &#34;&#34;&#34;
-    return shared.request(shared.MasterlistUrls.server_max_link.format(self.id, time))</code></pre>
+    return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.get_resource_size"><code class="name flex">

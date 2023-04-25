@@ -31,6 +31,7 @@ from urllib.request import urlopen, Request
 from dataclasses import dataclass
 from json import dumps, loads
 from io import StringIO
+from enum import Enum
 import logging
 import secrets
 
@@ -38,27 +39,28 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 
 
-@dataclass
-class MasterlistUrls:
+class MasterlistUrls(Enum):
     &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.alt-mp.com&#34;
-    base_cdn: str = &#34;https://cdn.alt-mp.com&#34;
-    all_server_stats_link: str = f&#34;{base_link}/servers&#34;
-    all_servers_link: str = f&#34;{base_link}/servers/list&#34;
-    server_link: str = f&#34;{base_link}/server&#34; + &#34;/{}&#34;
-    server_average_link: str = f&#34;{base_link}/avg&#34; + &#34;/{}/{}&#34;
-    server_max_link: str = f&#34;{base_link}/max&#34; + &#34;/{}/{}&#34;
-    launcher_skins: str = f&#34;{base_cdn}/launcher-skins/index.json&#34;
-    launcher_file: str = f&#34;{base_cdn}/launcher-skins/files/&#34; + &#34;{}&#34;
+    all_server_stats = &#34;https://api.alt-mp.com/servers&#34;
+    all_servers = &#34;https://api.alt-mp.com/servers/list&#34;
+    specific_server = &#34;https://api.alt-mp.com/server/{}&#34;
+    specific_server_average = &#34;https://api.alt-mp.com/avg/{}/{}&#34;
+    specific_server_maximum = &#34;https://api.alt-mp.com/max/{}/{}&#34;
+    launcher_skins = &#34;https://cdn.alt-mp.com/launcher-skins/index.json&#34;
+    launcher_skins_file = &#34;https://cdn.alt-mp.com/launcher-skins/files/{}&#34;
 
 
-@dataclass
-class AltstatsUrls:
+class AltstatsUrls(Enum):
     &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.altstats.net/api/v1/&#34;
-    all_server_stats_link: str = f&#34;{base_link}/master&#34;
-    all_servers_link: str = f&#34;{base_link}/server&#34;
-    server_link: str = f&#34;{base_link}/server/&#34; + &#34;{}&#34;
+    all_server_stats = &#34;https://api.altstats.net/api/v1//master&#34;
+    all_servers = &#34;https://api.altstats.net/api/v1//server&#34;
+    specific_server = &#34;https://api.altstats.net/api/v1//server/{}&#34;
+
+
+class Extra(Enum):
+    &#34;&#34;&#34;This class defines extra values.&#34;&#34;&#34;
+    user_agent = &#34;AltPublicAgent&#34;
+    default_password = &#34;17241709254077376921&#34;
 
 
 @dataclass
@@ -67,10 +69,10 @@ class RequestHeaders:
     They are commonly used to emulate an alt:V client.
     &#34;&#34;&#34;
     host: str = &#34;&#34;,
-    user_agent: str = &#39;AltPublicAgent&#39;,
+    user_agent: str = Extra.user_agent.value,
     accept: str = &#39;*/*&#39;,
     alt_debug: str = &#39;false&#39;,
-    alt_password: str = &#39;17241709254077376921&#39;,
+    alt_password: str = Extra.default_password.value,
     alt_branch: str = &#34;&#34;,
     alt_version: str = &#34;&#34;,
     alt_player_name: str = secrets.token_urlsafe(10),
@@ -117,7 +119,7 @@ def request(url: str, cdn: bool = False, server: any = None) -&gt; dict | None:
         req_headers = RequestHeaders(server.version, server.branch)
     else:
         req_headers = {
-            &#39;User-Agent&#39;: &#39;AltPublicAgent&#39;,
+            &#39;User-Agent&#39;: Extra.user_agent.value,
             &#39;content-type&#39;: &#39;application/json; charset=utf-8&#39;
         }
 
@@ -141,7 +143,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
         cdn_url (str): The CDN url of the server.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         locked (bool): Define if the server is locked. Locked servers have a password.
         password (str): The password of the server.
@@ -176,7 +178,7 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
         use_cdn (bool): Define if the Server is using a CDN.
         locked (bool): Define if the server is locked. Locked servers have a password.
         active (bool): Define if the server is active. Active means Online.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         cdn_url (str): The CDN url of the server.
 
@@ -209,12 +211,12 @@ class Permissions:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     &#34;&#34;&#34;
-
     @dataclass
     class Required:
         &#34;&#34;&#34;Required Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -228,6 +230,7 @@ class Permissions:
         &#34;&#34;&#34;Optional Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -248,43 +251,50 @@ def get_permissions(connect_json: dict) -&gt; Permissions | None:
         None: When an error occurred. But exceptions will still be logged!
         Permissions: The permissions of the server.
     &#34;&#34;&#34;
+    class Permission(Enum):
+        screen_capture = &#34;Screen Capture&#34;
+        webrtc = &#34;WebRTC&#34;
+        clipboard_access = &#34;Clipboard Access&#34;
+        optional = &#34;optional-permissions&#34;
+        required = &#34;required-permissions&#34;
+
     if connect_json is None:
         return None
 
-    optional = connect_json[&#34;optional-permissions&#34;]
-    required = connect_json[&#34;required-permissions&#34;]
+    optional = connect_json[Permission.optional.value]
+    required = connect_json[Permission.required.value]
 
     permissions = Permissions()
 
     if optional is not []:
         try:
-            permissions.Optional.screen_capture = optional[&#34;Screen Capture&#34;]
+            permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.webrtc = optional[&#34;WebRTC&#34;]
+            permissions.Optional.webrtc = optional[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.clipboard_access = optional[&#34;Clipboard Access&#34;]
+            permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
         except TypeError:
             pass
 
     if required is not []:
         try:
-            permissions.Required.screen_capture = required[&#34;Screen Capture&#34;]
+            permissions.Required.screen_capture = required[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.webrtc = required[&#34;WebRTC&#34;]
+            permissions.Required.webrtc = required[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.clipboard_access = required[&#34;Clipboard Access&#34;]
+            permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
         except TypeError:
             pass
 
@@ -311,12 +321,13 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     else:
         resource_url = f&#34;http://{host}:{port}/{resource}.resource&#34;
 
-    data = requests.head(resource_url, headers={&#34;User-Agent&#34;: &#34;AltPublicAgent&#34;}, timeout=60)
+    size_request = Request(resource_url, headers={&#34;User-Agent&#34;: Extra.user_agent.value}, method=&#34;HEAD&#34;)
 
-    if data.ok:
-        return round((int(data.headers[&#34;Content-Length&#34;]) / 1048576), decimal)
-    else:
-        return None</code></pre>
+    with urlopen(size_request, timeout=60) as size_data:
+        if size_data.status == 200:
+            return round((int(size_data.headers[&#34;Content-Length&#34;]) / 1048576), decimal)
+        else:
+            return None</code></pre>
 </details>
 </section>
 <section>
@@ -340,7 +351,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <dt><strong><code>active</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Define if the server is active. Active means Online.</dd>
 <dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
-<dd>The host IP adress of the server.</dd>
+<dd>The host IP address of the server.</dd>
 <dt><strong><code>port</code></strong> :&ensp;<code>int</code></dt>
 <dd>The port of the server.</dd>
 <dt><strong><code>cdn_url</code></strong> :&ensp;<code>str</code></dt>
@@ -364,7 +375,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
         use_cdn (bool): Define if the Server is using a CDN.
         locked (bool): Define if the server is locked. Locked servers have a password.
         active (bool): Define if the server is active. Active means Online.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         cdn_url (str): The CDN url of the server.
 
@@ -403,7 +414,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
 <dt><strong><code>cdn_url</code></strong> :&ensp;<code>str</code></dt>
 <dd>The CDN url of the server.</dd>
 <dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
-<dd>The host IP adress of the server.</dd>
+<dd>The host IP address of the server.</dd>
 <dt><strong><code>port</code></strong> :&ensp;<code>int</code></dt>
 <dd>The port of the server.</dd>
 <dt><strong><code>locked</code></strong> :&ensp;<code>bool</code></dt>
@@ -429,7 +440,7 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     Args:
         use_cdn (bool): Define if the Server is using a CDN.
         cdn_url (str): The CDN url of the server.
-        host (str): The host IP adress of the server.
+        host (str): The host IP address of the server.
         port (int): The port of the server.
         locked (bool): Define if the server is locked. Locked servers have a password.
         password (str): The password of the server.
@@ -490,43 +501,50 @@ e.g. Server(127).connect_json</dd>
         None: When an error occurred. But exceptions will still be logged!
         Permissions: The permissions of the server.
     &#34;&#34;&#34;
+    class Permission(Enum):
+        screen_capture = &#34;Screen Capture&#34;
+        webrtc = &#34;WebRTC&#34;
+        clipboard_access = &#34;Clipboard Access&#34;
+        optional = &#34;optional-permissions&#34;
+        required = &#34;required-permissions&#34;
+
     if connect_json is None:
         return None
 
-    optional = connect_json[&#34;optional-permissions&#34;]
-    required = connect_json[&#34;required-permissions&#34;]
+    optional = connect_json[Permission.optional.value]
+    required = connect_json[Permission.required.value]
 
     permissions = Permissions()
 
     if optional is not []:
         try:
-            permissions.Optional.screen_capture = optional[&#34;Screen Capture&#34;]
+            permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.webrtc = optional[&#34;WebRTC&#34;]
+            permissions.Optional.webrtc = optional[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Optional.clipboard_access = optional[&#34;Clipboard Access&#34;]
+            permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
         except TypeError:
             pass
 
     if required is not []:
         try:
-            permissions.Required.screen_capture = required[&#34;Screen Capture&#34;]
+            permissions.Required.screen_capture = required[Permission.screen_capture.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.webrtc = required[&#34;WebRTC&#34;]
+            permissions.Required.webrtc = required[Permission.webrtc.value]
         except TypeError:
             pass
 
         try:
-            permissions.Required.clipboard_access = required[&#34;Clipboard Access&#34;]
+            permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
         except TypeError:
             pass
 
@@ -584,12 +602,13 @@ e.g. Server(127).connect_json</dd>
     else:
         resource_url = f&#34;http://{host}:{port}/{resource}.resource&#34;
 
-    data = requests.head(resource_url, headers={&#34;User-Agent&#34;: &#34;AltPublicAgent&#34;}, timeout=60)
+    size_request = Request(resource_url, headers={&#34;User-Agent&#34;: Extra.user_agent.value}, method=&#34;HEAD&#34;)
 
-    if data.ok:
-        return round((int(data.headers[&#34;Content-Length&#34;]) / 1048576), decimal)
-    else:
-        return None</code></pre>
+    with urlopen(size_request, timeout=60) as size_data:
+        if size_data.status == 200:
+            return round((int(size_data.headers[&#34;Content-Length&#34;]) / 1048576), decimal)
+        else:
+            return None</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.shared.request"><code class="name flex">
@@ -635,7 +654,7 @@ e.g. Server(127).connect_json</dd>
         req_headers = RequestHeaders(server.version, server.branch)
     else:
         req_headers = {
-            &#39;User-Agent&#39;: &#39;AltPublicAgent&#39;,
+            &#39;User-Agent&#39;: Extra.user_agent.value,
             &#39;content-type&#39;: &#39;application/json; charset=utf-8&#39;
         }
 
@@ -659,7 +678,7 @@ e.g. Server(127).connect_json</dd>
 <dl>
 <dt id="altvmasterlist.shared.AltstatsUrls"><code class="flex name class">
 <span>class <span class="ident">AltstatsUrls</span></span>
-<span>(</span><span>base_link: str = 'https://api.altstats.net/api/v1/', all_server_stats_link: str = 'https://api.altstats.net/api/v1//master', all_servers_link: str = 'https://api.altstats.net/api/v1//server', server_link: str = 'https://api.altstats.net/api/v1//server/{}')</span>
+<span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class is used for the altstats submodule. It provides all urls needed.</p></div>
@@ -667,29 +686,58 @@ e.g. Server(127).connect_json</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@dataclass
-class AltstatsUrls:
+<pre><code class="python">class AltstatsUrls(Enum):
     &#34;&#34;&#34;This class is used for the altstats submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.altstats.net/api/v1/&#34;
-    all_server_stats_link: str = f&#34;{base_link}/master&#34;
-    all_servers_link: str = f&#34;{base_link}/server&#34;
-    server_link: str = f&#34;{base_link}/server/&#34; + &#34;{}&#34;</code></pre>
+    all_server_stats = &#34;https://api.altstats.net/api/v1//master&#34;
+    all_servers = &#34;https://api.altstats.net/api/v1//server&#34;
+    specific_server = &#34;https://api.altstats.net/api/v1//server/{}&#34;</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="altvmasterlist.shared.AltstatsUrls.all_server_stats_link"><code class="name">var <span class="ident">all_server_stats_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.AltstatsUrls.all_server_stats"><code class="name">var <span class="ident">all_server_stats</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.AltstatsUrls.all_servers_link"><code class="name">var <span class="ident">all_servers_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.AltstatsUrls.all_servers"><code class="name">var <span class="ident">all_servers</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.AltstatsUrls.base_link"><code class="name">var <span class="ident">base_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.AltstatsUrls.specific_server"><code class="name">var <span class="ident">specific_server</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.AltstatsUrls.server_link"><code class="name">var <span class="ident">server_link</span> : str</code></dt>
+</dl>
+</dd>
+<dt id="altvmasterlist.shared.Extra"><code class="flex name class">
+<span>class <span class="ident">Extra</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class defines extra values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Extra(Enum):
+    &#34;&#34;&#34;This class defines extra values.&#34;&#34;&#34;
+    user_agent = &#34;AltPublicAgent&#34;
+    default_password = &#34;17241709254077376921&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.shared.Extra.default_password"><code class="name">var <span class="ident">default_password</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.shared.Extra.user_agent"><code class="name">var <span class="ident">user_agent</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -697,7 +745,7 @@ class AltstatsUrls:
 </dd>
 <dt id="altvmasterlist.shared.MasterlistUrls"><code class="flex name class">
 <span>class <span class="ident">MasterlistUrls</span></span>
-<span>(</span><span>base_link: str = 'https://api.alt-mp.com', base_cdn: str = 'https://cdn.alt-mp.com', all_server_stats_link: str = 'https://api.alt-mp.com/servers', all_servers_link: str = 'https://api.alt-mp.com/servers/list', server_link: str = 'https://api.alt-mp.com/server/{}', server_average_link: str = 'https://api.alt-mp.com/avg/{}/{}', server_max_link: str = 'https://api.alt-mp.com/max/{}/{}', launcher_skins: str = 'https://cdn.alt-mp.com/launcher-skins/index.json', launcher_file: str = 'https://cdn.alt-mp.com/launcher-skins/files/{}')</span>
+<span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class is used for the masterlist submodule. It provides all urls needed.</p></div>
@@ -705,54 +753,47 @@ class AltstatsUrls:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@dataclass
-class MasterlistUrls:
+<pre><code class="python">class MasterlistUrls(Enum):
     &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
-    base_link: str = &#34;https://api.alt-mp.com&#34;
-    base_cdn: str = &#34;https://cdn.alt-mp.com&#34;
-    all_server_stats_link: str = f&#34;{base_link}/servers&#34;
-    all_servers_link: str = f&#34;{base_link}/servers/list&#34;
-    server_link: str = f&#34;{base_link}/server&#34; + &#34;/{}&#34;
-    server_average_link: str = f&#34;{base_link}/avg&#34; + &#34;/{}/{}&#34;
-    server_max_link: str = f&#34;{base_link}/max&#34; + &#34;/{}/{}&#34;
-    launcher_skins: str = f&#34;{base_cdn}/launcher-skins/index.json&#34;
-    launcher_file: str = f&#34;{base_cdn}/launcher-skins/files/&#34; + &#34;{}&#34;</code></pre>
+    all_server_stats = &#34;https://api.alt-mp.com/servers&#34;
+    all_servers = &#34;https://api.alt-mp.com/servers/list&#34;
+    specific_server = &#34;https://api.alt-mp.com/server/{}&#34;
+    specific_server_average = &#34;https://api.alt-mp.com/avg/{}/{}&#34;
+    specific_server_maximum = &#34;https://api.alt-mp.com/max/{}/{}&#34;
+    launcher_skins = &#34;https://cdn.alt-mp.com/launcher-skins/index.json&#34;
+    launcher_skins_file = &#34;https://cdn.alt-mp.com/launcher-skins/files/{}&#34;</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="altvmasterlist.shared.MasterlistUrls.all_server_stats_link"><code class="name">var <span class="ident">all_server_stats_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.all_server_stats"><code class="name">var <span class="ident">all_server_stats</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.all_servers_link"><code class="name">var <span class="ident">all_servers_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.all_servers"><code class="name">var <span class="ident">all_servers</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.base_cdn"><code class="name">var <span class="ident">base_cdn</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.launcher_skins"><code class="name">var <span class="ident">launcher_skins</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.base_link"><code class="name">var <span class="ident">base_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.launcher_skins_file"><code class="name">var <span class="ident">launcher_skins_file</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.launcher_file"><code class="name">var <span class="ident">launcher_file</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.specific_server"><code class="name">var <span class="ident">specific_server</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.launcher_skins"><code class="name">var <span class="ident">launcher_skins</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.specific_server_average"><code class="name">var <span class="ident">specific_server_average</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.server_average_link"><code class="name">var <span class="ident">server_average_link</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.server_link"><code class="name">var <span class="ident">server_link</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="altvmasterlist.shared.MasterlistUrls.server_max_link"><code class="name">var <span class="ident">server_max_link</span> : str</code></dt>
+<dt id="altvmasterlist.shared.MasterlistUrls.specific_server_maximum"><code class="name">var <span class="ident">specific_server_maximum</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -781,12 +822,12 @@ class MasterlistUrls:
         Required: The required permissions of an alt:V server. Without them, you can not play on the server.
         Optional: The optional permissions of an alt:V server. You can play without them.
     &#34;&#34;&#34;
-
     @dataclass
     class Required:
         &#34;&#34;&#34;Required Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -800,6 +841,7 @@ class MasterlistUrls:
         &#34;&#34;&#34;Optional Permissions of an alt:V server.
 
         Attributes:
+        ----------
             screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
@@ -813,28 +855,20 @@ class MasterlistUrls:
 <dt id="altvmasterlist.shared.Permissions.Optional"><code class="name">var <span class="ident">Optional</span></code></dt>
 <dd>
 <div class="desc"><p>Optional Permissions of an alt:V server.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>screen_capture</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows a screenshot to be taken of the alt:V process (just GTA) and any webview</dd>
-<dt><strong><code>webrtc</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows peer-to-peer RTC inside JS</dd>
-<dt><strong><code>clipboard_access</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows to copy content to users clipboard</dd>
-</dl></div>
+<h2 id="attributes">Attributes:</h2>
+<pre><code>screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+webrtc (bool): This allows peer-to-peer RTC inside JS
+clipboard_access (bool): This allows to copy content to users clipboard
+</code></pre></div>
 </dd>
 <dt id="altvmasterlist.shared.Permissions.Required"><code class="name">var <span class="ident">Required</span></code></dt>
 <dd>
 <div class="desc"><p>Required Permissions of an alt:V server.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>screen_capture</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows a screenshot to be taken of the alt:V process (just GTA) and any webview</dd>
-<dt><strong><code>webrtc</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows peer-to-peer RTC inside JS</dd>
-<dt><strong><code>clipboard_access</code></strong> :&ensp;<code>bool</code></dt>
-<dd>This allows to copy content to users clipboard</dd>
-</dl></div>
+<h2 id="attributes">Attributes:</h2>
+<pre><code>screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+webrtc (bool): This allows peer-to-peer RTC inside JS
+clipboard_access (bool): This allows to copy content to users clipboard
+</code></pre></div>
 </dd>
 </dl>
 </dd>
@@ -855,10 +889,10 @@ class RequestHeaders:
     They are commonly used to emulate an alt:V client.
     &#34;&#34;&#34;
     host: str = &#34;&#34;,
-    user_agent: str = &#39;AltPublicAgent&#39;,
+    user_agent: str = Extra.user_agent.value,
     accept: str = &#39;*/*&#39;,
     alt_debug: str = &#39;false&#39;,
-    alt_password: str = &#39;17241709254077376921&#39;,
+    alt_password: str = Extra.default_password.value,
     alt_branch: str = &#34;&#34;,
     alt_version: str = &#34;&#34;,
     alt_player_name: str = secrets.token_urlsafe(10),
@@ -962,24 +996,28 @@ class RequestHeaders:
 <li>
 <h4><code><a title="altvmasterlist.shared.AltstatsUrls" href="#altvmasterlist.shared.AltstatsUrls">AltstatsUrls</a></code></h4>
 <ul class="">
-<li><code><a title="altvmasterlist.shared.AltstatsUrls.all_server_stats_link" href="#altvmasterlist.shared.AltstatsUrls.all_server_stats_link">all_server_stats_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.AltstatsUrls.all_servers_link" href="#altvmasterlist.shared.AltstatsUrls.all_servers_link">all_servers_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.AltstatsUrls.base_link" href="#altvmasterlist.shared.AltstatsUrls.base_link">base_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.AltstatsUrls.server_link" href="#altvmasterlist.shared.AltstatsUrls.server_link">server_link</a></code></li>
+<li><code><a title="altvmasterlist.shared.AltstatsUrls.all_server_stats" href="#altvmasterlist.shared.AltstatsUrls.all_server_stats">all_server_stats</a></code></li>
+<li><code><a title="altvmasterlist.shared.AltstatsUrls.all_servers" href="#altvmasterlist.shared.AltstatsUrls.all_servers">all_servers</a></code></li>
+<li><code><a title="altvmasterlist.shared.AltstatsUrls.specific_server" href="#altvmasterlist.shared.AltstatsUrls.specific_server">specific_server</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="altvmasterlist.shared.Extra" href="#altvmasterlist.shared.Extra">Extra</a></code></h4>
+<ul class="">
+<li><code><a title="altvmasterlist.shared.Extra.default_password" href="#altvmasterlist.shared.Extra.default_password">default_password</a></code></li>
+<li><code><a title="altvmasterlist.shared.Extra.user_agent" href="#altvmasterlist.shared.Extra.user_agent">user_agent</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="altvmasterlist.shared.MasterlistUrls" href="#altvmasterlist.shared.MasterlistUrls">MasterlistUrls</a></code></h4>
 <ul class="">
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.all_server_stats_link" href="#altvmasterlist.shared.MasterlistUrls.all_server_stats_link">all_server_stats_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.all_servers_link" href="#altvmasterlist.shared.MasterlistUrls.all_servers_link">all_servers_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.base_cdn" href="#altvmasterlist.shared.MasterlistUrls.base_cdn">base_cdn</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.base_link" href="#altvmasterlist.shared.MasterlistUrls.base_link">base_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.launcher_file" href="#altvmasterlist.shared.MasterlistUrls.launcher_file">launcher_file</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.all_server_stats" href="#altvmasterlist.shared.MasterlistUrls.all_server_stats">all_server_stats</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.all_servers" href="#altvmasterlist.shared.MasterlistUrls.all_servers">all_servers</a></code></li>
 <li><code><a title="altvmasterlist.shared.MasterlistUrls.launcher_skins" href="#altvmasterlist.shared.MasterlistUrls.launcher_skins">launcher_skins</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.server_average_link" href="#altvmasterlist.shared.MasterlistUrls.server_average_link">server_average_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.server_link" href="#altvmasterlist.shared.MasterlistUrls.server_link">server_link</a></code></li>
-<li><code><a title="altvmasterlist.shared.MasterlistUrls.server_max_link" href="#altvmasterlist.shared.MasterlistUrls.server_max_link">server_max_link</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.launcher_skins_file" href="#altvmasterlist.shared.MasterlistUrls.launcher_skins_file">launcher_skins_file</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.specific_server" href="#altvmasterlist.shared.MasterlistUrls.specific_server">specific_server</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.specific_server_average" href="#altvmasterlist.shared.MasterlistUrls.specific_server_average">specific_server_average</a></code></li>
+<li><code><a title="altvmasterlist.shared.MasterlistUrls.specific_server_maximum" href="#altvmasterlist.shared.MasterlistUrls.specific_server_maximum">specific_server_maximum</a></code></li>
 </ul>
 </li>
 <li>
