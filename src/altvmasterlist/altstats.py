@@ -7,7 +7,6 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
-logging.debug(f'starting with base link: {shared.AltstatsUrls.base_link}')
 """You can find the altstats api docs here: https://docs.altv.mp/articles/master_list_api.html#information-1"""
 
 
@@ -61,7 +60,7 @@ class Server:
         self.Id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.AltstatsUrls.server_link.format(self.Id))
+            temp_data = shared.request(shared.AltstatsUrls.specific_server.value.format(self.Id))
             if temp_data is None or temp_data == {} or not temp_data["LastUpdate"]:
                 # the api returned no data or the server is offline
                 self.LastActivity = False
@@ -109,7 +108,8 @@ class Server:
     @property
     def connect_json(self) -> dict | None:
         """Get the connect.json of the server."""
-        return shared.fetch_connect_json(self.UseCdn, self.Locked, self.LastFetchOnline, self.Ip, self.Port, self.CdnUrl)
+        return shared.fetch_connect_json(self.UseCdn, self.Locked, self.LastFetchOnline,
+                                         self.Ip, self.Port, self.CdnUrl)
 
     @property
     def permissions(self) -> shared.Permissions | None:
@@ -132,7 +132,7 @@ def get_server_stats() -> dict | None:
         None: When an error occurs
         dict: The stats
     """
-    data = shared.request(shared.AltstatsUrls.all_server_stats_link)
+    data = shared.request(shared.AltstatsUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -148,7 +148,7 @@ def get_servers() -> list[Server] | None:
         list: List object that contains all servers.
     """
     return_servers = []
-    servers = shared.request(shared.AltstatsUrls.all_servers_link)
+    servers = shared.request(shared.AltstatsUrls.all_servers.value)
     if servers is None or servers == "{}":
         return None
     else:

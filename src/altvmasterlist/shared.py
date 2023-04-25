@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from urllib.request import urlopen, Request
 from dataclasses import dataclass
+from enum import Enum
 from json import dumps, loads
 from io import StringIO
 import logging
@@ -10,27 +11,22 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 
 
-@dataclass
-class MasterlistUrls:
+class MasterlistUrls(Enum):
     """This class is used for the masterlist submodule. It provides all urls needed."""
-    base_link: str = "https://api.alt-mp.com"
-    base_cdn: str = "https://cdn.alt-mp.com"
-    all_server_stats_link: str = f"{base_link}/servers"
-    all_servers_link: str = f"{base_link}/servers/list"
-    server_link: str = f"{base_link}/server" + "/{}"
-    server_average_link: str = f"{base_link}/avg" + "/{}/{}"
-    server_max_link: str = f"{base_link}/max" + "/{}/{}"
-    launcher_skins: str = f"{base_cdn}/launcher-skins/index.json"
-    launcher_file: str = f"{base_cdn}/launcher-skins/files/" + "{}"
+    all_server_stats = "https://api.alt-mp.com/servers"
+    all_servers = "https://api.alt-mp.com/servers/list"
+    specific_server = "https://api.alt-mp.com/server/{}"
+    specific_server_average = "https://api.alt-mp.com/avg/{}/{}"
+    specific_server_maximum = "https://api.alt-mp.com/max/{}/{}"
+    launcher_skins = "https://cdn.alt-mp.com/launcher-skins/index.json"
+    launcher_skins_file = "https://cdn.alt-mp.com/launcher-skins/files/{}"
 
 
-@dataclass
-class AltstatsUrls:
+class AltstatsUrls(Enum):
     """This class is used for the altstats submodule. It provides all urls needed."""
-    base_link: str = "https://api.altstats.net/api/v1/"
-    all_server_stats_link: str = f"{base_link}/master"
-    all_servers_link: str = f"{base_link}/server"
-    server_link: str = f"{base_link}/server/" + "{}"
+    all_server_stats = "https://api.altstats.net/api/v1//master"
+    all_servers = "https://api.altstats.net/api/v1//server"
+    specific_server = "https://api.altstats.net/api/v1//server/{}"
 
 
 @dataclass
