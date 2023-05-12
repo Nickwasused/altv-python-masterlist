@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from dacite import from_dict
 from altvmasterlist import shared
 from dataclasses import dataclass
 from re import compile
@@ -15,8 +16,8 @@ class Server:
     """This is the server object. All values will be fetched from the api
     in the __init__ function. You just need to provide the id like this: Server("example_id")
 
-    Attributes:
-        id: The server id.
+    Args:
+        server_id: The server id.
         no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
     """
     id: str
@@ -38,7 +39,7 @@ class Server:
     useCdn: bool = False
     cdnUrl: str = ""
     useVoiceChat: bool = False
-    tags: list[str] = None
+    tags: dict[str] = None
     bannerUrl: str = ""
     branch: str = ""
     build: str = ""
@@ -161,7 +162,7 @@ def get_servers() -> list[Server] | None:
 
     Returns:
         None: When an error occurs
-        list: List object that contains all servers.
+        dict: dict that contains all servers.
     """
     return_servers = []
     servers = shared.request(shared.MasterlistUrls.all_servers.value)
@@ -226,16 +227,10 @@ class LauncherServer:
         name (str): server name
         url (str): direct connect url
         id (str): server id
-        imageSplash64 (str): base64 splash image
-        imageLogo64 (str): base64 Logo
-        imageBackground64 (str): base64 background image
     """
     name: str
     url: str
     id: str
-    imageSplash64: str
-    imageLogo64: str
-    imageBackground64: str
 
 
 @dataclass
@@ -248,15 +243,25 @@ class LauncherSkin:
         rss (str): the url of the custom server rss feed
         primaryColor (str): the custom color of the server
         servers (list): list of servers
+        imageSplash64 (str): base64 splash image
+        imageLogo64 (str): base64 Logo
+        imageBackground64 (str): base64 background image
     """
     name: str
     id: str
     rss: str
     primaryColor: str
-    server: list[LauncherServer]
+    servers: list[LauncherServer]
+    imageSplash64: str
+    imageLogo64: str
+    imageBackground64: str
+
+    def __repr__(self):
+        return f"LauncherSkin(name: {self.name}, id: {self.id}, rss: {self.rss}, primaryColor: {self.primaryColor}, " \
+               f"servers: {self.servers}, imageSplash64: ..., imageLogo64: ..., imageBackground64: ...)"
 
 
-def get_launcher_skin(filename: str) -> dict[LauncherSkin] | None:
+def get_launcher_skin(filename: str) -> LauncherSkin | None:
     """Get a specific launcher skin by filename
 
     Args:
@@ -273,7 +278,7 @@ def get_launcher_skin(filename: str) -> dict[LauncherSkin] | None:
     if skin is None or skin == {}:
         return None
     else:
-        return skin
+        return from_dict(data_class=LauncherSkin, data=skin)
 
 
 @dataclass
@@ -290,18 +295,21 @@ class LauncherSkinItem:
     fileName: str
 
 
-def get_launcher_skins() -> dict[LauncherSkinItem] | None:
+def get_launcher_skins() -> list[LauncherSkinItem] | None:
     """Get a list of all available launcher skins.
 
     Returns:
-        dict: containing LauncherSkinItem
+        list: containing LauncherSkinItem
     """
     skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
+    new_skins = []
 
     if skins is None or skins == "{}":
         return None
     else:
-        return skins["indexEntries"]
+        for item in skins["indexEntries"]:
+            new_skins.append(LauncherSkinItem(**item))
+        return new_skins
 
 
 if __name__ == "__main__":
