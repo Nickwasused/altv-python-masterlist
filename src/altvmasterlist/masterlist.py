@@ -218,44 +218,52 @@ def validate_id(server_id: any) -> bool:
         return False
 
 
-def get_launcher_skins() -> dict | None:
-    """Get a list of all available launcher skins.
+@dataclass
+class LauncherServer:
+    """Class for the Launcher Server Data.
 
-    Returns:
-        json: A json array of all launcher skins.
-
-    The elements have the following keys: serverId, xxHash64 and fileName.
+    Attributes:
+        name (str): server name
+        url (str): direct connect url
+        id (str): server id
+        imageSplash64 (str): base64 splash image
+        imageLogo64 (str): base64 Logo
+        imageBackground64 (str): base64 background image
     """
-    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
+    name: str
+    url: str
+    id: str
+    imageSplash64: str
+    imageLogo64: str
+    imageBackground64: str
 
-    if skins is None or skins == "{}":
-        return None
-    else:
-        return skins["indexEntries"]
+
+@dataclass
+class LauncherSkin:
+    """Class for the Launcher Skins.
+
+    Attributes:
+        name (str): the name of the server
+        id (str): the server id
+        rss (str): the url of the custom server rss feed
+        primaryColor (str): the custom color of the server
+        servers (list): list of servers
+    """
+    name: str
+    id: str
+    rss: str
+    primaryColor: str
+    server: list[LauncherServer]
 
 
-def get_launcher_skin(filename: str) -> dict | None:
+def get_launcher_skin(filename: str) -> dict[LauncherSkin] | None:
     """Get a specific launcher skin by filename
 
     Args:
         filename (str): filename of the launcher skin
 
     Returns:
-        json: Object
-
-    The json object has the following keys:
-        - name: the name of the server
-        - id: the server id
-        - rss: the custom rss feed of the server
-        - primaryColor: the custom color of the server
-        - servers (array): list of servers
-            - name: server name
-            - url: direct connect url
-            - id: server id
-            - imageSplash64: base64 splash image
-            - imageLogo64: base64 Logo
-            - imageBackground64: base64 background image
-
+        LauncherSkin: the launcher skin
     """
     if not filename or filename == "":
         return None
@@ -266,6 +274,34 @@ def get_launcher_skin(filename: str) -> dict | None:
         return None
     else:
         return skin
+
+
+@dataclass
+class LauncherSkinItem:
+    """Contains the data to get the launcher skins
+
+    Args:
+        serverId (str): the id of the server that this skin belongs to
+        xxHash64 (str): filehash?
+        fileName (str): the filename of the skin
+    """
+    serverId: str
+    xxHash64: str
+    fileName: str
+
+
+def get_launcher_skins() -> dict[LauncherSkinItem] | None:
+    """Get a list of all available launcher skins.
+
+    Returns:
+        dict: containing LauncherSkinItem
+    """
+    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
+
+    if skins is None or skins == "{}":
+        return None
+    else:
+        return skins["indexEntries"]
 
 
 if __name__ == "__main__":
