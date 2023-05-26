@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from urllib.request import urlopen, Request
+from requests.adapters import HTTPAdapter, Retry
 from dataclasses import dataclass
-from json import dumps, loads
+from json import dumps
 from io import StringIO
 from enum import Enum
+import requests
 import logging
 import secrets
 
@@ -87,25 +88,28 @@ def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
     """
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de does that
-    if "http://" in url and cdn:
-        req_headers = RequestHeaders(server.version, server.branch)
-    else:
-        req_headers = {
-            'User-Agent': Extra.user_agent.value,
-            'content-type': 'application/json; charset=utf-8'
-        }
+    with requests.session() as session:
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        session.mount('http', HTTPAdapter(max_retries=retries))
 
-    try:
-        api_request = Request(url, headers=req_headers, method="GET")
-        with urlopen(api_request, timeout=60) as api_data:
-            if api_data.status != 200:
+        if "http://" in url and cdn:
+            session.headers = RequestHeaders(server.version, server.branch)
+        else:
+            session.headers = {
+                'User-Agent': Extra.user_agent.value,
+                'content-type': 'application/json; charset=utf-8'
+            }
+
+        try:
+            api_request = session.get(url, timeout=20)
+            if api_request.status_code != 200:
                 logging.warning(f"the request returned nothing.")
                 return None
             else:
-                return loads(api_data.read().decode("utf-8", errors='ignore'))
-    except Exception as e:
-        logging.error(e)
-        return None
+                return api_request.json()
+        except Exception as e:
+            logging.error(e)
+            return None
 
 
 def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -> str | None:
@@ -293,10 +297,14 @@ def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, por
     else:
         resource_url = f"http://{host}:{port}/{resource}.resource"
 
-    size_request = Request(resource_url, headers={"User-Agent": Extra.user_agent.value}, method="HEAD")
+    with requests.session() as session:
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        session.mount('http', HTTPAdapter(max_retries=retries))
+        session.headers = {"User-Agent": Extra.user_agent.value}
 
-    with urlopen(size_request, timeout=60) as size_data:
-        if size_data.status == 200:
-            return round((int(size_data.headers["Content-Length"]) / 1048576), decimal)
+        size_request = session.head(resource_url, timeout=20)
+
+        if size_request.status_code == 200:
+            return round((int(size_request.headers["Content-Length"]) / 1048576), decimal)
         else:
             return None
