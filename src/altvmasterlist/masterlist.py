@@ -19,31 +19,6 @@ class Server:
         id: The server id.
         no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
     """
-    id: str
-    active: bool = False
-    maxPlayers: int = 0
-    players: int = 0
-    name: str = ""
-    locked: bool = False
-    host: str = ""
-    port: int = 0
-    gameMode: str = ""
-    website: str = ""
-    language: str = ""
-    description: str = ""
-    verified: bool = False
-    promoted: bool = False
-    useEarlyAuth: bool = False
-    earlyAuthUrl: str = ""
-    useCdn: bool = False
-    cdnUrl: str = ""
-    useVoiceChat: bool = False
-    tags: list[str] = None
-    bannerUrl: str = ""
-    branch: str = ""
-    build: str = ""
-    version: float = 0.0
-    lastUpdate: int = 0
 
     def __init__(self, server_id: str, no_fetch: bool = False) -> None:
         """Update the server data using the api."""
@@ -51,35 +26,39 @@ class Server:
 
         if not no_fetch:
             temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
-            if temp_data is None or temp_data == {} or not temp_data["active"]:
+            if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
-                self.active = False
-                self.players = 0
+                self.playersCount = 0
             else:
-                self.active = temp_data["active"]
-                self.maxPlayers = temp_data["info"]["maxPlayers"]
-                self.players = temp_data["info"]["players"]
-                self.name = temp_data["info"]["name"]
-                self.locked = temp_data["info"]["locked"]
-                self.host = temp_data["info"]["host"]
-                self.port = temp_data["info"]["port"]
-                self.gameMode = temp_data["info"]["gameMode"]
-                self.website = temp_data["info"]["website"]
-                self.language = temp_data["info"]["language"]
-                self.description = temp_data["info"]["description"]
-                self.verified = temp_data["info"]["verified"]
-                self.promoted = temp_data["info"]["promoted"]
-                self.useEarlyAuth = temp_data["info"]["useEarlyAuth"]
-                self.earlyAuthUrl = temp_data["info"]["earlyAuthUrl"]
-                self.useCdn = temp_data["info"]["useCdn"]
-                self.cdnUrl = temp_data["info"]["cdnUrl"]
-                self.useVoiceChat = temp_data["info"]["useVoiceChat"]
-                self.tags = temp_data["info"]["tags"]
-                self.bannerUrl = temp_data["info"]["bannerUrl"]
-                self.branch = temp_data["info"]["branch"]
-                self.build = temp_data["info"]["build"]
-                self.version = temp_data["info"]["version"]
-                self.lastUpdate = temp_data["info"]["lastUpdate"]
+                self.ip = temp_data["ip"]
+                self.playersCount = temp_data["playersCount"]
+                self.maxPlayersCount = temp_data["maxPlayersCount"]
+                self.passworded = temp_data["passworded"]
+                self.port = temp_data["port"]
+                self.language = temp_data["language"]
+                self.useEarlyAuth = temp_data["useEarlyAuth"]
+                self.earlyAuthCdn = temp_data["earlyAuthCdn"]
+                self.useCdn = temp_data["useCdn"]
+                self.cdnUrl = temp_data["cdnUrl"]
+                self.useVoiceChat = temp_data["useVoiceChat"]
+                self.version = temp_data["version"]
+                self.branch = temp_data["branch"]
+                self.available = temp_data["available"]
+                self.banned = temp_data["banned"]
+                self.name = temp_data["name"]
+                self.publicId = temp_data["publicId"]
+                self.vanityUrl = temp_data["vanityUrl"]
+                self.website = temp_data["website"]
+                self.gameMode = temp_data["gameMode"]
+                self.description = temp_data["description"]
+                self.tags = temp_data["tags"]
+                self.lastTimeUpdate = temp_data["lastTimeUpdate"]
+                self.verified = temp_data["verified"]
+                self.promoted = temp_data["promoted"]
+                self.visible = temp_data["visible"]
+                self.hasCustomSkin = temp_data["hasCustomSkin"]
+                self.bannerUrl = temp_data["bannerUrl"]
+                self.address = temp_data["address"]
 
     def update(self) -> None:
         """Update the server data using the api."""
@@ -125,7 +104,7 @@ class Server:
     @property
     def connect_json(self) -> dict | None:
         """Get the connect.json of the server."""
-        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+        return shared.fetch_connect_json(self.useCdn, self.passworded, self.available, self.ip, self.port, self.cdnUrl, self)
 
     @property
     def permissions(self) -> shared.Permissions | None:
@@ -134,11 +113,11 @@ class Server:
 
     def get_dtc_url(self, password=None) -> str | None:
         """Get the dtc url of the server."""
-        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.ip, self.port, self.passworded, password)
 
     def get_resource_size(self, resource: str, decimal: int = 2) -> float | None:
         """Get the size of a server resource."""
-        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
+        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.ip, self.port, decimal)
 
 
 def get_server_stats() -> dict | None:
@@ -169,31 +148,36 @@ def get_servers() -> list[Server] | None:
         return None
     else:
         for server in servers:
-            tmp_server = Server(server["id"], no_fetch=True)
-            tmp_server.active = True
-            tmp_server.maxPlayers = server["maxPlayers"]
-            tmp_server.players = server["players"]
-            tmp_server.name = server["name"]
-            tmp_server.locked = server["locked"]
-            tmp_server.host = server["host"]
+            tmp_server = Server(server["publicId"], no_fetch=True)
+            tmp_server.ip = server["ip"]
+            tmp_server.playersCount = server["playersCount"]
+            tmp_server.maxPlayersCount = server["maxPlayersCount"]
+            tmp_server.passworded = server["passworded"]
             tmp_server.port = server["port"]
-            tmp_server.gameMode = server["gameMode"]
-            tmp_server.website = server["website"]
             tmp_server.language = server["language"]
-            tmp_server.description = server["description"]
-            tmp_server.verified = server["verified"]
-            tmp_server.promoted = server["promoted"]
             tmp_server.useEarlyAuth = server["useEarlyAuth"]
-            tmp_server.earlyAuthUrl = server["earlyAuthUrl"]
+            tmp_server.earlyAuthCdn = server["earlyAuthCdn"]
             tmp_server.useCdn = server["useCdn"]
             tmp_server.cdnUrl = server["cdnUrl"]
             tmp_server.useVoiceChat = server["useVoiceChat"]
-            tmp_server.tags = server["tags"]
-            tmp_server.bannerUrl = server["bannerUrl"]
-            tmp_server.branch = server["branch"]
-            tmp_server.build = server["build"]
             tmp_server.version = server["version"]
-            tmp_server.lastUpdate = server["lastUpdate"]
+            tmp_server.branch = server["branch"]
+            tmp_server.available = server["available"]
+            tmp_server.banned = server["banned"]
+            tmp_server.name = server["name"]
+            tmp_server.publicId = server["publicId"]
+            tmp_server.vanityUrl = server["vanityUrl"]
+            tmp_server.website = server["website"]
+            tmp_server.gameMode = server["gameMode"]
+            tmp_server.description = server["description"]
+            tmp_server.tags = server["tags"]
+            tmp_server.lastTimeUpdate = server["lastTimeUpdate"]
+            tmp_server.verified = server["verified"]
+            tmp_server.promoted = server["promoted"]
+            tmp_server.visible = server["visible"]
+            tmp_server.hasCustomSkin = server["hasCustomSkin"]
+            tmp_server.bannerUrl = server["bannerUrl"]
+            tmp_server.address = server["address"]
             return_servers.append(tmp_server)
 
         return return_servers
@@ -210,7 +194,7 @@ def validate_id(server_id: any) -> bool:
     """
     if not isinstance(server_id, str):
         return False
-    regex = compile(r"^[\da-zA-Z]{32}$")
+    regex = compile(r"^[\da-zA-Z]{7}$")
     result = regex.match(server_id)
     if result is not None:
         return True

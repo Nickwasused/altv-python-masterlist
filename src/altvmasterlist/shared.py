@@ -14,11 +14,11 @@ logging.getLogger().setLevel(logging.INFO)
 
 class MasterlistUrls(Enum):
     """This class is used for the masterlist submodule. It provides all urls needed."""
-    all_server_stats = "https://api.alt-mp.com/servers"
-    all_servers = "https://api.alt-mp.com/servers/list"
-    specific_server = "https://api.alt-mp.com/server/{}"
-    specific_server_average = "https://api.alt-mp.com/avg/{}/{}"
-    specific_server_maximum = "https://api.alt-mp.com/max/{}/{}"
+    all_server_stats = "https://api.alt-mp.com/servers/info"
+    all_servers = "https://api.alt-mp.com/servers"
+    specific_server = "https://api.alt-mp.com/servers/{}"
+    specific_server_average = "https://api.alt-mp.com/servers/{}/avg/{}"
+    specific_server_maximum = "https://api.alt-mp.com/servers/{}/max/{}"
     launcher_skins = "https://cdn.alt-mp.com/launcher-skins/index.json"
     launcher_skins_file = "https://cdn.alt-mp.com/launcher-skins/files/{}"
 
@@ -147,7 +147,7 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
         return dtc_url.getvalue()
 
 
-def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str) -> dict | None:
+def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str, tmp_server: any = None) -> dict | None:
     """This function fetched the connect.json of an alt:V server.
 
     Args:
@@ -157,6 +157,7 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
         host (str): The host IP address of the server.
         port (int): The port of the server.
         cdn_url (str): The CDN url of the server.
+        tmp_server (any): a server object
 
     Returns:
         None: When an error occurred. But exceptions will still be logged!
@@ -164,7 +165,7 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
     """
     if not use_cdn and not locked and active:
         # This Server is not using a CDN.
-        cdn_request = request(f"http://{host}:{port}/connect.json", True)
+        cdn_request = request(f"http://{host}:{port}/connect.json", True, tmp_server)
         if cdn_request is None:
             # possible server error or blocked by alt:V
             return None
@@ -172,7 +173,13 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
             return cdn_request
     else:
         # let`s try to get the connect.json
-        cdn_request = request(f"{cdn_url}/connect.json")
+        if ":80" in cdn_url:
+            cdn_request = request(f"http://{cdn_url.replace(':80', '')}/connect.json")
+        elif ":443" in cdn_url:
+            cdn_request = request(f"https://{cdn_url.replace(':443', '')}/connect.json")
+        else:
+            cdn_request = request(f"{cdn_url}/connect.json")
+
         if cdn_request is None:
             # maybe the CDN is offline
             return None
