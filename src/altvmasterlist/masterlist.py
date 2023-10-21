@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from dataclasses import dataclass
+from altvmasterlist import utils
 from io import StringIO
 from re import compile
 from enum import Enum
-from . import utils
 import logging
 import sys
 
