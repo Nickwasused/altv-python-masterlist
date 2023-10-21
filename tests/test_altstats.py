@@ -35,11 +35,6 @@ def test_validate_id_invalid():
 server = altv.Server(127)
 
 
-def test_get_resource_size():
-    size = server.get_resource_size("gamemode")
-    assert type(size) is float or size is None
-
-
 def test_dtc_url():
     url = server.get_dtc_url()
     assert "altv://connect/" in url

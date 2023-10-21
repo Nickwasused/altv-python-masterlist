@@ -14,31 +14,31 @@ def test_get_servers():
 
 
 def test_valid_server_by_id():
-    server = altv.Server("bb7228a0d366fc575a5682a99359424f")
+    server = altv.Server("mXFlJSM")
     assert server is None or altv.Server
 
 
 def test_get_server_by_id_avg():
-    avg = altv.Server("bb7228a0d366fc575a5682a99359424f").get_avg("1d")
+    avg = altv.Server("mXFlJSM").get_avg("1d")
     assert type(avg) == list or avg is None
 
 
 def test_get_server_by_id_avg_result():
-    players = altv.Server("bb7228a0d366fc575a5682a99359424f").get_avg("1d", return_result=True)
+    players = altv.Server("mXFlJSM").get_avg("1d", return_result=True)
     assert type(players) is int or players is None
 
 
 def test_get_server_by_id_max():
-    max_stats = altv.Server("bb7228a0d366fc575a5682a99359424f").get_max("1d")
+    max_stats = altv.Server("mXFlJSM").get_max("1d")
     assert type(max_stats) == list or max_stats is None
 
 
 def test_valid():
-    assert altv.validate_id("bb7228a0d366fc575a5682a99359424f") is True
+    assert altv.validate_id("mXFlJSM") is True
 
 
 def test_invalid():
-    assert altv.validate_id("invalid") is False
+    assert altv.validate_id("invalid12345678") is False
     assert altv.validate_id(126) is False
     assert altv.validate_id([]) is False
     assert altv.validate_id({}) is False
@@ -48,17 +48,12 @@ def test_invalid():
 # server object functions
 # lets get a server
 
-server = altv.Server("bb7228a0d366fc575a5682a99359424f")
+server = altv.Server("mXFlJSM")
 
 
 def test_fetch_connect_json():
     connect_json = server.connect_json
     assert type(connect_json) is dict or connect_json is None
-
-
-def test_get_resource_size():
-    size = server.get_resource_size("gamemode")
-    assert type(size) is float or size is None
 
 
 def test_dtc_url():

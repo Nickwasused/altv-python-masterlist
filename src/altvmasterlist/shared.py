@@ -280,36 +280,3 @@ def get_permissions(connect_json: dict) -> Permissions | None:
             pass
 
     return permissions
-
-
-def get_resource_size(use_cdn: bool, cdn_url: str, resource: str, host: str, port: int, decimal: int) -> float | None:
-    """This function returns the resource size of a server in MB.
-
-    Args:
-        use_cdn (bool): Define if the server is using a CDN.
-        cdn_url (str): The CDN url of the server.
-        resource (str): The name of the alt:V resource.
-        host (str): The IP address of the server.
-        port (int): The port of the server.
-        decimal (int): The number of decimal point that you need.
-
-    Returns:
-        None: When an error occurred. But exceptions will still be logged!
-        float: The size of the resource.
-    """
-    if use_cdn:
-        resource_url = f"{cdn_url}/{resource}.resource"
-    else:
-        resource_url = f"http://{host}:{port}/{resource}.resource"
-
-    with requests.session() as session:
-        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
-        session.mount('http', HTTPAdapter(max_retries=retries))
-        session.headers = {"User-Agent": Extra.user_agent.value}
-
-        size_request = session.head(resource_url, timeout=20)
-
-        if size_request.status_code == 200:
-            return round((int(size_request.headers["Content-Length"]) / 1048576), decimal)
-        else:
-            return None

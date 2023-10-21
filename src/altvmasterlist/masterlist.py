@@ -115,10 +115,6 @@ class Server:
         """Get the dtc url of the server."""
         return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.ip, self.port, self.passworded, password)
 
-    def get_resource_size(self, resource: str, decimal: int = 2) -> float | None:
-        """Get the size of a server resource."""
-        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.ip, self.port, decimal)
-
 
 def get_server_stats() -> dict | None:
     """Statistics - Player Count across all servers & The amount of servers online
