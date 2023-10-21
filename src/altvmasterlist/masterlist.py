@@ -104,7 +104,7 @@ class Server:
     @property
     def connect_json(self) -> dict | None:
         """Get the connect.json of the server."""
-        return shared.fetch_connect_json(self.useCdn, self.passworded, self.available, self.ip, self.port, self.cdnUrl, self)
+        return shared.fetch_connect_json(self)
 
     @property
     def permissions(self) -> shared.Permissions | None:
@@ -113,7 +113,7 @@ class Server:
 
     def get_dtc_url(self, password=None) -> str | None:
         """Get the dtc url of the server."""
-        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.ip, self.port, self.passworded, password)
+        return shared.get_dtc_url(self, password)
 
 
 def get_server_stats() -> dict | None:

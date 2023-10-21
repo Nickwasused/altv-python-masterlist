@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from requests.adapters import HTTPAdapter, Retry
-from masterlist import Server
 from dataclasses import dataclass
 from json import dumps
 from io import StringIO
@@ -66,7 +65,7 @@ class RequestHeaders:
         })
 
 
-def request(url: str, server: Server) -> dict | None:
+def request(url: str, server: any = None) -> dict | None:
     """This is the common request function to fetch remote data.
 
     Args:
@@ -84,7 +83,7 @@ def request(url: str, server: Server) -> dict | None:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
         session.mount('http', HTTPAdapter(max_retries=retries))
 
-        if "http://" in url and server.useCdn:
+        if server and "http://" in url and server.useCdn:
             session.headers = RequestHeaders(server.version, server.branch)
         else:
             session.headers = {
@@ -104,7 +103,7 @@ def request(url: str, server: Server) -> dict | None:
             return None
 
 
-def get_dtc_url(server: Server, password: str = None) -> str | None:
+def get_dtc_url(server: any, password: str = None) -> str | None:
     """This function gets the direct connect protocol url of an alt:V Server.
         (https://docs.altv.mp/articles/connectprotocol.html)
 
@@ -135,7 +134,7 @@ def get_dtc_url(server: Server, password: str = None) -> str | None:
         return dtc_url.getvalue()
 
 
-def fetch_connect_json(server: Server) -> dict | None:
+def fetch_connect_json(server: any) -> dict | None:
     """This function fetched the connect.json of an alt:V server.
 
     Args:
