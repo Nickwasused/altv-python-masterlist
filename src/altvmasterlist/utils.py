@@ -26,44 +26,6 @@ class Extra(Enum):
     default_password = "17241709254077376921"
 
 
-@dataclass
-class RequestHeaders:
-    """These are the common request headers used by the request function.
-    They are commonly used to emulate an alt:V client.
-    """
-    host: str = "",
-    user_agent: str = Extra.user_agent.value,
-    accept: str = '*/*',
-    alt_debug: str = 'false',
-    alt_password: str = Extra.default_password.value,
-    alt_branch: str = "",
-    alt_version: str = "",
-    alt_player_name: str = secrets.token_urlsafe(10),
-    alt_social_id: str = secrets.token_hex(9),
-    alt_hardware_id2: str = secrets.token_hex(19),
-    alt_hardware_id: str = secrets.token_hex(19)
-
-    def __init__(self, version, debug="false", branch="release"):
-        self.alt_branch = branch
-        self.alt_version = version
-        self.alt_debug = debug
-
-    def __repr__(self):
-        return dumps({
-            'host': self.host,
-            'user-agent': self.user_agent,
-            "accept": self.accept,
-            'alt-debug': self.alt_debug,
-            'alt-password': self.alt_password,
-            'alt-branch': self.alt_branch,
-            'alt-version': self.alt_version,
-            'alt-player-name': self.alt_player_name,
-            'alt-social-id': self.alt_social_id,
-            'alt-hardware-id2': self.alt_hardware_id2,
-            'alt-hardware-id': self.alt_hardware_id
-        })
-
-
 def request(url: str, server: any = None) -> dict | None:
     """This is the common request function to fetch remote data.
 
@@ -80,9 +42,9 @@ def request(url: str, server: any = None) -> dict | None:
     with requests.session() as session:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
         session.mount('http', HTTPAdapter(max_retries=retries))
-
-        if server and "http://" in url and server.useCdn:
-            session.headers = RequestHeaders(server.version, server.branch)
+        if "http://" in url and server and not server.useCdn:
+            logging.warning(f"server is not using cdn. can't fetch connect.json")
+            return None
         else:
             session.headers = {
                 'User-Agent': Extra.user_agent.value,
