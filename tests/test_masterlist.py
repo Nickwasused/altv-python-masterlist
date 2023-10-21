@@ -1,5 +1,4 @@
 from altvmasterlist import masterlist as altv
-from altvmasterlist import utils as utils
 
 
 # general functions
@@ -68,4 +67,4 @@ def test_dtc_url_password():
 
 def test_get_permissions():
     permissions = server.permissions
-    assert type(permissions) is utils.Permissions or permissions is None
+    assert type(permissions) is altv.Permissions or permissions is None
