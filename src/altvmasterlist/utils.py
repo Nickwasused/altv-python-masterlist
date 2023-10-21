@@ -31,37 +31,39 @@ class RequestHeaders:
     """These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
     """
-    host: str = "",
-    user_agent: str = Extra.user_agent.value,
-    accept: str = '*/*',
-    alt_debug: str = 'false',
-    alt_password: str = Extra.default_password.value,
-    alt_branch: str = "",
-    alt_version: str = "",
-    alt_player_name: str = secrets.token_urlsafe(10),
-    alt_social_id: str = secrets.token_hex(9),
-    alt_hardware_id2: str = secrets.token_hex(19),
+    host: str = ""
+    user_agent: str = Extra.user_agent.value
+    accept: str = '*/*'
+    alt_debug: str = 'false'
+    alt_password: str = Extra.default_password.value
+    alt_branch: str = ""
+    alt_version: str = ""
+    alt_player_name: str = secrets.token_urlsafe(10)
+    alt_social_id: int = "0"
+    alt_hardware_id2: str = secrets.token_hex(19)
     alt_hardware_id: str = secrets.token_hex(19)
 
-    def __init__(self, version, debug="false", branch="release"):
-        self.alt_branch = branch
-        self.alt_version = version
-        self.alt_debug = debug
+    def __init__(self, server):
+        self.alt_branch = server.branch
+        self.alt_version = server.version
+        self.host = server.address
 
-    def __repr__(self):
-        return dumps({
-            'host': self.host,
-            'user-agent': self.user_agent,
-            "accept": self.accept,
-            'alt-debug': self.alt_debug,
-            'alt-password': self.alt_password,
-            'alt-branch': self.alt_branch,
-            'alt-version': self.alt_version,
-            'alt-player-name': self.alt_player_name,
-            'alt-social-id': self.alt_social_id,
-            'alt-hardware-id2': self.alt_hardware_id2,
-            'alt-hardware-id': self.alt_hardware_id
-        })
+    def to_dict(self):
+        return {
+            'Host': self.host,
+            'Alt-Branch': self.alt_branch,
+            "Alt-Debug": self.alt_debug,
+            'Alt-Hardware-ID': self.alt_hardware_id,
+            'Alt-Hardware-ID2': self.alt_hardware_id2,
+            'Alt-Password': self.alt_password,
+            'Alt-Player-Name': self.alt_player_name,
+            'Alt-Social-ID': self.alt_social_id,
+            'Alt-Version': self.alt_version,
+            'User-Agent': self.user_agent,
+            'Accept': self.accept,
+            'Origin': f'http://{self.host}',
+            'Connection': 'close'
+        }
 
 
 def request(url: str, server: any = None) -> dict | None:
@@ -81,8 +83,8 @@ def request(url: str, server: any = None) -> dict | None:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
         session.mount('http', HTTPAdapter(max_retries=retries))
 
-        if server and "http://" in url and server.useCdn:
-            session.headers = RequestHeaders(server.version, server.branch)
+        if server and "http://" in url and not server.useCdn:
+            session.headers = RequestHeaders(server).to_dict()
         else:
             session.headers = {
                 'User-Agent': Extra.user_agent.value,
@@ -90,7 +92,7 @@ def request(url: str, server: any = None) -> dict | None:
             }
 
         try:
-            api_request = session.get(url, timeout=20)
+            api_request = session.get(url, timeout=5)
             if api_request.status_code != 200:
                 logging.warning(f"the request returned nothing.")
                 return None
