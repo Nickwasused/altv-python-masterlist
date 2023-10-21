@@ -27,9 +27,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
-from altvmasterlist import shared
+from requests.adapters import HTTPAdapter, Retry
 from dataclasses import dataclass
+from io import StringIO
 from re import compile
+from enum import Enum
+import requests
+import secrets
 import logging
 import sys
 
@@ -38,8 +42,169 @@ logging.getLogger().setLevel(logging.INFO)
 &#34;&#34;&#34;You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html&#34;&#34;&#34;
 
 
+class MasterlistUrls(Enum):
+    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
+    all_server_stats = &#34;https://api.alt-mp.com/servers/info&#34;
+    all_servers = &#34;https://api.alt-mp.com/servers&#34;
+    specific_server = &#34;https://api.alt-mp.com/servers/{}&#34;
+    specific_server_average = &#34;https://api.alt-mp.com/servers/{}/avg/{}&#34;
+    specific_server_maximum = &#34;https://api.alt-mp.com/servers/{}/max/{}&#34;
+
+
+class Extra(Enum):
+    &#34;&#34;&#34;This class defines extra values.&#34;&#34;&#34;
+    user_agent = &#34;AltPublicAgent&#34;
+    default_password = &#34;17241709254077376921&#34;
+
+
+@dataclass
+class RequestHeaders:
+    &#34;&#34;&#34;These are the common request headers used by the request function.
+    They are commonly used to emulate an alt:V client.
+    &#34;&#34;&#34;
+    host: str = &#34;&#34;
+    user_agent: str = Extra.user_agent.value
+    accept: str = &#39;*/*&#39;
+    alt_debug: str = &#39;false&#39;
+    alt_password: str = Extra.default_password.value
+    alt_branch: str = &#34;&#34;
+    alt_version: str = &#34;&#34;
+    alt_player_name: str = secrets.token_urlsafe(10)
+    alt_social_id: int = &#34;0&#34;
+    alt_hardware_id2: str = secrets.token_hex(19)
+    alt_hardware_id: str = secrets.token_hex(19)
+
+    def __init__(self, server):
+        self.alt_branch = server.branch
+        self.alt_version = server.version
+        self.host = server.address
+
+    def to_dict(self):
+        return {
+            &#39;Host&#39;: self.host,
+            &#39;Alt-Branch&#39;: self.alt_branch,
+            &#34;Alt-Debug&#34;: self.alt_debug,
+            &#39;Alt-Hardware-ID&#39;: self.alt_hardware_id,
+            &#39;Alt-Hardware-ID2&#39;: self.alt_hardware_id2,
+            &#39;Alt-Password&#39;: self.alt_password,
+            &#39;Alt-Player-Name&#39;: self.alt_player_name,
+            &#39;Alt-Social-ID&#39;: self.alt_social_id,
+            &#39;Alt-Version&#39;: self.alt_version,
+            &#39;User-Agent&#39;: self.user_agent,
+            &#39;Accept&#39;: self.accept,
+            &#39;Origin&#39;: f&#39;http://{self.host}&#39;,
+            &#39;Connection&#39;: &#39;close&#39;
+        }
+
+
+def request(url: str, server: any = None) -&gt; dict | None:
+    &#34;&#34;&#34;This is the common request function to fetch remote data.
+
+    Args:
+        url (str): The Url to fetch.
+        server (Server): An alt:V masterlist or altstats Server object.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        json: As data
+    &#34;&#34;&#34;
+    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
+    # a simple User-Agent check e.g. https://luckyv.de does that
+    with requests.session() as session:
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        session.mount(&#39;http&#39;, HTTPAdapter(max_retries=retries))
+        print(url)
+
+        if server and &#34;http://&#34; in url and not server.useCdn:
+            session.headers = RequestHeaders(server).to_dict()
+        else:
+            session.headers = {
+                &#39;User-Agent&#39;: Extra.user_agent.value,
+                &#39;content-type&#39;: &#39;application/json; charset=utf-8&#39;
+            }
+
+        try:
+            api_request = session.get(url, timeout=5)
+            if api_request.status_code != 200:
+                logging.warning(f&#34;the request returned nothing.&#34;)
+                return None
+            else:
+                return api_request.json()
+        except Exception as e:
+            logging.error(e)
+            return None
+
+
+class Permissions:
+    &#34;&#34;&#34;This is the Permission class used by get_permissions.
+
+    Returns:
+        Required: The required permissions of an alt:V server. Without them, you can not play on the server.
+        Optional: The optional permissions of an alt:V server. You can play without them.
+    &#34;&#34;&#34;
+
+    @dataclass
+    class Required:
+        &#34;&#34;&#34;Required Permissions of an alt:V server.
+
+        Attributes:
+        ----------
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        &#34;&#34;&#34;
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False
+
+    @dataclass
+    class Optional:
+        &#34;&#34;&#34;Optional Permissions of an alt:V server.
+
+        Attributes:
+        ----------
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        &#34;&#34;&#34;
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False
+
+
 @dataclass
 class Server:
+    id: str
+    no_fetch: bool = False
+    ip: str = &#34;&#34;
+    playersCount: int = 0
+    maxPlayersCount: int = 0
+    passworded: bool = False
+    port: int = 0
+    language: str = &#34;en&#34;
+    useEarlyAuth: bool = False
+    earlyAuthCdn: str = &#34;&#34;
+    useCdn: bool = False
+    cdnUrl: str = &#34;&#34;
+    useVoiceChat: bool = False
+    version: str = &#34;&#34;
+    branch: str = &#34;&#34;
+    available: bool = False
+    banned: bool = False
+    name: str = &#34;&#34;
+    publicId: str = &#34;&#34;
+    vanityUrl: str = &#34;&#34;
+    website: str = &#34;&#34;
+    gameMode: str = &#34;&#34;
+    description: str = &#34;&#34;
+    tags: str = &#34;&#34;
+    lastTimeUpdate: str = &#34;&#34;
+    verified: bool = False
+    promoted: bool = False
+    visible: bool = False
+    hasCustomSkin: bool = False
+    bannerUrl: str = &#34;&#34;
+    address: str = &#34;&#34;
     &#34;&#34;&#34;This is the server object. All values will be fetched from the api
     in the __init__ function. You just need to provide the id like this: Server(&#34;example_id&#34;)
 
@@ -47,67 +212,46 @@ class Server:
         id: The server id.
         no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
     &#34;&#34;&#34;
-    id: str
-    active: bool = False
-    maxPlayers: int = 0
-    players: int = 0
-    name: str = &#34;&#34;
-    locked: bool = False
-    host: str = &#34;&#34;
-    port: int = 0
-    gameMode: str = &#34;&#34;
-    website: str = &#34;&#34;
-    language: str = &#34;&#34;
-    description: str = &#34;&#34;
-    verified: bool = False
-    promoted: bool = False
-    useEarlyAuth: bool = False
-    earlyAuthUrl: str = &#34;&#34;
-    useCdn: bool = False
-    cdnUrl: str = &#34;&#34;
-    useVoiceChat: bool = False
-    tags: list[str] = None
-    bannerUrl: str = &#34;&#34;
-    branch: str = &#34;&#34;
-    build: str = &#34;&#34;
-    version: float = 0.0
-    lastUpdate: int = 0
 
     def __init__(self, server_id: str, no_fetch: bool = False) -&gt; None:
         &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
-            if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
+            temp_data = request(MasterlistUrls.specific_server.value.format(self.id))
+            if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
-                self.active = False
-                self.players = 0
+                self.playersCount = 0
             else:
-                self.active = temp_data[&#34;active&#34;]
-                self.maxPlayers = temp_data[&#34;info&#34;][&#34;maxPlayers&#34;]
-                self.players = temp_data[&#34;info&#34;][&#34;players&#34;]
-                self.name = temp_data[&#34;info&#34;][&#34;name&#34;]
-                self.locked = temp_data[&#34;info&#34;][&#34;locked&#34;]
-                self.host = temp_data[&#34;info&#34;][&#34;host&#34;]
-                self.port = temp_data[&#34;info&#34;][&#34;port&#34;]
-                self.gameMode = temp_data[&#34;info&#34;][&#34;gameMode&#34;]
-                self.website = temp_data[&#34;info&#34;][&#34;website&#34;]
-                self.language = temp_data[&#34;info&#34;][&#34;language&#34;]
-                self.description = temp_data[&#34;info&#34;][&#34;description&#34;]
-                self.verified = temp_data[&#34;info&#34;][&#34;verified&#34;]
-                self.promoted = temp_data[&#34;info&#34;][&#34;promoted&#34;]
-                self.useEarlyAuth = temp_data[&#34;info&#34;][&#34;useEarlyAuth&#34;]
-                self.earlyAuthUrl = temp_data[&#34;info&#34;][&#34;earlyAuthUrl&#34;]
-                self.useCdn = temp_data[&#34;info&#34;][&#34;useCdn&#34;]
-                self.cdnUrl = temp_data[&#34;info&#34;][&#34;cdnUrl&#34;]
-                self.useVoiceChat = temp_data[&#34;info&#34;][&#34;useVoiceChat&#34;]
-                self.tags = temp_data[&#34;info&#34;][&#34;tags&#34;]
-                self.bannerUrl = temp_data[&#34;info&#34;][&#34;bannerUrl&#34;]
-                self.branch = temp_data[&#34;info&#34;][&#34;branch&#34;]
-                self.build = temp_data[&#34;info&#34;][&#34;build&#34;]
-                self.version = temp_data[&#34;info&#34;][&#34;version&#34;]
-                self.lastUpdate = temp_data[&#34;info&#34;][&#34;lastUpdate&#34;]
+                self.ip = temp_data[&#34;ip&#34;]
+                self.playersCount = temp_data[&#34;playersCount&#34;]
+                self.maxPlayersCount = temp_data[&#34;maxPlayersCount&#34;]
+                self.passworded = temp_data[&#34;passworded&#34;]
+                self.port = temp_data[&#34;port&#34;]
+                self.language = temp_data[&#34;language&#34;]
+                self.useEarlyAuth = temp_data[&#34;useEarlyAuth&#34;]
+                self.earlyAuthCdn = temp_data[&#34;earlyAuthCdn&#34;]
+                self.useCdn = temp_data[&#34;useCdn&#34;]
+                self.cdnUrl = temp_data[&#34;cdnUrl&#34;]
+                self.useVoiceChat = temp_data[&#34;useVoiceChat&#34;]
+                self.version = temp_data[&#34;version&#34;]
+                self.branch = temp_data[&#34;branch&#34;]
+                self.available = temp_data[&#34;available&#34;]
+                self.banned = temp_data[&#34;banned&#34;]
+                self.name = temp_data[&#34;name&#34;]
+                self.publicId = temp_data[&#34;publicId&#34;]
+                self.vanityUrl = temp_data[&#34;vanityUrl&#34;]
+                self.website = temp_data[&#34;website&#34;]
+                self.gameMode = temp_data[&#34;gameMode&#34;]
+                self.description = temp_data[&#34;description&#34;]
+                self.tags = temp_data[&#34;tags&#34;]
+                self.lastTimeUpdate = temp_data[&#34;lastTimeUpdate&#34;]
+                self.verified = temp_data[&#34;verified&#34;]
+                self.promoted = temp_data[&#34;promoted&#34;]
+                self.visible = temp_data[&#34;visible&#34;]
+                self.hasCustomSkin = temp_data[&#34;hasCustomSkin&#34;]
+                self.bannerUrl = temp_data[&#34;bannerUrl&#34;]
+                self.address = temp_data[&#34;address&#34;]
 
     def update(self) -&gt; None:
         &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
@@ -123,7 +267,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         &#34;&#34;&#34;
-        return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
+        return request(MasterlistUrls.specific_server_maximum.value.format(self.id, time))
 
     def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
         &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -137,7 +281,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         &#34;&#34;&#34;
-        average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
+        average_data = request(MasterlistUrls.specific_server_average.value.format(self.id, time))
         if not average_data:
             return None
 
@@ -152,21 +296,124 @@ class Server:
 
     @property
     def connect_json(self) -&gt; dict | None:
-        &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
-        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+        &#34;&#34;&#34;This function fetched the connect.json of an alt:V server.
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            dict: The connect.json
+        &#34;&#34;&#34;
+        if not self.available or self.passworded:
+            return None
+
+        if not self.useCdn:
+            # This Server is not using a CDN.
+            cdn_request = request(f&#34;http://{self.ip}:{self.port}/connect.json&#34;, self)
+            if cdn_request is None:
+                # possible server error or blocked
+                return None
+            else:
+                return cdn_request
+        else:
+            # let`s try to get the connect.json
+            match self.cdnUrl:
+                case _ if &#34;:80&#34; in self.cdnUrl:
+                    cdn_request = request(f&#34;http://{self.cdnUrl.replace(&#39;:80&#39;, &#39;&#39;)}/connect.json&#34;, self)
+                case _ if &#34;:443&#34; in self.cdnUrl:
+                    cdn_request = request(f&#34;https://{self.cdnUrl.replace(&#39;:443&#39;, &#39;&#39;)}/connect.json&#34;, self)
+                case _:
+                    cdn_request = request(f&#34;{self.cdnUrl}/connect.json&#34;, self)
+
+            if cdn_request is None:
+                # maybe the CDN is offline
+                return None
+            else:
+                return cdn_request
 
     @property
-    def permissions(self) -&gt; shared.Permissions | None:
-        &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
-        return shared.get_permissions(self.connect_json)
+    def permissions(self) -&gt; Permissions | None:
+        &#34;&#34;&#34;This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            Permissions: The permissions of the server.
+        &#34;&#34;&#34;
+
+        class Permission(Enum):
+            screen_capture = &#34;Screen Capture&#34;
+            webrtc = &#34;WebRTC&#34;
+            clipboard_access = &#34;Clipboard Access&#34;
+            optional = &#34;optional-permissions&#34;
+            required = &#34;required-permissions&#34;
+
+        connect_json = self.connect_json
+
+        optional = connect_json[Permission.optional.value]
+        required = connect_json[Permission.required.value]
+
+        permissions = Permissions()
+
+        if optional is not []:
+            try:
+                permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.webrtc = optional[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        if required is not []:
+            try:
+                permissions.Required.screen_capture = required[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.webrtc = required[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        return permissions
 
     def get_dtc_url(self, password=None) -&gt; str | None:
-        &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
-        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+        &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
 
-    def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
-        &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
-        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)
+        Args:
+            password (str): The password of the server.
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            str: The direct connect protocol url.
+        &#34;&#34;&#34;
+        with StringIO() as dtc_url:
+            if self.useCdn:
+                if &#34;http&#34; not in self.cdnUrl:
+                    dtc_url.write(f&#34;altv://connect/http://{self.cdnUrl}&#34;)
+                else:
+                    dtc_url.write(f&#34;altv://connect/{self.cdnUrl}&#34;)
+            else:
+                dtc_url.write(f&#34;altv://connect/{self.ip}:{self.port}&#34;)
+
+            if self.passworded and password is None:
+                logging.warning(
+                    &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
+
+            if password is not None:
+                dtc_url.write(f&#34;?password={password}&#34;)
+
+            return dtc_url.getvalue()
 
 
 def get_server_stats() -&gt; dict | None:
@@ -176,7 +423,7 @@ def get_server_stats() -&gt; dict | None:
         None: When an error occurs
         dict: The stats
     &#34;&#34;&#34;
-    data = shared.request(shared.MasterlistUrls.all_server_stats.value)
+    data = request(MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -192,36 +439,41 @@ def get_servers() -&gt; list[Server] | None:
         list: List object that contains all servers.
     &#34;&#34;&#34;
     return_servers = []
-    servers = shared.request(shared.MasterlistUrls.all_servers.value)
+    servers = request(MasterlistUrls.all_servers.value)
     if servers is None or servers == &#34;{}&#34;:
         return None
     else:
         for server in servers:
-            tmp_server = Server(server[&#34;id&#34;], no_fetch=True)
-            tmp_server.active = True
-            tmp_server.maxPlayers = server[&#34;maxPlayers&#34;]
-            tmp_server.players = server[&#34;players&#34;]
-            tmp_server.name = server[&#34;name&#34;]
-            tmp_server.locked = server[&#34;locked&#34;]
-            tmp_server.host = server[&#34;host&#34;]
+            tmp_server = Server(server[&#34;publicId&#34;], no_fetch=True)
+            tmp_server.ip = server[&#34;ip&#34;]
+            tmp_server.playersCount = server[&#34;playersCount&#34;]
+            tmp_server.maxPlayersCount = server[&#34;maxPlayersCount&#34;]
+            tmp_server.passworded = server[&#34;passworded&#34;]
             tmp_server.port = server[&#34;port&#34;]
-            tmp_server.gameMode = server[&#34;gameMode&#34;]
-            tmp_server.website = server[&#34;website&#34;]
             tmp_server.language = server[&#34;language&#34;]
-            tmp_server.description = server[&#34;description&#34;]
-            tmp_server.verified = server[&#34;verified&#34;]
-            tmp_server.promoted = server[&#34;promoted&#34;]
             tmp_server.useEarlyAuth = server[&#34;useEarlyAuth&#34;]
-            tmp_server.earlyAuthUrl = server[&#34;earlyAuthUrl&#34;]
+            tmp_server.earlyAuthCdn = server[&#34;earlyAuthCdn&#34;]
             tmp_server.useCdn = server[&#34;useCdn&#34;]
             tmp_server.cdnUrl = server[&#34;cdnUrl&#34;]
             tmp_server.useVoiceChat = server[&#34;useVoiceChat&#34;]
-            tmp_server.tags = server[&#34;tags&#34;]
-            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
-            tmp_server.branch = server[&#34;branch&#34;]
-            tmp_server.build = server[&#34;build&#34;]
             tmp_server.version = server[&#34;version&#34;]
-            tmp_server.lastUpdate = server[&#34;lastUpdate&#34;]
+            tmp_server.branch = server[&#34;branch&#34;]
+            tmp_server.available = server[&#34;available&#34;]
+            tmp_server.banned = server[&#34;banned&#34;]
+            tmp_server.name = server[&#34;name&#34;]
+            tmp_server.publicId = server[&#34;publicId&#34;]
+            tmp_server.vanityUrl = server[&#34;vanityUrl&#34;]
+            tmp_server.website = server[&#34;website&#34;]
+            tmp_server.gameMode = server[&#34;gameMode&#34;]
+            tmp_server.description = server[&#34;description&#34;]
+            tmp_server.tags = server[&#34;tags&#34;]
+            tmp_server.lastTimeUpdate = server[&#34;lastTimeUpdate&#34;]
+            tmp_server.verified = server[&#34;verified&#34;]
+            tmp_server.promoted = server[&#34;promoted&#34;]
+            tmp_server.visible = server[&#34;visible&#34;]
+            tmp_server.hasCustomSkin = server[&#34;hasCustomSkin&#34;]
+            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
+            tmp_server.address = server[&#34;address&#34;]
             return_servers.append(tmp_server)
 
         return return_servers
@@ -238,62 +490,12 @@ def validate_id(server_id: any) -&gt; bool:
     &#34;&#34;&#34;
     if not isinstance(server_id, str):
         return False
-    regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
+    regex = compile(r&#34;^[\da-zA-Z]{7}$&#34;)
     result = regex.match(server_id)
     if result is not None:
         return True
     else:
         return False
-
-
-def get_launcher_skins() -&gt; dict | None:
-    &#34;&#34;&#34;Get a list of all available launcher skins.
-
-    Returns:
-        json: A json array of all launcher skins.
-
-    The elements have the following keys: serverId, xxHash64 and fileName.
-    &#34;&#34;&#34;
-    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
-
-    if skins is None or skins == &#34;{}&#34;:
-        return None
-    else:
-        return skins[&#34;indexEntries&#34;]
-
-
-def get_launcher_skin(filename: str) -&gt; dict | None:
-    &#34;&#34;&#34;Get a specific launcher skin by filename
-
-    Args:
-        filename (str): filename of the launcher skin
-
-    Returns:
-        json: Object
-
-    The json object has the following keys:
-        - name: the name of the server
-        - id: the server id
-        - rss: the custom rss feed of the server
-        - primaryColor: the custom color of the server
-        - servers (array): list of servers
-            - name: server name
-            - url: direct connect url
-            - id: server id
-            - imageSplash64: base64 splash image
-            - imageLogo64: base64 Logo
-            - imageBackground64: base64 background image
-
-    &#34;&#34;&#34;
-    if not filename or filename == &#34;&#34;:
-        return None
-
-    skin = shared.request(shared.MasterlistUrls.launcher_skins_file.value.format(filename))
-
-    if skin is None or skin == {}:
-        return None
-    else:
-        return skin
 
 
 if __name__ == &#34;__main__&#34;:
@@ -308,102 +510,6 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="altvmasterlist.masterlist.get_launcher_skin"><code class="name flex">
-<span>def <span class="ident">get_launcher_skin</span></span>(<span>filename: str) ‑> dict | None</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get a specific launcher skin by filename</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
-<dd>filename of the launcher skin</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>json</code></dt>
-<dd>Object</dd>
-</dl>
-<p>The json object has the following keys:
-- name: the name of the server
-- id: the server id
-- rss: the custom rss feed of the server
-- primaryColor: the custom color of the server
-- servers (array): list of servers
-- name: server name
-- url: direct connect url
-- id: server id
-- imageSplash64: base64 splash image
-- imageLogo64: base64 Logo
-- imageBackground64: base64 background image</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_launcher_skin(filename: str) -&gt; dict | None:
-    &#34;&#34;&#34;Get a specific launcher skin by filename
-
-    Args:
-        filename (str): filename of the launcher skin
-
-    Returns:
-        json: Object
-
-    The json object has the following keys:
-        - name: the name of the server
-        - id: the server id
-        - rss: the custom rss feed of the server
-        - primaryColor: the custom color of the server
-        - servers (array): list of servers
-            - name: server name
-            - url: direct connect url
-            - id: server id
-            - imageSplash64: base64 splash image
-            - imageLogo64: base64 Logo
-            - imageBackground64: base64 background image
-
-    &#34;&#34;&#34;
-    if not filename or filename == &#34;&#34;:
-        return None
-
-    skin = shared.request(shared.MasterlistUrls.launcher_skins_file.value.format(filename))
-
-    if skin is None or skin == {}:
-        return None
-    else:
-        return skin</code></pre>
-</details>
-</dd>
-<dt id="altvmasterlist.masterlist.get_launcher_skins"><code class="name flex">
-<span>def <span class="ident">get_launcher_skins</span></span>(<span>) ‑> dict | None</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get a list of all available launcher skins.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>json</code></dt>
-<dd>A json array of all launcher skins.</dd>
-</dl>
-<p>The elements have the following keys: serverId, xxHash64 and fileName.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_launcher_skins() -&gt; dict | None:
-    &#34;&#34;&#34;Get a list of all available launcher skins.
-
-    Returns:
-        json: A json array of all launcher skins.
-
-    The elements have the following keys: serverId, xxHash64 and fileName.
-    &#34;&#34;&#34;
-    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
-
-    if skins is None or skins == &#34;{}&#34;:
-        return None
-    else:
-        return skins[&#34;indexEntries&#34;]</code></pre>
-</details>
-</dd>
 <dt id="altvmasterlist.masterlist.get_server_stats"><code class="name flex">
 <span>def <span class="ident">get_server_stats</span></span>(<span>) ‑> dict | None</span>
 </code></dt>
@@ -427,7 +533,7 @@ if __name__ == &#34;__main__&#34;:
         None: When an error occurs
         dict: The stats
     &#34;&#34;&#34;
-    data = shared.request(shared.MasterlistUrls.all_server_stats.value)
+    data = request(MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -460,39 +566,105 @@ Note that the server objects returned are not complete!</p>
         list: List object that contains all servers.
     &#34;&#34;&#34;
     return_servers = []
-    servers = shared.request(shared.MasterlistUrls.all_servers.value)
+    servers = request(MasterlistUrls.all_servers.value)
     if servers is None or servers == &#34;{}&#34;:
         return None
     else:
         for server in servers:
-            tmp_server = Server(server[&#34;id&#34;], no_fetch=True)
-            tmp_server.active = True
-            tmp_server.maxPlayers = server[&#34;maxPlayers&#34;]
-            tmp_server.players = server[&#34;players&#34;]
-            tmp_server.name = server[&#34;name&#34;]
-            tmp_server.locked = server[&#34;locked&#34;]
-            tmp_server.host = server[&#34;host&#34;]
+            tmp_server = Server(server[&#34;publicId&#34;], no_fetch=True)
+            tmp_server.ip = server[&#34;ip&#34;]
+            tmp_server.playersCount = server[&#34;playersCount&#34;]
+            tmp_server.maxPlayersCount = server[&#34;maxPlayersCount&#34;]
+            tmp_server.passworded = server[&#34;passworded&#34;]
             tmp_server.port = server[&#34;port&#34;]
-            tmp_server.gameMode = server[&#34;gameMode&#34;]
-            tmp_server.website = server[&#34;website&#34;]
             tmp_server.language = server[&#34;language&#34;]
-            tmp_server.description = server[&#34;description&#34;]
-            tmp_server.verified = server[&#34;verified&#34;]
-            tmp_server.promoted = server[&#34;promoted&#34;]
             tmp_server.useEarlyAuth = server[&#34;useEarlyAuth&#34;]
-            tmp_server.earlyAuthUrl = server[&#34;earlyAuthUrl&#34;]
+            tmp_server.earlyAuthCdn = server[&#34;earlyAuthCdn&#34;]
             tmp_server.useCdn = server[&#34;useCdn&#34;]
             tmp_server.cdnUrl = server[&#34;cdnUrl&#34;]
             tmp_server.useVoiceChat = server[&#34;useVoiceChat&#34;]
-            tmp_server.tags = server[&#34;tags&#34;]
-            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
-            tmp_server.branch = server[&#34;branch&#34;]
-            tmp_server.build = server[&#34;build&#34;]
             tmp_server.version = server[&#34;version&#34;]
-            tmp_server.lastUpdate = server[&#34;lastUpdate&#34;]
+            tmp_server.branch = server[&#34;branch&#34;]
+            tmp_server.available = server[&#34;available&#34;]
+            tmp_server.banned = server[&#34;banned&#34;]
+            tmp_server.name = server[&#34;name&#34;]
+            tmp_server.publicId = server[&#34;publicId&#34;]
+            tmp_server.vanityUrl = server[&#34;vanityUrl&#34;]
+            tmp_server.website = server[&#34;website&#34;]
+            tmp_server.gameMode = server[&#34;gameMode&#34;]
+            tmp_server.description = server[&#34;description&#34;]
+            tmp_server.tags = server[&#34;tags&#34;]
+            tmp_server.lastTimeUpdate = server[&#34;lastTimeUpdate&#34;]
+            tmp_server.verified = server[&#34;verified&#34;]
+            tmp_server.promoted = server[&#34;promoted&#34;]
+            tmp_server.visible = server[&#34;visible&#34;]
+            tmp_server.hasCustomSkin = server[&#34;hasCustomSkin&#34;]
+            tmp_server.bannerUrl = server[&#34;bannerUrl&#34;]
+            tmp_server.address = server[&#34;address&#34;]
             return_servers.append(tmp_server)
 
         return return_servers</code></pre>
+</details>
+</dd>
+<dt id="altvmasterlist.masterlist.request"><code class="name flex">
+<span>def <span class="ident">request</span></span>(<span>url: str, server: <built-in function any> = None) ‑> dict | None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is the common request function to fetch remote data.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
+<dd>The Url to fetch.</dd>
+<dt><strong><code>server</code></strong> :&ensp;<code><a title="altvmasterlist.masterlist.Server" href="#altvmasterlist.masterlist.Server">Server</a></code></dt>
+<dd>An alt:V masterlist or altstats Server object.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurred. But exceptions will still be logged!</dd>
+<dt><code>json</code></dt>
+<dd>As data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def request(url: str, server: any = None) -&gt; dict | None:
+    &#34;&#34;&#34;This is the common request function to fetch remote data.
+
+    Args:
+        url (str): The Url to fetch.
+        server (Server): An alt:V masterlist or altstats Server object.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        json: As data
+    &#34;&#34;&#34;
+    # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
+    # a simple User-Agent check e.g. https://luckyv.de does that
+    with requests.session() as session:
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        session.mount(&#39;http&#39;, HTTPAdapter(max_retries=retries))
+        print(url)
+
+        if server and &#34;http://&#34; in url and not server.useCdn:
+            session.headers = RequestHeaders(server).to_dict()
+        else:
+            session.headers = {
+                &#39;User-Agent&#39;: Extra.user_agent.value,
+                &#39;content-type&#39;: &#39;application/json; charset=utf-8&#39;
+            }
+
+        try:
+            api_request = session.get(url, timeout=5)
+            if api_request.status_code != 200:
+                logging.warning(f&#34;the request returned nothing.&#34;)
+                return None
+            else:
+                return api_request.json()
+        except Exception as e:
+            logging.error(e)
+            return None</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.validate_id"><code class="name flex">
@@ -525,7 +697,7 @@ Note that the server objects returned are not complete!</p>
     &#34;&#34;&#34;
     if not isinstance(server_id, str):
         return False
-    regex = compile(r&#34;^[\da-zA-Z]{32}$&#34;)
+    regex = compile(r&#34;^[\da-zA-Z]{7}$&#34;)
     result = regex.match(server_id)
     if result is not None:
         return True
@@ -538,20 +710,291 @@ Note that the server objects returned are not complete!</p>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="altvmasterlist.masterlist.Extra"><code class="flex name class">
+<span>class <span class="ident">Extra</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class defines extra values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Extra(Enum):
+    &#34;&#34;&#34;This class defines extra values.&#34;&#34;&#34;
+    user_agent = &#34;AltPublicAgent&#34;
+    default_password = &#34;17241709254077376921&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.Extra.default_password"><code class="name">var <span class="ident">default_password</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Extra.user_agent"><code class="name">var <span class="ident">user_agent</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="altvmasterlist.masterlist.MasterlistUrls"><code class="flex name class">
+<span>class <span class="ident">MasterlistUrls</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class is used for the masterlist submodule. It provides all urls needed.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MasterlistUrls(Enum):
+    &#34;&#34;&#34;This class is used for the masterlist submodule. It provides all urls needed.&#34;&#34;&#34;
+    all_server_stats = &#34;https://api.alt-mp.com/servers/info&#34;
+    all_servers = &#34;https://api.alt-mp.com/servers&#34;
+    specific_server = &#34;https://api.alt-mp.com/servers/{}&#34;
+    specific_server_average = &#34;https://api.alt-mp.com/servers/{}/avg/{}&#34;
+    specific_server_maximum = &#34;https://api.alt-mp.com/servers/{}/max/{}&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.MasterlistUrls.all_server_stats"><code class="name">var <span class="ident">all_server_stats</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.MasterlistUrls.all_servers"><code class="name">var <span class="ident">all_servers</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.MasterlistUrls.specific_server"><code class="name">var <span class="ident">specific_server</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.MasterlistUrls.specific_server_average"><code class="name">var <span class="ident">specific_server_average</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.MasterlistUrls.specific_server_maximum"><code class="name">var <span class="ident">specific_server_maximum</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="altvmasterlist.masterlist.Permissions"><code class="flex name class">
+<span>class <span class="ident">Permissions</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is the Permission class used by get_permissions.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Required</code></dt>
+<dd>The required permissions of an alt:V server. Without them, you can not play on the server.</dd>
+<dt><code>Optional</code></dt>
+<dd>The optional permissions of an alt:V server. You can play without them.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Permissions:
+    &#34;&#34;&#34;This is the Permission class used by get_permissions.
+
+    Returns:
+        Required: The required permissions of an alt:V server. Without them, you can not play on the server.
+        Optional: The optional permissions of an alt:V server. You can play without them.
+    &#34;&#34;&#34;
+
+    @dataclass
+    class Required:
+        &#34;&#34;&#34;Required Permissions of an alt:V server.
+
+        Attributes:
+        ----------
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        &#34;&#34;&#34;
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False
+
+    @dataclass
+    class Optional:
+        &#34;&#34;&#34;Optional Permissions of an alt:V server.
+
+        Attributes:
+        ----------
+            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+            webrtc (bool): This allows peer-to-peer RTC inside JS
+            clipboard_access (bool): This allows to copy content to users clipboard
+        &#34;&#34;&#34;
+        screen_capture: bool = False
+        webrtc: bool = False
+        clipboard_access: bool = False</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.Permissions.Optional"><code class="name">var <span class="ident">Optional</span></code></dt>
+<dd>
+<div class="desc"><p>Optional Permissions of an alt:V server.</p>
+<h2 id="attributes">Attributes:</h2>
+<pre><code>screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+webrtc (bool): This allows peer-to-peer RTC inside JS
+clipboard_access (bool): This allows to copy content to users clipboard
+</code></pre></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Permissions.Required"><code class="name">var <span class="ident">Required</span></code></dt>
+<dd>
+<div class="desc"><p>Required Permissions of an alt:V server.</p>
+<h2 id="attributes">Attributes:</h2>
+<pre><code>screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
+webrtc (bool): This allows peer-to-peer RTC inside JS
+clipboard_access (bool): This allows to copy content to users clipboard
+</code></pre></div>
+</dd>
+</dl>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders"><code class="flex name class">
+<span>class <span class="ident">RequestHeaders</span></span>
+<span>(</span><span>server)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>These are the common request headers used by the request function.
+They are commonly used to emulate an alt:V client.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class RequestHeaders:
+    &#34;&#34;&#34;These are the common request headers used by the request function.
+    They are commonly used to emulate an alt:V client.
+    &#34;&#34;&#34;
+    host: str = &#34;&#34;
+    user_agent: str = Extra.user_agent.value
+    accept: str = &#39;*/*&#39;
+    alt_debug: str = &#39;false&#39;
+    alt_password: str = Extra.default_password.value
+    alt_branch: str = &#34;&#34;
+    alt_version: str = &#34;&#34;
+    alt_player_name: str = secrets.token_urlsafe(10)
+    alt_social_id: int = &#34;0&#34;
+    alt_hardware_id2: str = secrets.token_hex(19)
+    alt_hardware_id: str = secrets.token_hex(19)
+
+    def __init__(self, server):
+        self.alt_branch = server.branch
+        self.alt_version = server.version
+        self.host = server.address
+
+    def to_dict(self):
+        return {
+            &#39;Host&#39;: self.host,
+            &#39;Alt-Branch&#39;: self.alt_branch,
+            &#34;Alt-Debug&#34;: self.alt_debug,
+            &#39;Alt-Hardware-ID&#39;: self.alt_hardware_id,
+            &#39;Alt-Hardware-ID2&#39;: self.alt_hardware_id2,
+            &#39;Alt-Password&#39;: self.alt_password,
+            &#39;Alt-Player-Name&#39;: self.alt_player_name,
+            &#39;Alt-Social-ID&#39;: self.alt_social_id,
+            &#39;Alt-Version&#39;: self.alt_version,
+            &#39;User-Agent&#39;: self.user_agent,
+            &#39;Accept&#39;: self.accept,
+            &#39;Origin&#39;: f&#39;http://{self.host}&#39;,
+            &#39;Connection&#39;: &#39;close&#39;
+        }</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.RequestHeaders.accept"><code class="name">var <span class="ident">accept</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_branch"><code class="name">var <span class="ident">alt_branch</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_debug"><code class="name">var <span class="ident">alt_debug</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_hardware_id"><code class="name">var <span class="ident">alt_hardware_id</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_hardware_id2"><code class="name">var <span class="ident">alt_hardware_id2</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_password"><code class="name">var <span class="ident">alt_password</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_player_name"><code class="name">var <span class="ident">alt_player_name</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_social_id"><code class="name">var <span class="ident">alt_social_id</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.alt_version"><code class="name">var <span class="ident">alt_version</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.RequestHeaders.user_agent"><code class="name">var <span class="ident">user_agent</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="altvmasterlist.masterlist.RequestHeaders.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self):
+    return {
+        &#39;Host&#39;: self.host,
+        &#39;Alt-Branch&#39;: self.alt_branch,
+        &#34;Alt-Debug&#34;: self.alt_debug,
+        &#39;Alt-Hardware-ID&#39;: self.alt_hardware_id,
+        &#39;Alt-Hardware-ID2&#39;: self.alt_hardware_id2,
+        &#39;Alt-Password&#39;: self.alt_password,
+        &#39;Alt-Player-Name&#39;: self.alt_player_name,
+        &#39;Alt-Social-ID&#39;: self.alt_social_id,
+        &#39;Alt-Version&#39;: self.alt_version,
+        &#39;User-Agent&#39;: self.user_agent,
+        &#39;Accept&#39;: self.accept,
+        &#39;Origin&#39;: f&#39;http://{self.host}&#39;,
+        &#39;Connection&#39;: &#39;close&#39;
+    }</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="altvmasterlist.masterlist.Server"><code class="flex name class">
 <span>class <span class="ident">Server</span></span>
 <span>(</span><span>server_id: str, no_fetch: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This is the server object. All values will be fetched from the api
-in the <strong>init</strong> function. You just need to provide the id like this: Server("example_id")</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>id</code></strong></dt>
-<dd>The server id.</dd>
-<dt><strong><code>no_fetch</code></strong></dt>
-<dd>Define if you want to fetch the api data. This can be used when we already have data.</dd>
-</dl>
+<div class="desc"><p>Server(server_id: str, no_fetch: bool = False)</p>
 <p>Update the server data using the api.</p></div>
 <details class="source">
 <summary>
@@ -559,6 +1002,37 @@ in the <strong>init</strong> function. You just need to provide the id like this
 </summary>
 <pre><code class="python">@dataclass
 class Server:
+    id: str
+    no_fetch: bool = False
+    ip: str = &#34;&#34;
+    playersCount: int = 0
+    maxPlayersCount: int = 0
+    passworded: bool = False
+    port: int = 0
+    language: str = &#34;en&#34;
+    useEarlyAuth: bool = False
+    earlyAuthCdn: str = &#34;&#34;
+    useCdn: bool = False
+    cdnUrl: str = &#34;&#34;
+    useVoiceChat: bool = False
+    version: str = &#34;&#34;
+    branch: str = &#34;&#34;
+    available: bool = False
+    banned: bool = False
+    name: str = &#34;&#34;
+    publicId: str = &#34;&#34;
+    vanityUrl: str = &#34;&#34;
+    website: str = &#34;&#34;
+    gameMode: str = &#34;&#34;
+    description: str = &#34;&#34;
+    tags: str = &#34;&#34;
+    lastTimeUpdate: str = &#34;&#34;
+    verified: bool = False
+    promoted: bool = False
+    visible: bool = False
+    hasCustomSkin: bool = False
+    bannerUrl: str = &#34;&#34;
+    address: str = &#34;&#34;
     &#34;&#34;&#34;This is the server object. All values will be fetched from the api
     in the __init__ function. You just need to provide the id like this: Server(&#34;example_id&#34;)
 
@@ -566,67 +1040,46 @@ class Server:
         id: The server id.
         no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
     &#34;&#34;&#34;
-    id: str
-    active: bool = False
-    maxPlayers: int = 0
-    players: int = 0
-    name: str = &#34;&#34;
-    locked: bool = False
-    host: str = &#34;&#34;
-    port: int = 0
-    gameMode: str = &#34;&#34;
-    website: str = &#34;&#34;
-    language: str = &#34;&#34;
-    description: str = &#34;&#34;
-    verified: bool = False
-    promoted: bool = False
-    useEarlyAuth: bool = False
-    earlyAuthUrl: str = &#34;&#34;
-    useCdn: bool = False
-    cdnUrl: str = &#34;&#34;
-    useVoiceChat: bool = False
-    tags: list[str] = None
-    bannerUrl: str = &#34;&#34;
-    branch: str = &#34;&#34;
-    build: str = &#34;&#34;
-    version: float = 0.0
-    lastUpdate: int = 0
 
     def __init__(self, server_id: str, no_fetch: bool = False) -&gt; None:
         &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
         self.id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
-            if temp_data is None or temp_data == {} or not temp_data[&#34;active&#34;]:
+            temp_data = request(MasterlistUrls.specific_server.value.format(self.id))
+            if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
-                self.active = False
-                self.players = 0
+                self.playersCount = 0
             else:
-                self.active = temp_data[&#34;active&#34;]
-                self.maxPlayers = temp_data[&#34;info&#34;][&#34;maxPlayers&#34;]
-                self.players = temp_data[&#34;info&#34;][&#34;players&#34;]
-                self.name = temp_data[&#34;info&#34;][&#34;name&#34;]
-                self.locked = temp_data[&#34;info&#34;][&#34;locked&#34;]
-                self.host = temp_data[&#34;info&#34;][&#34;host&#34;]
-                self.port = temp_data[&#34;info&#34;][&#34;port&#34;]
-                self.gameMode = temp_data[&#34;info&#34;][&#34;gameMode&#34;]
-                self.website = temp_data[&#34;info&#34;][&#34;website&#34;]
-                self.language = temp_data[&#34;info&#34;][&#34;language&#34;]
-                self.description = temp_data[&#34;info&#34;][&#34;description&#34;]
-                self.verified = temp_data[&#34;info&#34;][&#34;verified&#34;]
-                self.promoted = temp_data[&#34;info&#34;][&#34;promoted&#34;]
-                self.useEarlyAuth = temp_data[&#34;info&#34;][&#34;useEarlyAuth&#34;]
-                self.earlyAuthUrl = temp_data[&#34;info&#34;][&#34;earlyAuthUrl&#34;]
-                self.useCdn = temp_data[&#34;info&#34;][&#34;useCdn&#34;]
-                self.cdnUrl = temp_data[&#34;info&#34;][&#34;cdnUrl&#34;]
-                self.useVoiceChat = temp_data[&#34;info&#34;][&#34;useVoiceChat&#34;]
-                self.tags = temp_data[&#34;info&#34;][&#34;tags&#34;]
-                self.bannerUrl = temp_data[&#34;info&#34;][&#34;bannerUrl&#34;]
-                self.branch = temp_data[&#34;info&#34;][&#34;branch&#34;]
-                self.build = temp_data[&#34;info&#34;][&#34;build&#34;]
-                self.version = temp_data[&#34;info&#34;][&#34;version&#34;]
-                self.lastUpdate = temp_data[&#34;info&#34;][&#34;lastUpdate&#34;]
+                self.ip = temp_data[&#34;ip&#34;]
+                self.playersCount = temp_data[&#34;playersCount&#34;]
+                self.maxPlayersCount = temp_data[&#34;maxPlayersCount&#34;]
+                self.passworded = temp_data[&#34;passworded&#34;]
+                self.port = temp_data[&#34;port&#34;]
+                self.language = temp_data[&#34;language&#34;]
+                self.useEarlyAuth = temp_data[&#34;useEarlyAuth&#34;]
+                self.earlyAuthCdn = temp_data[&#34;earlyAuthCdn&#34;]
+                self.useCdn = temp_data[&#34;useCdn&#34;]
+                self.cdnUrl = temp_data[&#34;cdnUrl&#34;]
+                self.useVoiceChat = temp_data[&#34;useVoiceChat&#34;]
+                self.version = temp_data[&#34;version&#34;]
+                self.branch = temp_data[&#34;branch&#34;]
+                self.available = temp_data[&#34;available&#34;]
+                self.banned = temp_data[&#34;banned&#34;]
+                self.name = temp_data[&#34;name&#34;]
+                self.publicId = temp_data[&#34;publicId&#34;]
+                self.vanityUrl = temp_data[&#34;vanityUrl&#34;]
+                self.website = temp_data[&#34;website&#34;]
+                self.gameMode = temp_data[&#34;gameMode&#34;]
+                self.description = temp_data[&#34;description&#34;]
+                self.tags = temp_data[&#34;tags&#34;]
+                self.lastTimeUpdate = temp_data[&#34;lastTimeUpdate&#34;]
+                self.verified = temp_data[&#34;verified&#34;]
+                self.promoted = temp_data[&#34;promoted&#34;]
+                self.visible = temp_data[&#34;visible&#34;]
+                self.hasCustomSkin = temp_data[&#34;hasCustomSkin&#34;]
+                self.bannerUrl = temp_data[&#34;bannerUrl&#34;]
+                self.address = temp_data[&#34;address&#34;]
 
     def update(self) -&gt; None:
         &#34;&#34;&#34;Update the server data using the api.&#34;&#34;&#34;
@@ -642,7 +1095,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         &#34;&#34;&#34;
-        return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
+        return request(MasterlistUrls.specific_server_maximum.value.format(self.id, time))
 
     def get_avg(self, time: str = &#34;1d&#34;, return_result: bool = False) -&gt; dict | int | None:
         &#34;&#34;&#34;Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -656,7 +1109,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         &#34;&#34;&#34;
-        average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
+        average_data = request(MasterlistUrls.specific_server_average.value.format(self.id, time))
         if not average_data:
             return None
 
@@ -671,25 +1124,144 @@ class Server:
 
     @property
     def connect_json(self) -&gt; dict | None:
-        &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
-        return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)
+        &#34;&#34;&#34;This function fetched the connect.json of an alt:V server.
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            dict: The connect.json
+        &#34;&#34;&#34;
+        if not self.available or self.passworded:
+            return None
+
+        if not self.useCdn:
+            # This Server is not using a CDN.
+            cdn_request = request(f&#34;http://{self.ip}:{self.port}/connect.json&#34;, self)
+            if cdn_request is None:
+                # possible server error or blocked
+                return None
+            else:
+                return cdn_request
+        else:
+            # let`s try to get the connect.json
+            match self.cdnUrl:
+                case _ if &#34;:80&#34; in self.cdnUrl:
+                    cdn_request = request(f&#34;http://{self.cdnUrl.replace(&#39;:80&#39;, &#39;&#39;)}/connect.json&#34;, self)
+                case _ if &#34;:443&#34; in self.cdnUrl:
+                    cdn_request = request(f&#34;https://{self.cdnUrl.replace(&#39;:443&#39;, &#39;&#39;)}/connect.json&#34;, self)
+                case _:
+                    cdn_request = request(f&#34;{self.cdnUrl}/connect.json&#34;, self)
+
+            if cdn_request is None:
+                # maybe the CDN is offline
+                return None
+            else:
+                return cdn_request
 
     @property
-    def permissions(self) -&gt; shared.Permissions | None:
-        &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
-        return shared.get_permissions(self.connect_json)
+    def permissions(self) -&gt; Permissions | None:
+        &#34;&#34;&#34;This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            Permissions: The permissions of the server.
+        &#34;&#34;&#34;
+
+        class Permission(Enum):
+            screen_capture = &#34;Screen Capture&#34;
+            webrtc = &#34;WebRTC&#34;
+            clipboard_access = &#34;Clipboard Access&#34;
+            optional = &#34;optional-permissions&#34;
+            required = &#34;required-permissions&#34;
+
+        connect_json = self.connect_json
+
+        optional = connect_json[Permission.optional.value]
+        required = connect_json[Permission.required.value]
+
+        permissions = Permissions()
+
+        if optional is not []:
+            try:
+                permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.webrtc = optional[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        if required is not []:
+            try:
+                permissions.Required.screen_capture = required[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.webrtc = required[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        return permissions
 
     def get_dtc_url(self, password=None) -&gt; str | None:
-        &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
-        return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)
+        &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
 
-    def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
-        &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
-        return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
+        Args:
+            password (str): The password of the server.
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            str: The direct connect protocol url.
+        &#34;&#34;&#34;
+        with StringIO() as dtc_url:
+            if self.useCdn:
+                if &#34;http&#34; not in self.cdnUrl:
+                    dtc_url.write(f&#34;altv://connect/http://{self.cdnUrl}&#34;)
+                else:
+                    dtc_url.write(f&#34;altv://connect/{self.cdnUrl}&#34;)
+            else:
+                dtc_url.write(f&#34;altv://connect/{self.ip}:{self.port}&#34;)
+
+            if self.passworded and password is None:
+                logging.warning(
+                    &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
+
+            if password is not None:
+                dtc_url.write(f&#34;?password={password}&#34;)
+
+            return dtc_url.getvalue()</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="altvmasterlist.masterlist.Server.active"><code class="name">var <span class="ident">active</span> : bool</code></dt>
+<dt id="altvmasterlist.masterlist.Server.address"><code class="name">var <span class="ident">address</span> : str</code></dt>
+<dd>
+<div class="desc"><p>This is the server object. All values will be fetched from the api
+in the <strong>init</strong> function. You just need to provide the id like this: Server("example_id")</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong></dt>
+<dd>The server id.</dd>
+<dt><strong><code>no_fetch</code></strong></dt>
+<dd>Define if you want to fetch the api data. This can be used when we already have data.</dd>
+</dl></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.available"><code class="name">var <span class="ident">available</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.banned"><code class="name">var <span class="ident">banned</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -701,10 +1273,6 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.build"><code class="name">var <span class="ident">build</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="altvmasterlist.masterlist.Server.cdnUrl"><code class="name">var <span class="ident">cdnUrl</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
@@ -713,7 +1281,7 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.earlyAuthUrl"><code class="name">var <span class="ident">earlyAuthUrl</span> : str</code></dt>
+<dt id="altvmasterlist.masterlist.Server.earlyAuthCdn"><code class="name">var <span class="ident">earlyAuthCdn</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -721,7 +1289,7 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dt id="altvmasterlist.masterlist.Server.hasCustomSkin"><code class="name">var <span class="ident">hasCustomSkin</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -729,19 +1297,19 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="altvmasterlist.masterlist.Server.ip"><code class="name">var <span class="ident">ip</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="altvmasterlist.masterlist.Server.language"><code class="name">var <span class="ident">language</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.lastUpdate"><code class="name">var <span class="ident">lastUpdate</span> : int</code></dt>
+<dt id="altvmasterlist.masterlist.Server.lastTimeUpdate"><code class="name">var <span class="ident">lastTimeUpdate</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.locked"><code class="name">var <span class="ident">locked</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="altvmasterlist.masterlist.Server.maxPlayers"><code class="name">var <span class="ident">maxPlayers</span> : int</code></dt>
+<dt id="altvmasterlist.masterlist.Server.maxPlayersCount"><code class="name">var <span class="ident">maxPlayersCount</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -749,7 +1317,15 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.players"><code class="name">var <span class="ident">players</span> : int</code></dt>
+<dt id="altvmasterlist.masterlist.Server.no_fetch"><code class="name">var <span class="ident">no_fetch</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.passworded"><code class="name">var <span class="ident">passworded</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.playersCount"><code class="name">var <span class="ident">playersCount</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -761,7 +1337,11 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.tags"><code class="name">var <span class="ident">tags</span> : list[str]</code></dt>
+<dt id="altvmasterlist.masterlist.Server.publicId"><code class="name">var <span class="ident">publicId</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.tags"><code class="name">var <span class="ident">tags</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -777,11 +1357,19 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="altvmasterlist.masterlist.Server.vanityUrl"><code class="name">var <span class="ident">vanityUrl</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="altvmasterlist.masterlist.Server.verified"><code class="name">var <span class="ident">verified</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.version"><code class="name">var <span class="ident">version</span> : float</code></dt>
+<dt id="altvmasterlist.masterlist.Server.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="altvmasterlist.masterlist.Server.visible"><code class="name">var <span class="ident">visible</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -794,28 +1382,124 @@ class Server:
 <dl>
 <dt id="altvmasterlist.masterlist.Server.connect_json"><code class="name">var <span class="ident">connect_json</span> : dict | None</code></dt>
 <dd>
-<div class="desc"><p>Get the connect.json of the server.</p></div>
+<div class="desc"><p>This function fetched the connect.json of an alt:V server.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurred. But exceptions will still be logged!</dd>
+<dt><code>dict</code></dt>
+<dd>The connect.json</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def connect_json(self) -&gt; dict | None:
-    &#34;&#34;&#34;Get the connect.json of the server.&#34;&#34;&#34;
-    return shared.fetch_connect_json(self.useCdn, self.locked, self.active, self.host, self.port, self.cdnUrl)</code></pre>
+    &#34;&#34;&#34;This function fetched the connect.json of an alt:V server.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        dict: The connect.json
+    &#34;&#34;&#34;
+    if not self.available or self.passworded:
+        return None
+
+    if not self.useCdn:
+        # This Server is not using a CDN.
+        cdn_request = request(f&#34;http://{self.ip}:{self.port}/connect.json&#34;, self)
+        if cdn_request is None:
+            # possible server error or blocked
+            return None
+        else:
+            return cdn_request
+    else:
+        # let`s try to get the connect.json
+        match self.cdnUrl:
+            case _ if &#34;:80&#34; in self.cdnUrl:
+                cdn_request = request(f&#34;http://{self.cdnUrl.replace(&#39;:80&#39;, &#39;&#39;)}/connect.json&#34;, self)
+            case _ if &#34;:443&#34; in self.cdnUrl:
+                cdn_request = request(f&#34;https://{self.cdnUrl.replace(&#39;:443&#39;, &#39;&#39;)}/connect.json&#34;, self)
+            case _:
+                cdn_request = request(f&#34;{self.cdnUrl}/connect.json&#34;, self)
+
+        if cdn_request is None:
+            # maybe the CDN is offline
+            return None
+        else:
+            return cdn_request</code></pre>
 </details>
 </dd>
-<dt id="altvmasterlist.masterlist.Server.permissions"><code class="name">var <span class="ident">permissions</span> : <a title="altvmasterlist.shared.Permissions" href="shared.html#altvmasterlist.shared.Permissions">Permissions</a> | None</code></dt>
+<dt id="altvmasterlist.masterlist.Server.permissions"><code class="name">var <span class="ident">permissions</span> : <a title="altvmasterlist.masterlist.Permissions" href="#altvmasterlist.masterlist.Permissions">Permissions</a> | None</code></dt>
 <dd>
-<div class="desc"><p>Get the permissions of the server.</p></div>
+<div class="desc"><p>This function returns the Permissions defined by the server. <a href="https://docs.altv.mp/articles/permissions.html">https://docs.altv.mp/articles/permissions.html</a></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurred. But exceptions will still be logged!</dd>
+<dt><code><a title="altvmasterlist.masterlist.Permissions" href="#altvmasterlist.masterlist.Permissions">Permissions</a></code></dt>
+<dd>The permissions of the server.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def permissions(self) -&gt; shared.Permissions | None:
-    &#34;&#34;&#34;Get the permissions of the server.&#34;&#34;&#34;
-    return shared.get_permissions(self.connect_json)</code></pre>
+def permissions(self) -&gt; Permissions | None:
+    &#34;&#34;&#34;This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        Permissions: The permissions of the server.
+    &#34;&#34;&#34;
+
+    class Permission(Enum):
+        screen_capture = &#34;Screen Capture&#34;
+        webrtc = &#34;WebRTC&#34;
+        clipboard_access = &#34;Clipboard Access&#34;
+        optional = &#34;optional-permissions&#34;
+        required = &#34;required-permissions&#34;
+
+    connect_json = self.connect_json
+
+    optional = connect_json[Permission.optional.value]
+    required = connect_json[Permission.required.value]
+
+    permissions = Permissions()
+
+    if optional is not []:
+        try:
+            permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Optional.webrtc = optional[Permission.webrtc.value]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
+        except TypeError:
+            pass
+
+    if required is not []:
+        try:
+            permissions.Required.screen_capture = required[Permission.screen_capture.value]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Required.webrtc = required[Permission.webrtc.value]
+        except TypeError:
+            pass
+
+        try:
+            permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
+        except TypeError:
+            pass
+
+    return permissions</code></pre>
 </details>
 </dd>
 </dl>
@@ -858,7 +1542,7 @@ def permissions(self) -&gt; shared.Permissions | None:
         dict: The maximum player data
         int: Overall average of defined timerange
     &#34;&#34;&#34;
-    average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
+    average_data = request(MasterlistUrls.specific_server_average.value.format(self.id, time))
     if not average_data:
         return None
 
@@ -876,14 +1560,52 @@ def permissions(self) -&gt; shared.Permissions | None:
 <span>def <span class="ident">get_dtc_url</span></span>(<span>self, password=None) ‑> str | None</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the dtc url of the server.</p></div>
+<div class="desc"><p>This function gets the direct connect protocol url of an alt:V Server.
+(<a href="https://docs.altv.mp/articles/connectprotocol.html">https://docs.altv.mp/articles/connectprotocol.html</a>)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>password</code></strong> :&ensp;<code>str</code></dt>
+<dd>The password of the server.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>When an error occurred. But exceptions will still be logged!</dd>
+<dt><code>str</code></dt>
+<dd>The direct connect protocol url.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_dtc_url(self, password=None) -&gt; str | None:
-    &#34;&#34;&#34;Get the dtc url of the server.&#34;&#34;&#34;
-    return shared.get_dtc_url(self.useCdn, self.cdnUrl, self.host, self.port, self.locked, password)</code></pre>
+    &#34;&#34;&#34;This function gets the direct connect protocol url of an alt:V Server.
+    (https://docs.altv.mp/articles/connectprotocol.html)
+
+    Args:
+        password (str): The password of the server.
+
+    Returns:
+        None: When an error occurred. But exceptions will still be logged!
+        str: The direct connect protocol url.
+    &#34;&#34;&#34;
+    with StringIO() as dtc_url:
+        if self.useCdn:
+            if &#34;http&#34; not in self.cdnUrl:
+                dtc_url.write(f&#34;altv://connect/http://{self.cdnUrl}&#34;)
+            else:
+                dtc_url.write(f&#34;altv://connect/{self.cdnUrl}&#34;)
+        else:
+            dtc_url.write(f&#34;altv://connect/{self.ip}:{self.port}&#34;)
+
+        if self.passworded and password is None:
+            logging.warning(
+                &#34;Your server is password protected but you did not supply a password for the Direct Connect Url.&#34;)
+
+        if password is not None:
+            dtc_url.write(f&#34;?password={password}&#34;)
+
+        return dtc_url.getvalue()</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.get_max"><code class="name flex">
@@ -917,21 +1639,7 @@ def permissions(self) -&gt; shared.Permissions | None:
         None: When an error occurs
         dict: The maximum player data
     &#34;&#34;&#34;
-    return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))</code></pre>
-</details>
-</dd>
-<dt id="altvmasterlist.masterlist.Server.get_resource_size"><code class="name flex">
-<span>def <span class="ident">get_resource_size</span></span>(<span>self, resource: str, decimal: int = 2) ‑> float | None</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get the size of a server resource.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_resource_size(self, resource: str, decimal: int = 2) -&gt; float | None:
-    &#34;&#34;&#34;Get the size of a server resource.&#34;&#34;&#34;
-    return shared.get_resource_size(self.useCdn, self.cdnUrl, resource, self.host, self.port, decimal)</code></pre>
+    return request(MasterlistUrls.specific_server_maximum.value.format(self.id, time))</code></pre>
 </details>
 </dd>
 <dt id="altvmasterlist.masterlist.Server.update"><code class="name flex">
@@ -966,49 +1674,94 @@ def permissions(self) -&gt; shared.Permissions | None:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="altvmasterlist.masterlist.get_launcher_skin" href="#altvmasterlist.masterlist.get_launcher_skin">get_launcher_skin</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.get_launcher_skins" href="#altvmasterlist.masterlist.get_launcher_skins">get_launcher_skins</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.get_server_stats" href="#altvmasterlist.masterlist.get_server_stats">get_server_stats</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.get_servers" href="#altvmasterlist.masterlist.get_servers">get_servers</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.request" href="#altvmasterlist.masterlist.request">request</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.validate_id" href="#altvmasterlist.masterlist.validate_id">validate_id</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="altvmasterlist.masterlist.Extra" href="#altvmasterlist.masterlist.Extra">Extra</a></code></h4>
+<ul class="">
+<li><code><a title="altvmasterlist.masterlist.Extra.default_password" href="#altvmasterlist.masterlist.Extra.default_password">default_password</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Extra.user_agent" href="#altvmasterlist.masterlist.Extra.user_agent">user_agent</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="altvmasterlist.masterlist.MasterlistUrls" href="#altvmasterlist.masterlist.MasterlistUrls">MasterlistUrls</a></code></h4>
+<ul class="">
+<li><code><a title="altvmasterlist.masterlist.MasterlistUrls.all_server_stats" href="#altvmasterlist.masterlist.MasterlistUrls.all_server_stats">all_server_stats</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.MasterlistUrls.all_servers" href="#altvmasterlist.masterlist.MasterlistUrls.all_servers">all_servers</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.MasterlistUrls.specific_server" href="#altvmasterlist.masterlist.MasterlistUrls.specific_server">specific_server</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.MasterlistUrls.specific_server_average" href="#altvmasterlist.masterlist.MasterlistUrls.specific_server_average">specific_server_average</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.MasterlistUrls.specific_server_maximum" href="#altvmasterlist.masterlist.MasterlistUrls.specific_server_maximum">specific_server_maximum</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="altvmasterlist.masterlist.Permissions" href="#altvmasterlist.masterlist.Permissions">Permissions</a></code></h4>
+<ul class="">
+<li><code><a title="altvmasterlist.masterlist.Permissions.Optional" href="#altvmasterlist.masterlist.Permissions.Optional">Optional</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Permissions.Required" href="#altvmasterlist.masterlist.Permissions.Required">Required</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="altvmasterlist.masterlist.RequestHeaders" href="#altvmasterlist.masterlist.RequestHeaders">RequestHeaders</a></code></h4>
+<ul class="two-column">
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.accept" href="#altvmasterlist.masterlist.RequestHeaders.accept">accept</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_branch" href="#altvmasterlist.masterlist.RequestHeaders.alt_branch">alt_branch</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_debug" href="#altvmasterlist.masterlist.RequestHeaders.alt_debug">alt_debug</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_hardware_id" href="#altvmasterlist.masterlist.RequestHeaders.alt_hardware_id">alt_hardware_id</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_hardware_id2" href="#altvmasterlist.masterlist.RequestHeaders.alt_hardware_id2">alt_hardware_id2</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_password" href="#altvmasterlist.masterlist.RequestHeaders.alt_password">alt_password</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_player_name" href="#altvmasterlist.masterlist.RequestHeaders.alt_player_name">alt_player_name</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_social_id" href="#altvmasterlist.masterlist.RequestHeaders.alt_social_id">alt_social_id</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.alt_version" href="#altvmasterlist.masterlist.RequestHeaders.alt_version">alt_version</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.host" href="#altvmasterlist.masterlist.RequestHeaders.host">host</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.to_dict" href="#altvmasterlist.masterlist.RequestHeaders.to_dict">to_dict</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.RequestHeaders.user_agent" href="#altvmasterlist.masterlist.RequestHeaders.user_agent">user_agent</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="altvmasterlist.masterlist.Server" href="#altvmasterlist.masterlist.Server">Server</a></code></h4>
 <ul class="two-column">
-<li><code><a title="altvmasterlist.masterlist.Server.active" href="#altvmasterlist.masterlist.Server.active">active</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.address" href="#altvmasterlist.masterlist.Server.address">address</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.available" href="#altvmasterlist.masterlist.Server.available">available</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.banned" href="#altvmasterlist.masterlist.Server.banned">banned</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.bannerUrl" href="#altvmasterlist.masterlist.Server.bannerUrl">bannerUrl</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.branch" href="#altvmasterlist.masterlist.Server.branch">branch</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.build" href="#altvmasterlist.masterlist.Server.build">build</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.cdnUrl" href="#altvmasterlist.masterlist.Server.cdnUrl">cdnUrl</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.connect_json" href="#altvmasterlist.masterlist.Server.connect_json">connect_json</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.description" href="#altvmasterlist.masterlist.Server.description">description</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.earlyAuthUrl" href="#altvmasterlist.masterlist.Server.earlyAuthUrl">earlyAuthUrl</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.earlyAuthCdn" href="#altvmasterlist.masterlist.Server.earlyAuthCdn">earlyAuthCdn</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.gameMode" href="#altvmasterlist.masterlist.Server.gameMode">gameMode</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.get_avg" href="#altvmasterlist.masterlist.Server.get_avg">get_avg</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.get_dtc_url" href="#altvmasterlist.masterlist.Server.get_dtc_url">get_dtc_url</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.get_max" href="#altvmasterlist.masterlist.Server.get_max">get_max</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.get_resource_size" href="#altvmasterlist.masterlist.Server.get_resource_size">get_resource_size</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.host" href="#altvmasterlist.masterlist.Server.host">host</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.hasCustomSkin" href="#altvmasterlist.masterlist.Server.hasCustomSkin">hasCustomSkin</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.id" href="#altvmasterlist.masterlist.Server.id">id</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.ip" href="#altvmasterlist.masterlist.Server.ip">ip</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.language" href="#altvmasterlist.masterlist.Server.language">language</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.lastUpdate" href="#altvmasterlist.masterlist.Server.lastUpdate">lastUpdate</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.locked" href="#altvmasterlist.masterlist.Server.locked">locked</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.maxPlayers" href="#altvmasterlist.masterlist.Server.maxPlayers">maxPlayers</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.lastTimeUpdate" href="#altvmasterlist.masterlist.Server.lastTimeUpdate">lastTimeUpdate</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.maxPlayersCount" href="#altvmasterlist.masterlist.Server.maxPlayersCount">maxPlayersCount</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.name" href="#altvmasterlist.masterlist.Server.name">name</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.no_fetch" href="#altvmasterlist.masterlist.Server.no_fetch">no_fetch</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.passworded" href="#altvmasterlist.masterlist.Server.passworded">passworded</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.permissions" href="#altvmasterlist.masterlist.Server.permissions">permissions</a></code></li>
-<li><code><a title="altvmasterlist.masterlist.Server.players" href="#altvmasterlist.masterlist.Server.players">players</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.playersCount" href="#altvmasterlist.masterlist.Server.playersCount">playersCount</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.port" href="#altvmasterlist.masterlist.Server.port">port</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.promoted" href="#altvmasterlist.masterlist.Server.promoted">promoted</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.publicId" href="#altvmasterlist.masterlist.Server.publicId">publicId</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.tags" href="#altvmasterlist.masterlist.Server.tags">tags</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.update" href="#altvmasterlist.masterlist.Server.update">update</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.useCdn" href="#altvmasterlist.masterlist.Server.useCdn">useCdn</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.useEarlyAuth" href="#altvmasterlist.masterlist.Server.useEarlyAuth">useEarlyAuth</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.useVoiceChat" href="#altvmasterlist.masterlist.Server.useVoiceChat">useVoiceChat</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.vanityUrl" href="#altvmasterlist.masterlist.Server.vanityUrl">vanityUrl</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.verified" href="#altvmasterlist.masterlist.Server.verified">verified</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.version" href="#altvmasterlist.masterlist.Server.version">version</a></code></li>
+<li><code><a title="altvmasterlist.masterlist.Server.visible" href="#altvmasterlist.masterlist.Server.visible">visible</a></code></li>
 <li><code><a title="altvmasterlist.masterlist.Server.website" href="#altvmasterlist.masterlist.Server.website">website</a></code></li>
 </ul>
 </li>
