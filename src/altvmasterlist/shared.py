@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from requests.adapters import HTTPAdapter, Retry
+from masterlist import Server
 from dataclasses import dataclass
 from json import dumps
 from io import StringIO
@@ -19,13 +20,6 @@ class MasterlistUrls(Enum):
     specific_server = "https://api.alt-mp.com/servers/{}"
     specific_server_average = "https://api.alt-mp.com/servers/{}/avg/{}"
     specific_server_maximum = "https://api.alt-mp.com/servers/{}/max/{}"
-
-
-class AltstatsUrls(Enum):
-    """This class is used for the altstats submodule. It provides all urls needed."""
-    all_server_stats = "https://api.altstats.net/api/v1//master"
-    all_servers = "https://api.altstats.net/api/v1//server"
-    specific_server = "https://api.altstats.net/api/v1//server/{}"
 
 
 class Extra(Enum):
@@ -72,7 +66,7 @@ class RequestHeaders:
         })
 
 
-def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
+def request(url: str, server: Server) -> dict | None:
     """This is the common request function to fetch remote data.
 
     Args:
@@ -90,7 +84,7 @@ def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
         session.mount('http', HTTPAdapter(max_retries=retries))
 
-        if "http://" in url and cdn:
+        if "http://" in url and server.useCdn:
             session.headers = RequestHeaders(server.version, server.branch)
         else:
             session.headers = {
@@ -110,16 +104,12 @@ def request(url: str, cdn: bool = False, server: any = None) -> dict | None:
             return None
 
 
-def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool, password: str = None) -> str | None:
+def get_dtc_url(server: Server, password: str = None) -> str | None:
     """This function gets the direct connect protocol url of an alt:V Server.
         (https://docs.altv.mp/articles/connectprotocol.html)
 
     Args:
-        use_cdn (bool): Define if the Server is using a CDN.
-        cdn_url (str): The CDN url of the server.
-        host (str): The host IP address of the server.
-        port (int): The port of the server.
-        locked (bool): Define if the server is locked. Locked servers have a password.
+        server (Server): Server object
         password (str): The password of the server.
 
     Returns:
@@ -127,15 +117,15 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
         str: The direct connect protocol url.
     """
     with StringIO() as dtc_url:
-        if use_cdn:
-            if "http" not in cdn_url:
-                dtc_url.write(f"altv://connect/http://{cdn_url}")
+        if server.useCdn:
+            if "http" not in server.cdnUrl:
+                dtc_url.write(f"altv://connect/http://{server.cdnUrl}")
             else:
-                dtc_url.write(f"altv://connect/{cdn_url}")
+                dtc_url.write(f"altv://connect/{server.cdnUrl}")
         else:
-            dtc_url.write(f"altv://connect/{host}:{port}")
+            dtc_url.write(f"altv://connect/{server.ip}:{server.port}")
 
-        if locked and password is None:
+        if server.passworded and password is None:
             logging.warning(
                 "Your server is password protected but you did not supply a password for the Direct Connect Url.")
 
@@ -145,25 +135,19 @@ def get_dtc_url(use_cdn: bool, cdn_url: str, host: str, port: int, locked: bool,
         return dtc_url.getvalue()
 
 
-def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, port: int, cdn_url: str, tmp_server: any = None) -> dict | None:
+def fetch_connect_json(server: Server) -> dict | None:
     """This function fetched the connect.json of an alt:V server.
 
     Args:
-        use_cdn (bool): Define if the Server is using a CDN.
-        locked (bool): Define if the server is locked. Locked servers have a password.
-        active (bool): Define if the server is active. Active means Online.
-        host (str): The host IP address of the server.
-        port (int): The port of the server.
-        cdn_url (str): The CDN url of the server.
-        tmp_server (any): a server object
+        server (Server): The server object
 
     Returns:
         None: When an error occurred. But exceptions will still be logged!
         str: The direct connect protocol url.
     """
-    if not use_cdn and not locked and active:
+    if not server.useCdn and not server.passworded and server.available:
         # This Server is not using a CDN.
-        cdn_request = request(f"http://{host}:{port}/connect.json", True, tmp_server)
+        cdn_request = request(f"http://{server.ip}:{server.port}/connect.json", server)
         if cdn_request is None:
             # possible server error or blocked by alt:V
             return None
@@ -171,12 +155,12 @@ def fetch_connect_json(use_cdn: bool, locked: bool, active: bool, host: str, por
             return cdn_request
     else:
         # let`s try to get the connect.json
-        if ":80" in cdn_url:
-            cdn_request = request(f"http://{cdn_url.replace(':80', '')}/connect.json")
-        elif ":443" in cdn_url:
-            cdn_request = request(f"https://{cdn_url.replace(':443', '')}/connect.json")
+        if ":80" in server.cdnUrl:
+            cdn_request = request(f"http://{server.cdnUrl.replace(':80', '')}/connect.json")
+        elif ":443" in server.cdnUrl:
+            cdn_request = request(f"https://{server.cdnUrl.replace(':443', '')}/connect.json")
         else:
-            cdn_request = request(f"{cdn_url}/connect.json")
+            cdn_request = request(f"{server.cdnUrl}/connect.json")
 
         if cdn_request is None:
             # maybe the CDN is offline

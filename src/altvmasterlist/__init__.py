@@ -1,5 +1,5 @@
 """
-This Module contains two submodules to use the alt:V masterlist and altstats.net api.
+This Module contains one submodule to use the alt:V masterlist api.
 
 If you want to use a proxy then you need to do that via environment variables.
 
