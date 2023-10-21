@@ -2,7 +2,6 @@
 from requests.adapters import HTTPAdapter, Retry
 from dataclasses import dataclass
 from json import dumps
-from io import StringIO
 from enum import Enum
 import requests
 import logging
@@ -70,7 +69,6 @@ def request(url: str, server: any = None) -> dict | None:
 
     Args:
         url (str): The Url to fetch.
-        cdn (bool): Define if the request goes to an alt:V CDN. Then the emulated alt:V Client will be used.
         server (Server): An alt:V masterlist or altstats Server object.
 
     Returns:
@@ -101,71 +99,6 @@ def request(url: str, server: any = None) -> dict | None:
         except Exception as e:
             logging.error(e)
             return None
-
-
-def get_dtc_url(server: any, password: str = None) -> str | None:
-    """This function gets the direct connect protocol url of an alt:V Server.
-        (https://docs.altv.mp/articles/connectprotocol.html)
-
-    Args:
-        server (Server): Server object
-        password (str): The password of the server.
-
-    Returns:
-        None: When an error occurred. But exceptions will still be logged!
-        str: The direct connect protocol url.
-    """
-    with StringIO() as dtc_url:
-        if server.useCdn:
-            if "http" not in server.cdnUrl:
-                dtc_url.write(f"altv://connect/http://{server.cdnUrl}")
-            else:
-                dtc_url.write(f"altv://connect/{server.cdnUrl}")
-        else:
-            dtc_url.write(f"altv://connect/{server.ip}:{server.port}")
-
-        if server.passworded and password is None:
-            logging.warning(
-                "Your server is password protected but you did not supply a password for the Direct Connect Url.")
-
-        if password is not None:
-            dtc_url.write(f"?password={password}")
-
-        return dtc_url.getvalue()
-
-
-def fetch_connect_json(server: any) -> dict | None:
-    """This function fetched the connect.json of an alt:V server.
-
-    Args:
-        server (Server): The server object
-
-    Returns:
-        None: When an error occurred. But exceptions will still be logged!
-        str: The direct connect protocol url.
-    """
-    if not server.useCdn and not server.passworded and server.available:
-        # This Server is not using a CDN.
-        cdn_request = request(f"http://{server.ip}:{server.port}/connect.json", server)
-        if cdn_request is None:
-            # possible server error or blocked by alt:V
-            return None
-        else:
-            return cdn_request
-    else:
-        # let`s try to get the connect.json
-        if ":80" in server.cdnUrl:
-            cdn_request = request(f"http://{server.cdnUrl.replace(':80', '')}/connect.json")
-        elif ":443" in server.cdnUrl:
-            cdn_request = request(f"https://{server.cdnUrl.replace(':443', '')}/connect.json")
-        else:
-            cdn_request = request(f"{server.cdnUrl}/connect.json")
-
-        if cdn_request is None:
-            # maybe the CDN is offline
-            return None
-        else:
-            return cdn_request
 
 
 class Permissions:
@@ -202,64 +135,3 @@ class Permissions:
         screen_capture: bool = False
         webrtc: bool = False
         clipboard_access: bool = False
-
-
-def get_permissions(connect_json: dict) -> Permissions | None:
-    """This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
-
-    Args:
-        connect_json (json): The connect.json of the server. You can get the connect.json from the Server object
-                                e.g. Server(127).connect_json
-
-    Returns:
-        None: When an error occurred. But exceptions will still be logged!
-        Permissions: The permissions of the server.
-    """
-    class Permission(Enum):
-        screen_capture = "Screen Capture"
-        webrtc = "WebRTC"
-        clipboard_access = "Clipboard Access"
-        optional = "optional-permissions"
-        required = "required-permissions"
-
-    if connect_json is None:
-        return None
-
-    optional = connect_json[Permission.optional.value]
-    required = connect_json[Permission.required.value]
-
-    permissions = Permissions()
-
-    if optional is not []:
-        try:
-            permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
-        except TypeError:
-            pass
-
-        try:
-            permissions.Optional.webrtc = optional[Permission.webrtc.value]
-        except TypeError:
-            pass
-
-        try:
-            permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
-        except TypeError:
-            pass
-
-    if required is not []:
-        try:
-            permissions.Required.screen_capture = required[Permission.screen_capture.value]
-        except TypeError:
-            pass
-
-        try:
-            permissions.Required.webrtc = required[Permission.webrtc.value]
-        except TypeError:
-            pass
-
-        try:
-            permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
-        except TypeError:
-            pass
-
-    return permissions

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-from altvmasterlist import shared
 from dataclasses import dataclass
+from altvmasterlist import utils
+from io import StringIO
 from re import compile
+from enum import Enum
 import logging
 import sys
 
@@ -25,7 +27,7 @@ class Server:
         self.id = server_id
 
         if not no_fetch:
-            temp_data = shared.request(shared.MasterlistUrls.specific_server.value.format(self.id))
+            temp_data = utils.request(utils.MasterlistUrls.specific_server.value.format(self.id))
             if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
                 self.playersCount = 0
@@ -74,7 +76,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         """
-        return shared.request(shared.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
+        return utils.request(utils.MasterlistUrls.specific_server_maximum.value.format(self.id, time))
 
     def get_avg(self, time: str = "1d", return_result: bool = False) -> dict | int | None:
         """Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -88,7 +90,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         """
-        average_data = shared.request(shared.MasterlistUrls.specific_server_average.value.format(self.id, time))
+        average_data = utils.request(utils.MasterlistUrls.specific_server_average.value.format(self.id, time))
         if not average_data:
             return None
 
@@ -103,17 +105,127 @@ class Server:
 
     @property
     def connect_json(self) -> dict | None:
-        """Get the connect.json of the server."""
-        return shared.fetch_connect_json(self)
+        """This function fetched the connect.json of an alt:V server.
+
+        Args:
+            server (Server): The server object
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            str: The direct connect protocol url.
+        """
+        if not self.useCdn and not self.passworded and self.available:
+            # This Server is not using a CDN.
+            cdn_request = utils.request(f"http://{self.ip}:{self.port}/connect.json", self)
+            if cdn_request is None:
+                # possible server error or blocked by alt:V
+                return None
+            else:
+                return cdn_request
+        else:
+            # let`s try to get the connect.json
+            if ":80" in self.cdnUrl:
+                cdn_request = utils.request(f"http://{self.cdnUrl.replace(':80', '')}/connect.json", self)
+            elif ":443" in self.cdnUrl:
+                cdn_request = utils.request(f"https://{self.cdnUrl.replace(':443', '')}/connect.json", self)
+            else:
+                cdn_request = utils.request(f"{self.cdnUrl}/connect.json", self)
+
+            if cdn_request is None:
+                # maybe the CDN is offline
+                return None
+            else:
+                return cdn_request
 
     @property
-    def permissions(self) -> shared.Permissions | None:
-        """Get the permissions of the server."""
-        return shared.get_permissions(self.connect_json)
+    def permissions(self) -> utils.Permissions | None:
+        """This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
+
+        Args:
+            connect_json (json): The connect.json of the server. You can get the connect.json from the Server object
+                                    e.g. Server(127).connect_json
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            Permissions: The permissions of the server.
+        """
+        class Permission(Enum):
+            screen_capture = "Screen Capture"
+            webrtc = "WebRTC"
+            clipboard_access = "Clipboard Access"
+            optional = "optional-permissions"
+            required = "required-permissions"
+
+        connect_json = self.connect_json
+
+        optional = connect_json[Permission.optional.value]
+        required = connect_json[Permission.required.value]
+
+        permissions = utils.Permissions()
+
+        if optional is not []:
+            try:
+                permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.webrtc = optional[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        if required is not []:
+            try:
+                permissions.Required.screen_capture = required[Permission.screen_capture.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.webrtc = required[Permission.webrtc.value]
+            except TypeError:
+                pass
+
+            try:
+                permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
+            except TypeError:
+                pass
+
+        return permissions
 
     def get_dtc_url(self, password=None) -> str | None:
-        """Get the dtc url of the server."""
-        return shared.get_dtc_url(self, password)
+        """This function gets the direct connect protocol url of an alt:V Server.
+        (https://docs.altv.mp/articles/connectprotocol.html)
+
+        Args:
+            server (Server): Server object
+            password (str): The password of the server.
+
+        Returns:
+            None: When an error occurred. But exceptions will still be logged!
+            str: The direct connect protocol url.
+        """
+        with StringIO() as dtc_url:
+            if self.useCdn:
+                if "http" not in self.cdnUrl:
+                    dtc_url.write(f"altv://connect/http://{self.cdnUrl}")
+                else:
+                    dtc_url.write(f"altv://connect/{self.cdnUrl}")
+            else:
+                dtc_url.write(f"altv://connect/{self.ip}:{self.port}")
+
+            if self.passworded and password is None:
+                logging.warning(
+                    "Your server is password protected but you did not supply a password for the Direct Connect Url.")
+
+            if password is not None:
+                dtc_url.write(f"?password={password}")
+
+            return dtc_url.getvalue()
 
 
 def get_server_stats() -> dict | None:
@@ -123,7 +235,7 @@ def get_server_stats() -> dict | None:
         None: When an error occurs
         dict: The stats
     """
-    data = shared.request(shared.MasterlistUrls.all_server_stats.value)
+    data = utils.request(utils.MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -139,7 +251,7 @@ def get_servers() -> list[Server] | None:
         list: List object that contains all servers.
     """
     return_servers = []
-    servers = shared.request(shared.MasterlistUrls.all_servers.value)
+    servers = utils.request(utils.MasterlistUrls.all_servers.value)
     if servers is None or servers == "{}":
         return None
     else:

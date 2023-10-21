@@ -1,6 +1,6 @@
 # alt:V Masterlist for Python
 
-You can use this Package to interface with the alt:V master list API and with the altstats.net API.
+You can use this Package to interface with the alt:V master list API.
 
 # Install 
 
@@ -15,3 +15,4 @@ from altvmasterlist import masterlist as altv
 # Docs
 
 Please see the Docs [here](https://nickwasused.github.io/altv-python-masterlist/).
+  
