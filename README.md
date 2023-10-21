@@ -10,10 +10,6 @@ You can use this Package to interface with the alt:V master list API and with th
 
 ```
 from altvmasterlist import masterlist as altv
-...
-or
-...
-from altvmasterlist import altstats as altv
 ```
 
 # Docs
