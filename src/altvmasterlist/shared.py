@@ -19,8 +19,6 @@ class MasterlistUrls(Enum):
     specific_server = "https://api.alt-mp.com/servers/{}"
     specific_server_average = "https://api.alt-mp.com/servers/{}/avg/{}"
     specific_server_maximum = "https://api.alt-mp.com/servers/{}/max/{}"
-    launcher_skins = "https://cdn.alt-mp.com/launcher-skins/index.json"
-    launcher_skins_file = "https://cdn.alt-mp.com/launcher-skins/files/{}"
 
 
 class AltstatsUrls(Enum):

@@ -202,56 +202,6 @@ def validate_id(server_id: any) -> bool:
         return False
 
 
-def get_launcher_skins() -> dict | None:
-    """Get a list of all available launcher skins.
-
-    Returns:
-        json: A json array of all launcher skins.
-
-    The elements have the following keys: serverId, xxHash64 and fileName.
-    """
-    skins = shared.request(shared.MasterlistUrls.launcher_skins.value)
-
-    if skins is None or skins == "{}":
-        return None
-    else:
-        return skins["indexEntries"]
-
-
-def get_launcher_skin(filename: str) -> dict | None:
-    """Get a specific launcher skin by filename
-
-    Args:
-        filename (str): filename of the launcher skin
-
-    Returns:
-        json: Object
-
-    The json object has the following keys:
-        - name: the name of the server
-        - id: the server id
-        - rss: the custom rss feed of the server
-        - primaryColor: the custom color of the server
-        - servers (array): list of servers
-            - name: server name
-            - url: direct connect url
-            - id: server id
-            - imageSplash64: base64 splash image
-            - imageLogo64: base64 Logo
-            - imageBackground64: base64 background image
-
-    """
-    if not filename or filename == "":
-        return None
-
-    skin = shared.request(shared.MasterlistUrls.launcher_skins_file.value.format(filename))
-
-    if skin is None or skin == {}:
-        return None
-    else:
-        return skin
-
-
 if __name__ == "__main__":
     print("This is a Module!")
     sys.exit()
