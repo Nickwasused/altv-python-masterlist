@@ -85,7 +85,6 @@ def request(url: str, server: any = None) -> dict | None:
     with requests.session() as session:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
         session.mount('http', HTTPAdapter(max_retries=retries))
-        print(url)
 
         if server and "http://" in url and not server.useCdn:
             session.headers = RequestHeaders(server).to_dict()
