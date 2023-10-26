@@ -154,7 +154,7 @@ class Server:
     port: int = 0
     language: str = "en"
     useEarlyAuth: bool = False
-    earlyAuthCdn: str = ""
+    earlyAuthUrl: str = ""
     useCdn: bool = False
     cdnUrl: str = ""
     useVoiceChat: bool = False
@@ -201,7 +201,7 @@ class Server:
                 self.port = temp_data["port"]
                 self.language = temp_data["language"]
                 self.useEarlyAuth = temp_data["useEarlyAuth"]
-                self.earlyAuthCdn = temp_data["earlyAuthCdn"]
+                self.earlyAuthUrl = temp_data["earlyAuthUrl"]
                 self.useCdn = temp_data["useCdn"]
                 self.cdnUrl = temp_data["cdnUrl"]
                 self.useVoiceChat = temp_data["useVoiceChat"]
@@ -423,7 +423,7 @@ def get_servers() -> list[Server] | None:
             tmp_server.port = server["port"]
             tmp_server.language = server["language"]
             tmp_server.useEarlyAuth = server["useEarlyAuth"]
-            tmp_server.earlyAuthCdn = server["earlyAuthCdn"]
+            tmp_server.earlyAuthUrl = server["earlyAuthUrl"]
             tmp_server.useCdn = server["useCdn"]
             tmp_server.cdnUrl = server["cdnUrl"]
             tmp_server.useVoiceChat = server["useVoiceChat"]
