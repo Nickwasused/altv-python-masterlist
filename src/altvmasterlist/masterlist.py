@@ -147,11 +147,10 @@ class Permissions:
 class Server:
     id: str
     no_fetch: bool = False
-    ip: str = ""
+    address: str = ""
     playersCount: int = 0
     maxPlayersCount: int = 0
     passworded: bool = False
-    port: int = 0
     language: str = "en"
     useEarlyAuth: bool = False
     earlyAuthUrl: str = ""
@@ -194,11 +193,10 @@ class Server:
                 # the api returned no data or the server is offline
                 self.playersCount = 0
             else:
-                self.ip = temp_data["ip"]
+                self.address = temp_data["address"]
                 self.playersCount = temp_data["playersCount"]
                 self.maxPlayersCount = temp_data["maxPlayersCount"]
                 self.passworded = temp_data["passworded"]
-                self.port = temp_data["port"]
                 self.language = temp_data["language"]
                 self.useEarlyAuth = temp_data["useEarlyAuth"]
                 self.earlyAuthUrl = temp_data["earlyAuthUrl"]
@@ -278,7 +276,7 @@ class Server:
 
         if not self.useCdn:
             # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.ip}:{self.port}/connect.json", self)
+            cdn_request = request(f"http://{self.address}/connect.json", self)
             if cdn_request is None:
                 # possible server error or blocked
                 return None
@@ -375,7 +373,7 @@ class Server:
                 else:
                     dtc_url.write(f"altv://connect/{self.cdnUrl}")
             else:
-                dtc_url.write(f"altv://connect/{self.ip}:{self.port}")
+                dtc_url.write(f"altv://connect/{self.address}")
 
             if self.passworded and password is None:
                 logging.warning(
@@ -416,11 +414,10 @@ def get_servers() -> list[Server] | None:
     else:
         for server in servers:
             tmp_server = Server(server["publicId"], no_fetch=True)
-            tmp_server.ip = server["ip"]
+            tmp_server.address = server["address"]
             tmp_server.playersCount = server["playersCount"]
             tmp_server.maxPlayersCount = server["maxPlayersCount"]
             tmp_server.passworded = server["passworded"]
-            tmp_server.port = server["port"]
             tmp_server.language = server["language"]
             tmp_server.useEarlyAuth = server["useEarlyAuth"]
             tmp_server.earlyAuthUrl = server["earlyAuthUrl"]
