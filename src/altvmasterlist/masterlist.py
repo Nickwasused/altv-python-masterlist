@@ -145,61 +145,79 @@ class Permissions:
 
 @dataclass
 class Server:
-    id: str
+    publicId: str
+    """The server id."""
     no_fetch: bool = False
-    address: str = ""
+    """Define if you want to fetch the api data. This can be used when we already have data."""
     playersCount: int = 0
+    """Current player count"""
     maxPlayersCount: int = 0
+    """player limit"""
     passworded: bool = False
+    """password protected"""
     language: str = "en"
+    """two letter country code"""
     useEarlyAuth: bool = False
+    """server is using early auth (https://docs.altv.mp/articles/earlyauth.html)"""
     earlyAuthUrl: str = ""
+    """early auth url (usually a login screen)"""
     useCdn: bool = False
+    """server is using a cdn (https://docs.altv.mp/articles/cdn.html)"""
     cdnUrl: str = ""
+    """cdn url"""
     useVoiceChat: bool = False
+    """server is using the built in voice chat (https://docs.altv.mp/articles/voice.html) 
+    (https://docs.altv.mp/articles/external_voice_server.html)"""
     version: str = ""
+    """server version"""
     branch: str = ""
+    """server branch (release, rc, dev)"""
     available: bool = False
+    """server is online"""
     banned: bool = False
     name: str = ""
-    publicId: str = ""
+    """server name"""
     vanityUrl: str = ""
     website: str = ""
+    """server website"""
     gameMode: str = ""
+    """gamemode provided by the server"""
     description: str = ""
+    """description provided by the server"""
     tags: str = ""
+    """tags provided by the server"""
     lastTimeUpdate: str = ""
+    """time string with this format 2024-02-12T16:22:24.195392493Z"""
     verified: bool = False
+    """alt:V verified server"""
     promoted: bool = False
+    """promoted server"""
     visible: bool = False
+    """visible in server-list"""
     hasCustomSkin: bool = False
     bannerUrl: str = ""
+    address: str = ""
+    """connection address for the client can be url + port or ip + port"""
+    """"""
     group: {
         id: str,
         name: str
     } = None
-    """This is the server object. All values will be fetched from the api
-    in the __init__ function. You just need to provide the id like this: Server("example_id")
-
-    Attributes:
-        id: The server id.
-        no_fetch: Define if you want to fetch the api data. This can be used when we already have data.
-    """
 
     def __init__(self, server_id: str, no_fetch: bool = False) -> None:
         """Update the server data using the api."""
-        self.id = server_id
+        self.publicId = server_id
 
         if not no_fetch:
-            temp_data = request(MasterlistUrls.specific_server.value.format(self.id))
+            temp_data = request(MasterlistUrls.specific_server.value.format(self.publicId))
             if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
                 self.playersCount = 0
             else:
-                self.address = temp_data["address"]
                 self.playersCount = temp_data["playersCount"]
                 self.maxPlayersCount = temp_data["maxPlayersCount"]
                 self.passworded = temp_data["passworded"]
+                self.port = temp_data["port"]
                 self.language = temp_data["language"]
                 self.useEarlyAuth = temp_data["useEarlyAuth"]
                 self.earlyAuthUrl = temp_data["earlyAuthUrl"]
@@ -223,11 +241,12 @@ class Server:
                 self.visible = temp_data["visible"]
                 self.hasCustomSkin = temp_data["hasCustomSkin"]
                 self.bannerUrl = temp_data["bannerUrl"]
+                self.address = temp_data["address"]
                 self.group = temp_data["group"]
 
     def update(self) -> None:
         """Update the server data using the api."""
-        self.__init__(self.id)
+        self.__init__(self.publicId)
 
     def get_max(self, time: str = "1d") -> dict | None:
         """Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
@@ -239,7 +258,7 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         """
-        return request(MasterlistUrls.specific_server_maximum.value.format(self.id, time))
+        return request(MasterlistUrls.specific_server_maximum.value.format(self.publicId, time))
 
     def get_avg(self, time: str = "1d", return_result: bool = False) -> dict | int | None:
         """Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
@@ -253,7 +272,7 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         """
-        average_data = request(MasterlistUrls.specific_server_average.value.format(self.id, time))
+        average_data = request(MasterlistUrls.specific_server_average.value.format(self.publicId, time))
         if not average_data:
             return None
 
@@ -417,7 +436,6 @@ def get_servers() -> list[Server] | None:
     else:
         for server in servers:
             tmp_server = Server(server["publicId"], no_fetch=True)
-            tmp_server.address = server["address"]
             tmp_server.playersCount = server["playersCount"]
             tmp_server.maxPlayersCount = server["maxPlayersCount"]
             tmp_server.passworded = server["passworded"]
@@ -444,6 +462,7 @@ def get_servers() -> list[Server] | None:
             tmp_server.visible = server["visible"]
             tmp_server.hasCustomSkin = server["hasCustomSkin"]
             tmp_server.bannerUrl = server["bannerUrl"]
+            tmp_server.address = server["address"]
             tmp_server.group = server["group"]
             return_servers.append(tmp_server)
 
