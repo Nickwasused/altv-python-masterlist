@@ -28,7 +28,7 @@ jobs:
 
       # install all dependencies
       - run: poetry install
-      - run: pdoc .\src\altvmasterlist\ -o .\docs
+      - run: poetry run pdoc .\src\altvmasterlist\ -o .\docs
 
       - uses: actions/upload-pages-artifact@v3
         with:
