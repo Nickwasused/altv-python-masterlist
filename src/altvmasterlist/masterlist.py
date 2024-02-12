@@ -174,7 +174,10 @@ class Server:
     visible: bool = False
     hasCustomSkin: bool = False
     bannerUrl: str = ""
-    address: str = ""
+    group: {
+        id: str,
+        name: str
+    } = None
     """This is the server object. All values will be fetched from the api
     in the __init__ function. You just need to provide the id like this: Server("example_id")
 
@@ -220,7 +223,7 @@ class Server:
                 self.visible = temp_data["visible"]
                 self.hasCustomSkin = temp_data["hasCustomSkin"]
                 self.bannerUrl = temp_data["bannerUrl"]
-                self.address = temp_data["address"]
+                self.group = temp_data["group"]
 
     def update(self) -> None:
         """Update the server data using the api."""
@@ -441,7 +444,7 @@ def get_servers() -> list[Server] | None:
             tmp_server.visible = server["visible"]
             tmp_server.hasCustomSkin = server["hasCustomSkin"]
             tmp_server.bannerUrl = server["bannerUrl"]
-            tmp_server.address = server["address"]
+            tmp_server.group = server["group"]
             return_servers.append(tmp_server)
 
         return return_servers

@@ -8,24 +8,28 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)
 
 # Valid id
-print(altv.validate_id("mXFlJSM"))
+logging.info(altv.validate_id("mXFlJSM"))
 
 # Invalid id
-print(altv.validate_id("mXFlJSMaaaaaaaaaaaaaaaa"))
+logging.info(altv.validate_id("mXFlJSMaaaaaaaaaaaaaaaa"))
 
-print(altv.get_servers())
+logging.info(altv.get_servers())
 
 # get the server cdn connect json
-server = altv.Server("mXFlJSM")
-print(server.connect_json)
+server = altv.Server("EnLAA0O")
+logging.info(server.connect_json)
+
+# check the server group
+server = altv.Server("YMRctiN")
+logging.info(server.group)
 
 # get the server and print it
 server = altv.Server("mXFlJSM")
-print(server)
+logging.info(server)
 
 # get the server connect json (without cdn)
 server = altv.Server("mXFlJSM")
-print(server.connect_json)
+logging.info(server.connect_json)
 
 # get all servers as server object
 altv.get_servers()
@@ -35,11 +39,11 @@ altv.get_server_stats()
 
 # get server with update
 server = altv.Server("mXFlJSM")
-print(server.lastTimeUpdate)
+logging.info(server.lastTimeUpdate)
 time.sleep(120)
 server.update()
-print(server.lastTimeUpdate)
+logging.info(server.lastTimeUpdate)
 
 # get the server permissions
 server = altv.Server("mXFlJSM")
-print(server.permissions)
+logging.info(server.permissions)
