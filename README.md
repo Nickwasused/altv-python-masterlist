@@ -16,6 +16,8 @@ from altvmasterlist import masterlist as altv
 
 Please see the Docs [here](https://nickwasused.github.io/altv-python-masterlist/).
 
+Build the docs using ``pdoc .\src\altvmasterlist\ -o .\docs``
+
 # Development
 
 You need to have [poetry](https://python-poetry.org/docs/#installation) installed.
