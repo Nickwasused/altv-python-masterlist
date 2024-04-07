@@ -4,12 +4,12 @@ from altvmasterlist import masterlist as altv
 # general functions
 def test_server_stats():
     stats = altv.get_server_stats()
-    assert type(stats) is dict or stats is None
+    assert isinstance(stats, dict) or stats is None
 
 
 def test_get_servers():
     servers = altv.get_servers()
-    assert type(servers) is list or servers is None
+    assert isinstance(servers, list) or servers is None
 
 
 def test_valid_server_by_id():
@@ -19,17 +19,17 @@ def test_valid_server_by_id():
 
 def test_get_server_by_id_avg():
     avg = altv.Server("mXFlJSM").get_avg("1d")
-    assert type(avg) == list or avg is None
+    assert isinstance(avg, list) or avg is None
 
 
 def test_get_server_by_id_avg_result():
     players = altv.Server("mXFlJSM").get_avg("1d", return_result=True)
-    assert type(players) is int or players is None
+    assert isinstance(players, int) or players is None
 
 
 def test_get_server_by_id_max():
     max_stats = altv.Server("mXFlJSM").get_max("1d")
-    assert type(max_stats) == list or max_stats is None
+    assert isinstance(max_stats, list) or max_stats is None
 
 
 def test_valid():
@@ -52,7 +52,7 @@ server = altv.Server("mXFlJSM")
 
 def test_fetch_connect_json():
     connect_json = server.connect_json
-    assert type(connect_json) is dict or connect_json is None
+    assert isinstance(connect_json, dict) or connect_json is None
 
 
 def test_dtc_url():
@@ -67,4 +67,4 @@ def test_dtc_url_password():
 
 def test_get_permissions():
     permissions = server.permissions
-    assert type(permissions) is altv.Permissions or permissions is None
+    assert isinstance(permissions, altv.Permissions) or permissions is None

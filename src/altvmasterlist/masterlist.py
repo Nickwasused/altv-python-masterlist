@@ -97,7 +97,7 @@ def request(url: str, server: any = None) -> dict | None:
         try:
             api_request = session.get(url, timeout=5)
             if api_request.status_code != 200:
-                logging.warning(f"the request returned nothing.")
+                logging.warning("the request returned nothing.")
                 return None
             else:
                 return api_request.json()
