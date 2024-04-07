@@ -16,6 +16,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 class MasterlistUrls(Enum):
     """This class is used for the masterlist submodule. It provides all urls needed."""
+
     all_server_stats = "https://api.alt-mp.com/servers/info"
     all_servers = "https://api.alt-mp.com/servers"
     specific_server = "https://api.alt-mp.com/servers/{}"
@@ -25,6 +26,7 @@ class MasterlistUrls(Enum):
 
 class Extra(Enum):
     """This class defines extra values."""
+
     user_agent = "AltPublicAgent"
     default_password = "17241709254077376921"
 
@@ -34,10 +36,11 @@ class RequestHeaders:
     """These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
     """
+
     host: str = ""
     user_agent: str = Extra.user_agent.value
-    accept: str = '*/*'
-    alt_debug: str = 'false'
+    accept: str = "*/*"
+    alt_debug: str = "false"
     alt_password: str = Extra.default_password.value
     alt_branch: str = ""
     alt_version: str = ""
@@ -53,19 +56,19 @@ class RequestHeaders:
 
     def to_dict(self):
         return {
-            'Host': self.host,
-            'Alt-Branch': self.alt_branch,
+            "Host": self.host,
+            "Alt-Branch": self.alt_branch,
             "Alt-Debug": self.alt_debug,
-            'Alt-Hardware-ID': self.alt_hardware_id,
-            'Alt-Hardware-ID2': self.alt_hardware_id2,
-            'Alt-Password': self.alt_password,
-            'Alt-Player-Name': self.alt_player_name,
-            'Alt-Social-ID': self.alt_social_id,
-            'Alt-Version': self.alt_version,
-            'User-Agent': self.user_agent,
-            'Accept': self.accept,
-            'Origin': f'http://{self.host}',
-            'Connection': 'close'
+            "Alt-Hardware-ID": self.alt_hardware_id,
+            "Alt-Hardware-ID2": self.alt_hardware_id2,
+            "Alt-Password": self.alt_password,
+            "Alt-Player-Name": self.alt_player_name,
+            "Alt-Social-ID": self.alt_social_id,
+            "Alt-Version": self.alt_version,
+            "User-Agent": self.user_agent,
+            "Accept": self.accept,
+            "Origin": f"http://{self.host}",
+            "Connection": "close",
         }
 
 
@@ -84,14 +87,14 @@ def request(url: str, server: any = None) -> dict | None:
     # a simple User-Agent check e.g. https://luckyv.de does that
     with requests.session() as session:
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
-        session.mount('http', HTTPAdapter(max_retries=retries))
+        session.mount("http", HTTPAdapter(max_retries=retries))
 
         if server and "http://" in url and not server.useCdn:
             session.headers = RequestHeaders(server).to_dict()
         else:
             session.headers = {
-                'User-Agent': Extra.user_agent.value,
-                'content-type': 'application/json; charset=utf-8'
+                "User-Agent": Extra.user_agent.value,
+                "content-type": "application/json; charset=utf-8",
             }
 
         try:
@@ -124,6 +127,7 @@ class Permissions:
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
         """
+
         screen_capture: bool = False
         webrtc: bool = False
         clipboard_access: bool = False
@@ -138,6 +142,7 @@ class Permissions:
             webrtc (bool): This allows peer-to-peer RTC inside JS
             clipboard_access (bool): This allows to copy content to users clipboard
         """
+
         screen_capture: bool = False
         webrtc: bool = False
         clipboard_access: bool = False
@@ -199,17 +204,16 @@ class Server:
     address: str = ""
     """connection address for the client can be url + port or ip + port"""
     """"""
-    group: {
-        id: str,
-        name: str
-    } = None
+    group: {id: str, name: str} = None
 
     def __init__(self, server_id: str, no_fetch: bool = False) -> None:
         """Update the server data using the api."""
         self.publicId = server_id
 
         if not no_fetch:
-            temp_data = request(MasterlistUrls.specific_server.value.format(self.publicId))
+            temp_data = request(
+                MasterlistUrls.specific_server.value.format(self.publicId)
+            )
             if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
                 self.playersCount = 0
@@ -258,9 +262,13 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         """
-        return request(MasterlistUrls.specific_server_maximum.value.format(self.publicId, time))
+        return request(
+            MasterlistUrls.specific_server_maximum.value.format(self.publicId, time)
+        )
 
-    def get_avg(self, time: str = "1d", return_result: bool = False) -> dict | int | None:
+    def get_avg(
+        self, time: str = "1d", return_result: bool = False
+    ) -> dict | int | None:
         """Averages - Returns averages data about the specified server (TIME = 1d, 7d, 31d)
 
         Args:
@@ -272,7 +280,9 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         """
-        average_data = request(MasterlistUrls.specific_server_average.value.format(self.publicId, time))
+        average_data = request(
+            MasterlistUrls.specific_server_average.value.format(self.publicId, time)
+        )
         if not average_data:
             return None
 
@@ -308,9 +318,13 @@ class Server:
             # let`s try to get the connect.json
             match self.cdnUrl:
                 case _ if ":80" in self.cdnUrl:
-                    cdn_request = request(f"http://{self.cdnUrl.replace(':80', '')}/connect.json", self)
+                    cdn_request = request(
+                        f"http://{self.cdnUrl.replace(':80', '')}/connect.json", self
+                    )
                 case _ if ":443" in self.cdnUrl:
-                    cdn_request = request(f"https://{self.cdnUrl.replace(':443', '')}/connect.json", self)
+                    cdn_request = request(
+                        f"https://{self.cdnUrl.replace(':443', '')}/connect.json", self
+                    )
                 case _:
                     cdn_request = request(f"{self.cdnUrl}/connect.json", self)
 
@@ -345,7 +359,9 @@ class Server:
 
         if optional is not []:
             try:
-                permissions.Optional.screen_capture = optional[Permission.screen_capture.value]
+                permissions.Optional.screen_capture = optional[
+                    Permission.screen_capture.value
+                ]
             except TypeError:
                 pass
 
@@ -355,13 +371,17 @@ class Server:
                 pass
 
             try:
-                permissions.Optional.clipboard_access = optional[Permission.clipboard_access.value]
+                permissions.Optional.clipboard_access = optional[
+                    Permission.clipboard_access.value
+                ]
             except TypeError:
                 pass
 
         if required is not []:
             try:
-                permissions.Required.screen_capture = required[Permission.screen_capture.value]
+                permissions.Required.screen_capture = required[
+                    Permission.screen_capture.value
+                ]
             except TypeError:
                 pass
 
@@ -371,7 +391,9 @@ class Server:
                 pass
 
             try:
-                permissions.Required.clipboard_access = required[Permission.clipboard_access.value]
+                permissions.Required.clipboard_access = required[
+                    Permission.clipboard_access.value
+                ]
             except TypeError:
                 pass
 
@@ -399,7 +421,8 @@ class Server:
 
             if self.passworded and password is None:
                 logging.warning(
-                    "Your server is password protected but you did not supply a password for the Direct Connect Url.")
+                    "Your server is password protected but you did not supply a password for the Direct Connect Url."
+                )
 
             if password is not None:
                 dtc_url.write(f"?password={password}")
