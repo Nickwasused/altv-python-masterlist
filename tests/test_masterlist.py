@@ -14,30 +14,26 @@ def test_get_servers():
 
 
 def test_valid_server_by_id():
-    tmp_server = altv.Server()
-    tmp_server.set_public_id("mXFlJSM")
-    assert tmp_server is None or altv.Server
+    tmp_server = altv.Server("mXFlJSM")
+    assert isinstance(tmp_server, altv.Server)
 
 
 def test_get_server_by_id_avg():
-    tmp_server = altv.Server()
-    tmp_server.set_public_id("mXFlJSM")
+    tmp_server = altv.Server("mXFlJSM")
     avg = tmp_server.get_avg("1d")
     assert isinstance(avg, list) or avg is None
 
 
 def test_get_server_by_id_avg_result():
-    tmp_server = altv.Server()
-    tmp_server.set_public_id("mXFlJSM")
+    tmp_server = altv.Server("mXFlJSM")
     players = tmp_server.get_avg("1d", return_result=True)
-    assert isinstance(players, int) or players is None
+    assert isinstance(players, int)
 
 
 def test_get_server_by_id_max():
-    tmp_server = altv.Server()
-    tmp_server.set_public_id("mXFlJSM")
+    tmp_server = altv.Server("mXFlJSM")
     max_stats = tmp_server.get_max("1d")
-    assert isinstance(max_stats, list) or max_stats is None
+    assert isinstance(max_stats, list)
 
 
 def test_valid():
@@ -55,13 +51,12 @@ def test_invalid():
 # server object functions
 # lets get a server
 
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 
 
 def test_fetch_connect_json():
     connect_json = server.connect_json
-    assert isinstance(connect_json, dict) or connect_json is None
+    assert isinstance(connect_json, dict)
 
 
 def test_dtc_url():

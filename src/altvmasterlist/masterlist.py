@@ -109,7 +109,7 @@ class Server:
     masterlist_icon_url: str = None
     masterlist_banner_url: str = None
 
-    def set_public_id(self, server_id: str, no_fetch: bool = False) -> None:
+    def __init__(self, server_id: str, no_fetch: bool = False) -> None:
         self.publicId = server_id
 
         if not no_fetch:
@@ -152,12 +152,9 @@ class Server:
                 self.masterlist_icon_url = temp_data["masterlist_icon_url"]
                 self.masterlist_banner_url = temp_data["masterlist_banner_url"]
 
-    def set_ip(self, ip: str, port: int = 7788):
-        self.address, self.port = ip, port
-
     def update(self) -> None:
         """Update the server data using the api."""
-        self.set_public_id(self.publicId, False)
+        self.__init__(self.publicId, False)
 
     def get_max(self, time: str = "1d") -> dict | None:
         """Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
@@ -379,9 +376,8 @@ def get_servers() -> list[Server] | None:
         return None
     else:
         for server in servers:
-            tmp_server = Server()
+            tmp_server = Server(server["publicId"], no_fetch=True)
             #fixme wrong data!
-            tmp_server.set_public_id(server["publicId"], no_fetch=True)
             tmp_server.playersCount = server["playersCount"]
             tmp_server.maxPlayersCount = server["maxPlayersCount"]
             tmp_server.passworded = server["passworded"]
