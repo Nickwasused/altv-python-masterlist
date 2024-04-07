@@ -101,13 +101,17 @@ class Server:
     visible: bool = False
     """visible in server-list"""
     hasCustomSkin: bool = False
+    """Defines if the server has a custom launcher skin"""
     bannerUrl: str = ""
+    """"""
     address: str = ""
     """connection address for the client can be url + port or ip + port"""
-    """"""
-    group: {id: str, name: str} = None
+    group: altvenum.Group = None
+    """Server group info"""
     masterlist_icon_url: str = None
+    """Server icon shown on masterlist"""
     masterlist_banner_url: str = None
+    """Banner that is shown when you click on the server in the masterlist"""
 
     def __init__(self, server_id: str, no_fetch: bool = False) -> None:
         self.publicId = server_id
@@ -406,6 +410,8 @@ def get_servers() -> list[Server] | None:
             tmp_server.bannerUrl = server["bannerUrl"]
             tmp_server.address = server["address"]
             tmp_server.group = server["group"]
+            tmp_server.masterlist_icon_url = server["masterlist_icon_url"]
+            tmp_server.masterlist_banner_url = server["masterlist_banner_url"]
             return_servers.append(tmp_server)
 
         return return_servers

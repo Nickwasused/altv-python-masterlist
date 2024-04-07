@@ -22,6 +22,16 @@ class Extra(Enum):
 
 
 @dataclass
+class Group:
+    """This defines the group"""
+
+    id: str
+    name: str
+    iconUrl: str
+    pinned: bool
+
+
+@dataclass
 class RequestHeaders:
     """These are the common request headers used by the request function.
     They are commonly used to emulate an alt:V client.
