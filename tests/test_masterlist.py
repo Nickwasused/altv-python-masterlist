@@ -1,4 +1,5 @@
 from altvmasterlist import masterlist as altv
+from altvmasterlist import enum as altvenum
 
 
 # general functions
@@ -13,22 +14,29 @@ def test_get_servers():
 
 
 def test_valid_server_by_id():
-    server = altv.Server("mXFlJSM")
-    assert server is None or altv.Server
+    tmp_server = altv.Server()
+    tmp_server.set_public_id("mXFlJSM")
+    assert tmp_server is None or altv.Server
 
 
 def test_get_server_by_id_avg():
-    avg = altv.Server("mXFlJSM").get_avg("1d")
+    tmp_server = altv.Server()
+    tmp_server.set_public_id("mXFlJSM")
+    avg = tmp_server.get_avg("1d")
     assert isinstance(avg, list) or avg is None
 
 
 def test_get_server_by_id_avg_result():
-    players = altv.Server("mXFlJSM").get_avg("1d", return_result=True)
+    tmp_server = altv.Server()
+    tmp_server.set_public_id("mXFlJSM")
+    players = tmp_server.get_avg("1d", return_result=True)
     assert isinstance(players, int) or players is None
 
 
 def test_get_server_by_id_max():
-    max_stats = altv.Server("mXFlJSM").get_max("1d")
+    tmp_server = altv.Server()
+    tmp_server.set_public_id("mXFlJSM")
+    max_stats = tmp_server.get_max("1d")
     assert isinstance(max_stats, list) or max_stats is None
 
 
@@ -47,7 +55,8 @@ def test_invalid():
 # server object functions
 # lets get a server
 
-server = altv.Server("mXFlJSM")
+server = altv.Server()
+server.set_public_id("mXFlJSM")
 
 
 def test_fetch_connect_json():
@@ -67,4 +76,4 @@ def test_dtc_url_password():
 
 def test_get_permissions():
     permissions = server.permissions
-    assert isinstance(permissions, altv.Permissions) or permissions is None
+    assert isinstance(permissions, altvenum.Permissions)

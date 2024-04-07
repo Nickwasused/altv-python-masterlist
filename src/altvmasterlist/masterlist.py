@@ -1,75 +1,17 @@
 #!/usr/bin/env python3
-from requests.adapters import HTTPAdapter, Retry
+from altvmasterlist import enum as altvenum
 from dataclasses import dataclass
 from io import StringIO
 from re import compile
 from enum import Enum
 import requests
-import secrets
 import logging
 import sys
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 """You can find the masterlist api docs here: https://docs.altv.mp/articles/master_list_api.html"""
-
-
-class MasterlistUrls(Enum):
-    """This class is used for the masterlist submodule. It provides all urls needed."""
-
-    all_server_stats = "https://api.alt-mp.com/servers/info"
-    all_servers = "https://api.alt-mp.com/servers"
-    specific_server = "https://api.alt-mp.com/servers/{}"
-    specific_server_average = "https://api.alt-mp.com/servers/{}/avg/{}"
-    specific_server_maximum = "https://api.alt-mp.com/servers/{}/max/{}"
-
-
-class Extra(Enum):
-    """This class defines extra values."""
-
-    user_agent = "AltPublicAgent"
-    default_password = "17241709254077376921"
-
-
-@dataclass
-class RequestHeaders:
-    """These are the common request headers used by the request function.
-    They are commonly used to emulate an alt:V client.
-    """
-
-    host: str = ""
-    user_agent: str = Extra.user_agent.value
-    accept: str = "*/*"
-    alt_debug: str = "false"
-    alt_password: str = Extra.default_password.value
-    alt_branch: str = ""
-    alt_version: str = ""
-    alt_player_name: str = secrets.token_urlsafe(10)
-    alt_social_id: int = "0"
-    alt_hardware_id2: str = secrets.token_hex(19)
-    alt_hardware_id: str = secrets.token_hex(19)
-
-    def __init__(self, server):
-        self.alt_branch = server.branch
-        self.alt_version = server.version
-        self.host = server.address
-
-    def to_dict(self):
-        return {
-            "Host": self.host,
-            "Alt-Branch": self.alt_branch,
-            "Alt-Debug": self.alt_debug,
-            "Alt-Hardware-ID": self.alt_hardware_id,
-            "Alt-Hardware-ID2": self.alt_hardware_id2,
-            "Alt-Password": self.alt_password,
-            "Alt-Player-Name": self.alt_player_name,
-            "Alt-Social-ID": self.alt_social_id,
-            "Alt-Version": self.alt_version,
-            "User-Agent": self.user_agent,
-            "Accept": self.accept,
-            "Origin": f"http://{self.host}",
-            "Connection": "close",
-        }
+session = requests.session()
 
 
 def request(url: str, server: any = None) -> dict | None:
@@ -84,82 +26,39 @@ def request(url: str, server: any = None) -> dict | None:
         json: As data
     """
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
-    # a simple User-Agent check e.g. https://luckyv.de does that
-    with requests.session() as session:
-        retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
-        session.mount("http", HTTPAdapter(max_retries=retries))
+    # a simple User-Agent check e.g. https://luckyv.de did that before
+    session.headers.clear()
 
-        if server and "http://" in url and not server.useCdn:
-            session.headers = RequestHeaders(server).to_dict()
-        else:
-            session.headers = {
-                "User-Agent": Extra.user_agent.value,
-                "content-type": "application/json; charset=utf-8",
-            }
+    if server and "http://" in url and not server.useCdn:
+        session.headers = altvenum.RequestHeaders(server).to_dict()
+    else:
+        session.headers = {
+            "User-Agent": altvenum.Extra.user_agent.value,
+            "Content-Type": "application/json; charset=utf-8",
+        }
 
-        try:
-            api_request = session.get(url, timeout=5)
-            if api_request.status_code != 200:
-                logging.warning("the request returned nothing.")
-                return None
-            else:
-                return api_request.json()
-        except Exception as e:
-            logging.error(e)
+    try:
+        api_request = session.get(url, timeout=5)
+        if api_request.status_code != 200:
+            logging.warning("the request returned nothing.")
             return None
-
-
-class Permissions:
-    """This is the Permission class used by get_permissions.
-
-    Returns:
-        Required: The required permissions of an alt:V server. Without them, you can not play on the server.
-        Optional: The optional permissions of an alt:V server. You can play without them.
-    """
-
-    @dataclass
-    class Required:
-        """Required Permissions of an alt:V server.
-
-        Attributes:
-        ----------
-            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
-            webrtc (bool): This allows peer-to-peer RTC inside JS
-            clipboard_access (bool): This allows to copy content to users clipboard
-        """
-
-        screen_capture: bool = False
-        webrtc: bool = False
-        clipboard_access: bool = False
-
-    @dataclass
-    class Optional:
-        """Optional Permissions of an alt:V server.
-
-        Attributes:
-        ----------
-            screen_capture (bool): This allows a screenshot to be taken of the alt:V process (just GTA) and any webview
-            webrtc (bool): This allows peer-to-peer RTC inside JS
-            clipboard_access (bool): This allows to copy content to users clipboard
-        """
-
-        screen_capture: bool = False
-        webrtc: bool = False
-        clipboard_access: bool = False
+        else:
+            return api_request.json()
+    except Exception as e:
+        logging.error(e)
+        return None
 
 
 @dataclass
 class Server:
-    publicId: str
-    """The server id."""
-    no_fetch: bool = False
-    """Define if you want to fetch the api data. This can be used when we already have data."""
     playersCount: int = 0
     """Current player count"""
     maxPlayersCount: int = 0
     """player limit"""
     passworded: bool = False
     """password protected"""
+    port: int = 0
+    """server game port"""
     language: str = "en"
     """two letter country code"""
     useEarlyAuth: bool = False
@@ -182,6 +81,8 @@ class Server:
     banned: bool = False
     name: str = ""
     """server name"""
+    publicId: str = None
+    """The server id."""
     vanityUrl: str = ""
     website: str = ""
     """server website"""
@@ -205,14 +106,15 @@ class Server:
     """connection address for the client can be url + port or ip + port"""
     """"""
     group: {id: str, name: str} = None
+    masterlist_icon_url: str = None
+    masterlist_banner_url: str = None
 
-    def __init__(self, server_id: str, no_fetch: bool = False) -> None:
-        """Update the server data using the api."""
+    def set_public_id(self, server_id: str, no_fetch: bool = False) -> None:
         self.publicId = server_id
 
         if not no_fetch:
             temp_data = request(
-                MasterlistUrls.specific_server.value.format(self.publicId)
+                altvenum.MasterlistUrls.specific_server.value.format(self.publicId)
             )
             if temp_data is None or temp_data == {}:
                 # the api returned no data or the server is offline
@@ -247,10 +149,15 @@ class Server:
                 self.bannerUrl = temp_data["bannerUrl"]
                 self.address = temp_data["address"]
                 self.group = temp_data["group"]
+                self.masterlist_icon_url = temp_data["masterlist_icon_url"]
+                self.masterlist_banner_url = temp_data["masterlist_banner_url"]
+
+    def set_ip(self, ip: str, port: int = 7788):
+        self.address, self.port = ip, port
 
     def update(self) -> None:
         """Update the server data using the api."""
-        self.__init__(self.publicId)
+        self.set_public_id(self.publicId, False)
 
     def get_max(self, time: str = "1d") -> dict | None:
         """Maximum - Returns maximum data about the specified server (TIME = 1d, 7d, 31d)
@@ -262,8 +169,11 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
         """
+        if not self.publicId:
+            logging.warning("server got not masterlist publicID")
+
         return request(
-            MasterlistUrls.specific_server_maximum.value.format(self.publicId, time)
+            altvenum.MasterlistUrls.specific_server_maximum.value.format(self.publicId, time)
         )
 
     def get_avg(
@@ -280,8 +190,11 @@ class Server:
             dict: The maximum player data
             int: Overall average of defined timerange
         """
+        if not self.publicId:
+            logging.warning("server got not masterlist publicID")
+
         average_data = request(
-            MasterlistUrls.specific_server_average.value.format(self.publicId, time)
+            altvenum.MasterlistUrls.specific_server_average.value.format(self.publicId, time)
         )
         if not average_data:
             return None
@@ -306,36 +219,40 @@ class Server:
         if not self.available or self.passworded:
             return None
 
-        if not self.useCdn:
-            # This Server is not using a CDN.
-            cdn_request = request(f"http://{self.address}/connect.json", self)
-            if cdn_request is None:
-                # possible server error or blocked
-                return None
+        if self.publicId:
+            if not self.useCdn:
+                # This Server is not using a CDN.
+                cdn_request = request(f"http://{self.address}/connect.json", self)
+                if cdn_request is None:
+                    # possible server error or blocked
+                    return None
+                else:
+                    return cdn_request
             else:
-                return cdn_request
+                # let`s try to get the connect.json
+                match self.cdnUrl:
+                    case _ if ":80" in self.cdnUrl:
+                        cdn_request = request(
+                            f"http://{self.cdnUrl.replace(':80', '')}/connect.json", self
+                        )
+                    case _ if ":443" in self.cdnUrl:
+                        cdn_request = request(
+                            f"https://{self.cdnUrl.replace(':443', '')}/connect.json", self
+                        )
+                    case _:
+                        cdn_request = request(f"{self.cdnUrl}/connect.json", self)
         else:
-            # let`s try to get the connect.json
-            match self.cdnUrl:
-                case _ if ":80" in self.cdnUrl:
-                    cdn_request = request(
-                        f"http://{self.cdnUrl.replace(':80', '')}/connect.json", self
-                    )
-                case _ if ":443" in self.cdnUrl:
-                    cdn_request = request(
-                        f"https://{self.cdnUrl.replace(':443', '')}/connect.json", self
-                    )
-                case _:
-                    cdn_request = request(f"{self.cdnUrl}/connect.json", self)
+            logging.info("getting server data by ip")
+            cdn_request = request(f"{self.address}:{self.port}/connect.json", self)
 
-            if cdn_request is None:
-                # maybe the CDN is offline
-                return None
-            else:
-                return cdn_request
+        if cdn_request is None:
+            # maybe the CDN is offline
+            return None
+        else:
+            return cdn_request
 
     @property
-    def permissions(self) -> Permissions | None:
+    def permissions(self) -> altvenum.Permissions | None:
         """This function returns the Permissions defined by the server. https://docs.altv.mp/articles/permissions.html
 
         Returns:
@@ -352,10 +269,14 @@ class Server:
 
         connect_json = self.connect_json
 
+        if not connect_json:
+            logging.warning("got no connect.json")
+            return None
+
         optional = connect_json[Permission.optional.value]
         required = connect_json[Permission.required.value]
 
-        permissions = Permissions()
+        permissions = altvenum.Permissions()
 
         if optional is not []:
             try:
@@ -437,7 +358,7 @@ def get_server_stats() -> dict | None:
         None: When an error occurs
         dict: The stats
     """
-    data = request(MasterlistUrls.all_server_stats.value)
+    data = request(altvenum.MasterlistUrls.all_server_stats.value)
     if data is None:
         return None
     else:
@@ -453,12 +374,14 @@ def get_servers() -> list[Server] | None:
         list: List object that contains all servers.
     """
     return_servers = []
-    servers = request(MasterlistUrls.all_servers.value)
+    servers = request(altvenum.MasterlistUrls.all_servers.value)
     if servers is None or servers == "{}":
         return None
     else:
         for server in servers:
-            tmp_server = Server(server["publicId"], no_fetch=True)
+            tmp_server = Server()
+            #fixme wrong data!
+            tmp_server.set_public_id(server["publicId"], no_fetch=True)
             tmp_server.playersCount = server["playersCount"]
             tmp_server.maxPlayersCount = server["maxPlayersCount"]
             tmp_server.passworded = server["passworded"]

@@ -7,5 +7,6 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)
 
 # get the server cdn connect json
-server = altv.Server("0GLQLkG")
+server = altv.Server()
+server.set_public_id("0GLQLkG")
 print(server.connect_json)
