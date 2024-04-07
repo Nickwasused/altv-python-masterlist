@@ -106,7 +106,7 @@ class Server:
     """"""
     address: str = ""
     """connection address for the client can be url + port or ip + port"""
-    group: altvenum.Group = None
+    group: altvenum.Group | None = None
     """Server group info"""
     masterlist_icon_url: str = None
     """Server icon shown on masterlist"""
@@ -152,7 +152,8 @@ class Server:
                 self.hasCustomSkin = temp_data["hasCustomSkin"]
                 self.bannerUrl = temp_data["bannerUrl"]
                 self.address = temp_data["address"]
-                self.group = temp_data["group"]
+                if temp_data["group"]:
+                    self.group = altvenum.Group(**temp_data["group"])
                 self.masterlist_icon_url = temp_data["masterlist_icon_url"]
                 self.masterlist_banner_url = temp_data["masterlist_banner_url"]
 
@@ -381,7 +382,6 @@ def get_servers() -> list[Server] | None:
     else:
         for server in servers:
             tmp_server = Server(server["publicId"], no_fetch=True)
-            #fixme wrong data!
             tmp_server.playersCount = server["playersCount"]
             tmp_server.maxPlayersCount = server["maxPlayersCount"]
             tmp_server.passworded = server["passworded"]

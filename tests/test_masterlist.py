@@ -5,12 +5,17 @@ from altvmasterlist import enum as altvenum
 # general functions
 def test_server_stats():
     stats = altv.get_server_stats()
-    assert isinstance(stats, dict) or stats is None
+    assert isinstance(stats, dict) or stats
 
 
 def test_get_servers():
     servers = altv.get_servers()
-    assert isinstance(servers, list) or servers is None
+    assert isinstance(servers, list) or servers
+
+
+def test_group():
+    tmp_server = altv.Server("YMRctiN")
+    assert isinstance(tmp_server.group, altvenum.Group)
 
 
 def test_valid_server_by_id():
@@ -21,7 +26,7 @@ def test_valid_server_by_id():
 def test_get_server_by_id_avg():
     tmp_server = altv.Server("mXFlJSM")
     avg = tmp_server.get_avg("1d")
-    assert isinstance(avg, list) or avg is None
+    assert isinstance(avg, list)
 
 
 def test_get_server_by_id_avg_result():
