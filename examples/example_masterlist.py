@@ -20,18 +20,15 @@ server = altv.Server("EnLAA0O")
 logging.info(server.connect_json)
 
 # check the server group
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 logging.info(server.group)
 
 # get the server and print it
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 logging.info(server)
 
 # get the server connect json (without cdn)
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 logging.info(server.connect_json)
 
 # get all servers as server object
@@ -41,14 +38,12 @@ altv.get_servers()
 altv.get_server_stats()
 
 # get server with update
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 logging.info(server.lastTimeUpdate)
 time.sleep(120)
 server.update()
 logging.info(server.lastTimeUpdate)
 
 # get the server permissions
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 logging.info(server.permissions)

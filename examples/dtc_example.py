@@ -4,8 +4,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.DEBUG)
-server = altv.Server()
-server.set_public_id("mXFlJSM")
+server = altv.Server("mXFlJSM")
 
 
 # get the server dtc url
