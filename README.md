@@ -12,7 +12,7 @@
 
 ---
 
-<p align="center"> This is a python3 package to interface with the <a href="https://altv.mp">alt:V</a>> Masterlist API.
+<p align="center"> This is a python3 package to interface with the <a href="https://altv.mp">alt:V</a> Masterlist API.
     <br> 
 </p>
 
