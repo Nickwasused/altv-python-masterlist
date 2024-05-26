@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "altvmasterlist"
-version = "3.1.0"
+version = "3.2.0"
 description = "A package to use the alt:V Masterlist api."
 authors = ["Nickwasused <contact.nickwasused.fa6c8@simplelogin.co>"]
 license = "MPL-2.0"
