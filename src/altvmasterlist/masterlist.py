@@ -96,7 +96,11 @@ class Server:
         self.fetch_data()
 
     def fetch_data(self):
-        temp_data = request(enum.MasterlistUrls.specific_server.value.format(self.publicId))
+        try:
+            temp_data = request(enum.MasterlistUrls.specific_server.value.format(self.publicId))
+        except error.FetchError as e:
+            logger.error(f"there was an error fetching server data: {self.publicId} {e}")
+            return
 
         if temp_data:
             for key, value in temp_data.items():
