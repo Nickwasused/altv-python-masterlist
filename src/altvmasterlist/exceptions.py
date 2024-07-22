@@ -4,6 +4,7 @@ class FetchError(Exception):
     """There has been an error while fetching remote data."""
     pass
 
-class NoData(Exception):
+
+class NoPublicID(Exception):
     """No valid data got fetched."""
     pass

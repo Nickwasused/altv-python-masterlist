@@ -126,11 +126,11 @@ class Server:
 
         Raises:
             FetchError: there was an error while getting the data
-            NoData: the server has no publicID
+            NoPublicID: the server has no publicID
         """
         if not self.publicId:
             logger.warning("server got no masterlist publicID")
-            raise error.NoData(f"The server got no publicID")
+            raise error.NoPublicID(f"The server got no publicID")
         else:
             try:
                 tmp_data = request(enum.MasterlistUrls.specific_server_maximum.value.format(self.publicId, time))
@@ -155,11 +155,11 @@ class Server:
 
         Raises:
             FetchError: there was an error while getting the data
-            NoData: the server has no publicID
+            NoPublicID: the server has no publicID
         """
         if not self.publicId:
             logger.warning("server got not masterlist publicID")
-            raise error.NoData(f"The server got no publicID")
+            raise error.NoPublicID(f"The server got no publicID")
         else:
             average_data = request(
                 enum.MasterlistUrls.specific_server_average.value.format(self.publicId, time)
