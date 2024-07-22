@@ -55,7 +55,7 @@ poetry run build
 ```
 
 ## 🎈 Usage <a name="usage"></a>
-None
+See the docs: [https://nickwasused.com/altv-python-masterlist/altvmasterlist.html](https://nickwasused.com/altv-python-masterlist/altvmasterlist.html)
 
 ## 🚀 Deployment <a name = "deployment"></a>
 None
