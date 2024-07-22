@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-from typing import Optional
-
 from altvmasterlist import exceptions as error
 from altvmasterlist import enum as enum
 from urllib.parse import quote
 from dataclasses import dataclass, field
+from typing import Optional
 from io import StringIO
 from re import compile
 from enum import Enum
@@ -28,6 +27,9 @@ def request(url: str, server: any = None) -> dict | None:
     Returns:
         None: When an error occurred. But exceptions will still be logged!
         json: As data
+
+    Raises:
+        FetchError: there was an error while getting the data
     """
     # Use the User-Agent: AltPublicAgent, because some servers protect their CDN with
     # a simple User-Agent check e.g. https://luckyv.de did that before
@@ -52,7 +54,7 @@ def request(url: str, server: any = None) -> dict | None:
         else:
             return api_request.json()
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return None
 
 
@@ -121,14 +123,21 @@ class Server:
         Returns:
             None: When an error occurs
             dict: The maximum player data
+
+        Raises:
+            FetchError: there was an error while getting the data
+            NoData: the server has no publicID
         """
         if not self.publicId:
             logger.warning("server got no masterlist publicID")
             raise error.NoData(f"The server got no publicID")
         else:
-            return request(
-                enum.MasterlistUrls.specific_server_maximum.value.format(self.publicId, time)
-            )
+            try:
+                tmp_data = request(enum.MasterlistUrls.specific_server_maximum.value.format(self.publicId, time))
+                return tmp_data
+            except error.FetchError as e:
+                logger.error(f"there was an error while getting max stats: {e}")
+                raise error.FetchError(f"there was an error while getting max stats: {e}")
 
     def get_avg(
         self, time: str = "1d", return_result: bool = False
@@ -143,6 +152,10 @@ class Server:
             None: When an error occurs
             dict: The maximum player data
             int: Overall average of defined timerange
+
+        Raises:
+            FetchError: there was an error while getting the data
+            NoData: the server has no publicID
         """
         if not self.publicId:
             logger.warning("server got not masterlist publicID")
@@ -153,7 +166,7 @@ class Server:
             )
 
             if not average_data:
-                raise error.NoData(f"There was an error while fetching data for {self.publicId} {time} {return_result}")
+                raise error.FetchError(f"There was an error while fetching data for {self.publicId} {time} {return_result}")
 
             if return_result:
                 players_all = 0
@@ -171,9 +184,12 @@ class Server:
         Returns:
             None: When an error occurred. But exceptions will still be logged!
             dict: The connect.json
+
+        Raises:
+            FetchError: there was an error while getting the data
         """
         if not self.available or self.passworded:
-            raise error.NoData(f"{self.publicId} is offline or password protected.")
+            raise error.FetchError(f"{self.publicId} is offline or password protected.")
 
         if self.publicId:
             if not self.useCdn:
@@ -198,7 +214,7 @@ class Server:
             cdn_request = request(f"{self.address}:{self.port}/connect.json", self)
 
         if cdn_request is None:
-            raise error.NoData(f"There was an error while fetching connect.json for {self.publicId}")
+            raise error.FetchError(f"There was an error while fetching connect.json for {self.publicId}")
         else:
             return cdn_request
 
@@ -209,6 +225,9 @@ class Server:
         Returns:
             None: When an error occurred. But exceptions will still be logged!
             Permissions: The permissions of the server.
+
+        Raises:
+            FetchError: there was an error while getting the data
         """
 
         class Permission(Enum):
@@ -220,9 +239,9 @@ class Server:
 
         try:
             connect_json = self.connect_json
-        except error.NoData as e:
-            logging.error(e)
-            raise error.NoData(f"couln't get permissions {e} ")
+        except error.FetchError as e:
+            logger.error(e)
+            raise error.FetchError(f"couln't get permissions {e} ")
 
         optional = connect_json[Permission.optional.value]
         required = connect_json[Permission.required.value]
@@ -282,13 +301,16 @@ def get_server_stats() -> dict | None:
     Returns:
         None: When an error occurs
         dict: The stats
+
+    Raises:
+        FetchError: there was an error while getting the data
     """
     try:
         tmp_data = request(enum.MasterlistUrls.all_server_stats.value)
         return tmp_data
-    except error.NoData as e:
+    except error.FetchError as e:
         logger.error(f"error while getting server stats: {e}")
-        raise error.NoData(f"error while getting server stats: {e}")
+        raise error.FetchError(f"error while getting server stats: {e}")
 
 
 def get_servers() -> list[Server] | None:
@@ -298,12 +320,15 @@ def get_servers() -> list[Server] | None:
     Returns:
         None: When an error occurs
         list: List object that contains all servers.
+
+    Raises:
+        FetchError: there was an error while getting the data
     """
     return_servers = []
     try:
         servers = request(enum.MasterlistUrls.all_servers.value)
-    except error.NoData as e:
-        raise error.NoData(f"failed to get servers: {e}")
+    except error.FetchError as e:
+        raise error.FetchError(f"failed to get servers: {e}")
 
     server_attributes = [
         "playersCount", "maxPlayersCount", "passworded", "language",
