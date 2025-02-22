@@ -2,7 +2,7 @@
 
 <div align="center">
 
-  [![Status](https://img.shields.io/badge/status-active-success.svg)]() 
+  [![Status](https://img.shields.io/badge/status-inactive-warning.svg)]() 
   [![License](https://img.shields.io/github/license/nickwasused/altv-python-masterlist)](/LICENSE)
   [![PyPI - Version](https://img.shields.io/pypi/v/altvmasterlist)](https://pypi.org/project/altvmasterlist/)
   [![PyPI - Format](https://img.shields.io/pypi/format/altvmasterlist)](https://pypi.org/project/altvmasterlist/)
@@ -11,6 +11,30 @@
 </div>
 
 ---
+<br />
+<br />
+<br />
+<br />
+
+# deprecated
+
+This package is deprecated as the platform alt:V is probably going to shut down. Read more at https://fivem.team/#passionatealtv
+
+---
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 <p align="center"> This is a python3 package to interface with the <a href="https://altv.mp">alt:V</a> Masterlist API.
     <br> 
